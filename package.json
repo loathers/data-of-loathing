@@ -1,0 +1,22 @@
+{
+  "name": "data-of-loathing",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "author": "Sam Gaus <sam@gaus.co.uk>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.8.7",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "@typescript-eslint/parser": "^6.8.0",
+    "eslint": "^8.52.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6"
+  },
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write ."
+  },
+  "dependencies": {}
+}

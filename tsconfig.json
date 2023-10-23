@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": ["ESNext"],
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "vitest-fetch-mock": ["node_modules/vitest-fetch-mock/types/index.d.ts"]
+    }
+  },
+  "include": ["src"]
+}
