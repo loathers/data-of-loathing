@@ -2,6 +2,7 @@
   "name": "data-of-loathing",
   "version": "1.0.0",
   "main": "dist/index.js",
+  "files": ["dist"],
   "author": "Sam Gaus <sam@gaus.co.uk>",
   "license": "MIT",
   "devDependencies": {
@@ -17,7 +18,7 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write .",
-    "prepublishOnly": "yarn run build",
+    "prepack": "yarn run build",
     "test": "vitest"
   },
   "packageManager": "yarn@4.0.0"
