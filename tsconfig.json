@@ -4,6 +4,7 @@
     "lib": ["ESNext"],
     "module": "NodeNext",
     "esModuleInterop": true,
+    "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
     "strict": true,
