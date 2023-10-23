@@ -6,7 +6,7 @@ export type Treat = {
 };
 
 const parseEquipment = (equipmentList = "") =>
-  equipmentList.trim().split(", ").map(decodeHTML);
+  equipmentList.trim().split(", ");
 
 const parseTreats = (treatList = "") =>
   treatList

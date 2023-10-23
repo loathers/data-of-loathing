@@ -16,7 +16,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepublishOnly": "yarn run build"
   },
   "dependencies": {}
 }
