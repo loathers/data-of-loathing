@@ -20,5 +20,5 @@
     "prepublishOnly": "yarn run build",
     "test": "vitest"
   },
-  "dependencies": {}
+  "packageManager": "yarn@4.0.0"
 }
