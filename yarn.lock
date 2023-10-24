@@ -791,6 +791,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"chevrotain@npm:6.5.0":
+  version: 6.5.0
+  resolution: "chevrotain@npm:6.5.0"
+  dependencies:
+    regexp-to-ast: "npm:0.4.0"
+  checksum: 7fa4cf8ac2600f5c08bc4538bb49e0ce88daedbfb9507227251d87e5fa33ab28a39e69418b054299f00809fe9821f32cdebef0c36910b0ee7c15513f98dd609d
+  languageName: node
+  linkType: hard
+
 "chownr@npm:^2.0.0":
   version: 2.0.0
   resolution: "chownr@npm:2.0.0"
@@ -864,6 +873,7 @@ __metadata:
     "@typescript-eslint/parser": "npm:^6.8.0"
     eslint: "npm:^8.52.0"
     eslint-config-prettier: "npm:^9.0.0"
+    java-parser: "npm:^2.0.5"
     prettier: "npm:^3.0.3"
     typescript: "npm:^5.2.2"
     vitest: "npm:^0.34.6"
@@ -1613,6 +1623,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"java-parser@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "java-parser@npm:2.0.5"
+  dependencies:
+    chevrotain: "npm:6.5.0"
+    lodash: "npm:4.17.21"
+  checksum: 04dc5185b3db52ae5fa0e0a1b02e395a472393b440e1c07883a1f94fc198daae37671abdd5fcf158862eda2b77aec99c27aea829cfe0078a890f9ea4bb9e0d70
+  languageName: node
+  linkType: hard
+
 "js-yaml@npm:^4.1.0":
   version: 4.1.0
   resolution: "js-yaml@npm:4.1.0"
@@ -1691,6 +1711,13 @@ __metadata:
   version: 4.6.2
   resolution: "lodash.merge@npm:4.6.2"
   checksum: 402fa16a1edd7538de5b5903a90228aa48eb5533986ba7fa26606a49db2572bf414ff73a2c9f5d5fd36b31c46a5d5c7e1527749c07cbcf965ccff5fbdf32c506
+  languageName: node
+  linkType: hard
+
+"lodash@npm:4.17.21":
+  version: 4.17.21
+  resolution: "lodash@npm:4.17.21"
+  checksum: d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
   languageName: node
   linkType: hard
 
@@ -2201,6 +2228,13 @@ __metadata:
     string_decoder: "npm:^1.1.1"
     util-deprecate: "npm:^1.0.1"
   checksum: e37be5c79c376fdd088a45fa31ea2e423e5d48854be7a22a58869b4e84d25047b193f6acb54f1012331e1bcd667ffb569c01b99d36b0bd59658fb33f513511b7
+  languageName: node
+  linkType: hard
+
+"regexp-to-ast@npm:0.4.0":
+  version: 0.4.0
+  resolution: "regexp-to-ast@npm:0.4.0"
+  checksum: 56b7148be88ea553e648f5ebba486c951f4c044723e5e34360786c8b5cf0b2a2315b0f145143fb3afe1699b8e44d9586bd1a977693109f7d7ae230d62fa74b61
   languageName: node
   linkType: hard
 
