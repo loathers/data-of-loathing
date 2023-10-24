@@ -1,4 +1,5 @@
 import { expect, test, vi } from "vitest";
+import { dedent } from "ts-dedent";
 
 import { createFetchResponse, expectNotNull } from "../testUtils";
 import { loadPaths } from "./paths";
@@ -7,7 +8,7 @@ global.fetch = vi.fn();
 
 test("Can read paths", async () => {
   vi.mocked(fetch).mockResolvedValue(
-    createFetchResponse(`
+    createFetchResponse(dedent`
       package net.sourceforge.kolmafia;
 
       public class AscensionPath {
@@ -120,7 +121,7 @@ test("Can read paths", async () => {
 
   expectNotNull(paths);
 
-  expect(paths.size).toBe(5833);
+  expect(paths.size).toBe(5203);
 
   expect(paths.data).toHaveLength(48);
 

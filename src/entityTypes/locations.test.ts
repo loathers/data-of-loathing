@@ -1,24 +1,26 @@
 import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
 import { createFetchResponse, expectNotNull } from "../testUtils";
-import { LocationDifficulty, LocationEnvironment, loadLocations } from "./locations";
+import {
+  LocationDifficulty,
+  LocationEnvironment,
+  loadLocations,
+} from "./locations";
 
 global.fetch = vi.fn();
 
 test("Can read locations", async () => {
   vi.mocked(fetch).mockResolvedValue(
-    createFetchResponse(
-      dedent`
-        1
-        Hobopolis	adventure=168	DiffLevel: unknown Env: underground Stat: 350	Burnbarrel Blvd.	+1 jar of squeeze
-        # No snarfblat
-        Gyms	clan_gym=MUSCLE	DiffLevel: none Env: none Stat: 0	Pump Up Muscle
-        # Water level
-        Manor0	place=manor4_chamberboss	DiffLevel: none Env: none Stat: 0 Level: 4	Summoning Chamber
-        # Nowander
-        HiddenCity	adventure=346	DiffLevel: high Env: outdoor Stat: 140 nowander	An Overgrown Shrine (Northwest)
-      `,
-    ),
+    createFetchResponse(dedent`
+      1
+      Hobopolis	adventure=168	DiffLevel: unknown Env: underground Stat: 350	Burnbarrel Blvd.	+1 jar of squeeze
+      # No snarfblat
+      Gyms	clan_gym=MUSCLE	DiffLevel: none Env: none Stat: 0	Pump Up Muscle
+      # Water level
+      Manor0	place=manor4_chamberboss	DiffLevel: none Env: none Stat: 0 Level: 4	Summoning Chamber
+      # Nowander
+      HiddenCity	adventure=346	DiffLevel: high Env: outdoor Stat: 140 nowander	An Overgrown Shrine (Northwest)
+    `),
   );
 
   const locations = await loadLocations();
@@ -41,7 +43,7 @@ test("Can read locations", async () => {
     overdrunk: false,
     nowander: false,
   });
-  
+
   expect(locations.data).toContainEqual({
     id: -1,
     name: "Pump Up Muscle",

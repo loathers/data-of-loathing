@@ -1,4 +1,6 @@
 import { expect, test, vi } from "vitest";
+import { dedent } from "ts-dedent";
+
 import { createFetchResponse, expectNotNull } from "../testUtils";
 import { ItemUse, loadItems } from "./items";
 
@@ -6,9 +8,10 @@ global.fetch = vi.fn();
 
 test("Can read items", async () => {
   vi.mocked(fetch).mockResolvedValue(
-    createFetchResponse(
-      "1\n87\tmeat from yesterday\t653772183\tmeat.gif\tnone, paste\tt,d\t5\tmeats from yesterday",
-    ),
+    createFetchResponse(dedent`
+      1
+      87\tmeat from yesterday\t653772183\tmeat.gif\tnone, paste\tt,d\t5\tmeats from yesterday
+    `),
   );
 
   const items = await loadItems();

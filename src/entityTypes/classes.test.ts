@@ -1,12 +1,13 @@
 import { expect, test, vi } from "vitest";
 import { createFetchResponse } from "../testUtils";
 import { loadClasses } from "./classes";
+import { dedent } from "ts-dedent";
 
 global.fetch = vi.fn();
 
 test("Can read classes", async () => {
   vi.mocked(fetch).mockResolvedValue(
-    createFetchResponse(`
+    createFetchResponse(dedent`
       package net.sourceforge.kolmafia;
 
       public enum AscensionClass {
@@ -97,7 +98,7 @@ test("Can read classes", async () => {
 
   const classes = await loadClasses();
 
-  expect(classes.size).toBe(3645);
+  expect(classes.size).toBe(3165);
 
   expect(classes.data).toHaveLength(22);
 

@@ -67,11 +67,16 @@ export const isMemberOfEnum =
   (token: EnumValue): token is Enum[keyof Enum] =>
     Object.values(e).includes(token as Enum[keyof Enum]);
 
-export const memberOfEnumElse =
-  <EnumValue, Enum extends { [s: string]: EnumValue }>(e: Enum, fallback: Enum[keyof Enum]) => {
-    const isMember = isMemberOfEnum(e);
-    return (token: EnumValue) => isMember(token) ? token : fallback;
-  };
+export const memberOfEnumElse = <
+  EnumValue,
+  Enum extends { [s: string]: EnumValue },
+>(
+  e: Enum,
+  fallback: Enum[keyof Enum],
+) => {
+  const isMember = isMemberOfEnum(e);
+  return (token: EnumValue) => (isMember(token) ? token : fallback);
+};
 
 export function zip<A, B>(a1: A[], a2: B[]): [A, B][];
 export function zip<A, B, C>(a1: A[], a2: B[], a3: C[]): [A, B, C][];

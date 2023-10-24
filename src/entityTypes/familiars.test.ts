@@ -1,4 +1,6 @@
 import { expect, test, vi } from "vitest";
+import { dedent } from "ts-dedent";
+
 import { createFetchResponse, expectNotNull } from "../testUtils";
 import { FamiliarCategory, loadFamiliars } from "./familiars";
 
@@ -6,9 +8,10 @@ global.fetch = vi.fn();
 
 test("Can read familiars", async () => {
   vi.mocked(fetch).mockResolvedValue(
-    createFetchResponse(
-      "1\n7\tSpooky Pirate Skeleton\tfamiliar7.gif\tcombat1,delevel\tspooky pirate skeleton\tblundarrrbus\t2\t3\t1\t0\thashands,haseyes,undead,cantalk",
-    ),
+    createFetchResponse(dedent`
+      1
+      7\tSpooky Pirate Skeleton\tfamiliar7.gif\tcombat1,delevel\tspooky pirate skeleton\tblundarrrbus\t2\t3\t1\t0\thashands,haseyes,undead,cantalk
+    `),
   );
 
   const familiars = await loadFamiliars();
