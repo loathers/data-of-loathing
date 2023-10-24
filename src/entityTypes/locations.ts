@@ -1,4 +1,4 @@
-import { loadMafiaData, memberOfEnumElse } from "../utils";
+import { loadMafiaData, memberOfEnumElse, tokenizeAttributes } from "../utils";
 
 export enum LocationDifficulty {
   None = "none",
@@ -46,19 +46,7 @@ const parseSnarfblat = (url: string) =>
   Number(url.match(/^adventure=(\d+)$/)?.[1] ?? "-1");
 
 const parseAttributes = (attributesString: string) => {
-  const [attributes] = attributesString
-    .toLowerCase()
-    .split(" ")
-    .reduce(
-      ([acc, current], token) => {
-        if (current === null) {
-          if (token.endsWith(":")) return [acc, token.slice(0, -1)];
-          return [{ ...acc, [token]: true }, null];
-        }
-        return [{ ...acc, [current]: token }, null];
-      },
-      [{}, null] as [Record<string, string | boolean>, string | null],
-    );
+  const attributes = tokenizeAttributes(attributesString.toLowerCase());
 
   return {
     difficulty: validDifficulty(attributes["difflevel"]),

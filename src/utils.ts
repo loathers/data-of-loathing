@@ -59,6 +59,8 @@ export async function loadMafiaEnum(
 
 export const tuple = <T extends unknown[]>(args: [...T]): T => args;
 
+export const notNull = <T>(value: T | null): value is T => value !== null;
+
 export const arrayOf = <T>(items: T | T[]) =>
   Array.isArray(items) ? items : [items];
 
@@ -70,9 +72,10 @@ export const isMemberOfEnum =
 export const memberOfEnumElse = <
   EnumValue,
   Enum extends { [s: string]: EnumValue },
+  Fallback,
 >(
   e: Enum,
-  fallback: Enum[keyof Enum],
+  fallback: Fallback,
 ) => {
   const isMember = isMemberOfEnum(e);
   return (token: EnumValue) => (isMember(token) ? token : fallback);
@@ -100,5 +103,19 @@ export function disambiguate(entities: { id: number; name: string }[]) {
       ),
   ).flatMap(([name, ids]) =>
     ids.length > 1 ? ids.map((id) => `[${id}]${name}`) : name,
+  );
+}
+
+export function tokenizeAttributes(attributesString: string) {
+  return [
+    ...attributesString.matchAll(
+      /([A-Za-z]+)(?:: (?:([^"[ ]+)|"([^"]+)"|(\[.*?])))?/g,
+    ),
+  ].reduce(
+    (acc, [, key, value, quotedValue, computedValue]) => ({
+      ...acc,
+      [key]: value ?? quotedValue ?? computedValue ?? true,
+    }),
+    {} as Record<string, string | boolean>,
   );
 }
