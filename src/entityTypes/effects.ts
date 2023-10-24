@@ -24,11 +24,12 @@ const parseEffect = (parts: string[]): EffectType => ({
   image: parts[2],
   descid: parts[3],
   quality: isValidQuality(parts[4]) ? parts[4] : EffectQuality.Neutral,
-  attributes: parts[5]
-    .split(",")
-    .map((p) => p.trim())
-    .filter((p) => p !== "none"),
-  actions: parts[6].split("|"),
+  attributes:
+    parts[5]
+      ?.split(",")
+      .map((p) => p.trim())
+      .filter((p) => p !== "none") ?? [],
+  actions: parts[6]?.split("|") ?? [],
 });
 
 export const loadEffects = async (lastKnownSize?: number) => {
