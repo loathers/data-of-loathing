@@ -1,14 +1,13 @@
 import { loadMafiaData } from "../utils";
 
-export type Treat = {
+const parseEquipment = (equipmentList = "") => equipmentList.trim().split(", ");
+
+export type OutfitTreat = {
   item: string;
   chance: number;
 };
 
-const parseEquipment = (equipmentList = "") =>
-  equipmentList.trim().split(", ");
-
-const parseTreats = (treatList = "") =>
+const parseTreats = (treatList = ""): OutfitTreat[] =>
   treatList
     .trim()
     .split(", ")
@@ -19,15 +18,15 @@ const parseTreats = (treatList = "") =>
       return { item: m[1], chance: Number(m[2]) };
     });
 
-export type Outfit = {
+export type OutfitType = {
   id: number;
   name: string;
   image: string;
   equipment: string[];
-  treats: Treat[];
+  treats: OutfitTreat[];
 };
 
-const parseOutfit = (parts: string[]): Outfit => ({
+const parseOutfit = (parts: string[]): OutfitType => ({
   id: Number(parts[0]),
   name: parts[1],
   image: parts[2],

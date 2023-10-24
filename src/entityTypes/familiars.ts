@@ -1,6 +1,6 @@
 import { isMemberOfEnum, loadMafiaData } from "../utils";
 
-export enum FamiliarType {
+export enum FamiliarCategory {
   Stat0 = "stat0", // vollyball-like
   Stat1 = "stat1", // sombrero-like
   Item0 = "item0", // Item Drop
@@ -27,13 +27,13 @@ export enum FamiliarType {
   Variable = "variable", // varies according to equipment or other factors.
 }
 
-const isValidType = isMemberOfEnum(FamiliarType);
+const isValidCategory = isMemberOfEnum(FamiliarCategory);
 
-export type Familiar = {
+export type FamiliarType = {
   id: number;
   name: string;
   image: string;
-  types: FamiliarType[];
+  categories: FamiliarCategory[];
   larva: string;
   equipment: string | null;
   arenaStats: {
@@ -45,7 +45,7 @@ export type Familiar = {
   attributes: string[];
 };
 
-export const isOwnable = ({ id }: Familiar) => {
+export const isFamiliarOwnable = ({ id }: { id: number }) => {
   // April Fools familiars
   if (id >= 125 && id < 134) return false;
   // Pokefams
@@ -53,14 +53,14 @@ export const isOwnable = ({ id }: Familiar) => {
   return true;
 };
 
-const parseFamiliar = (parts: string[]): Familiar => ({
+const parseFamiliar = (parts: string[]): FamiliarType => ({
   id: Number(parts[0]),
   name: parts[1],
   image: parts[2],
-  types: parts[3]
+  categories: parts[3]
     .split(",")
     .map((p) => p.trim())
-    .filter(isValidType),
+    .filter(isValidCategory),
   larva: parts[4],
   equipment: parts[5] || null,
   arenaStats: {

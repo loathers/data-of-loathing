@@ -8,7 +8,7 @@ export enum EffectQuality {
 
 const isValidQuality = isMemberOfEnum(EffectQuality);
 
-export type Effect = {
+export type EffectType = {
   id: number;
   name: string;
   image: string;
@@ -18,7 +18,7 @@ export type Effect = {
   actions: string[];
 };
 
-const parseEffect = (parts: string[]): Effect => ({
+const parseEffect = (parts: string[]): EffectType => ({
   id: Number(parts[0]),
   name: parts[1],
   image: parts[2],

@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createFetchResponse, expectNotNull } from "../testUtils";
-import { FamiliarType, loadFamiliars } from "./familiars";
+import { FamiliarCategory, loadFamiliars } from "./familiars";
 
 global.fetch = vi.fn();
 
@@ -23,7 +23,7 @@ test("Can read familiars", async () => {
     id: 7,
     name: "Spooky Pirate Skeleton",
     image: "familiar7.gif",
-    types: [FamiliarType.Combat1, FamiliarType.Delevel],
+    types: [FamiliarCategory.Combat1, FamiliarCategory.Delevel],
     larva: "spooky pirate skeleton",
     equipment: "blundarrrbus",
     arenaStats: {

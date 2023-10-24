@@ -54,7 +54,7 @@ export enum ItemUse {
 
 const isValidItemUse = isMemberOfEnum(ItemUse);
 
-export type Item = {
+export type ItemType = {
   id: number;
   name: string;
   descid: string;
@@ -78,7 +78,7 @@ const parseAccess = (accessString: string) => {
   };
 };
 
-const parseItem = (parts: string[]): Item => ({
+const parseItem = (parts: string[]): ItemType => ({
   id: Number(parts[0]),
   name: parts[1],
   descid: parts[2],

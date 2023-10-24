@@ -1,6 +1,6 @@
 import { isMemberOfEnum, loadMafiaData } from "../utils";
 
-export enum SkillType {
+export enum SkillCategory {
   Passive = 0,
   NoncombatItemSummon = 1,
   NoncombatHealing = 2,
@@ -15,19 +15,19 @@ export enum SkillType {
   NoncombatHealingPassive = 11,
 }
 
-const isValidType = isMemberOfEnum(SkillType);
+const isValidType = isMemberOfEnum(SkillCategory);
 
 export type Skill = {
   id: number;
   name: string;
   image: string;
-  type: SkillType;
+  type: SkillCategory;
   mpCost: number;
   duration: number;
   level: number;
 };
 
-export const getMaxLevel = ({ id }: Skill) => {
+export const getMaxSkillLevel = ({ id }: { id: number }) => {
   switch (id) {
     // Will probably be this way forever
 
@@ -82,7 +82,7 @@ export const getMaxLevel = ({ id }: Skill) => {
   }
 };
 
-export const isPermable = ({ id }: Skill) => {
+export const isSkillPermable = ({ id }: { id: number }) => {
   // Random old skills
   if (id < 10) return false;
 
@@ -170,7 +170,9 @@ const parseSkill = (parts: string[]): Skill => ({
   id: Number(parts[0]),
   name: parts[1],
   image: parts[2],
-  type: isValidType(Number(parts[3])) ? Number(parts[3]) : SkillType.Passive,
+  type: isValidType(Number(parts[3]))
+    ? Number(parts[3])
+    : SkillCategory.Passive,
   mpCost: Number(parts[4]),
   duration: Number(parts[5]),
   level: parts[6] ? Number(parts[6]) : 0,

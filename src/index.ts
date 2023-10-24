@@ -1,5 +1,5 @@
-export * as Effect from "./entityTypes/effects";
-export * as Familiar from "./entityTypes/familiars";
-export * as Item from "./entityTypes/items";
-export * as Outfit from "./entityTypes/outfits";
-export * as Skill from "./entityTypes/skills";
+export * from "./entityTypes/effects";
+export * from "./entityTypes/familiars";
+export * from "./entityTypes/items";
+export * from "./entityTypes/outfits";
+export * from "./entityTypes/skills";

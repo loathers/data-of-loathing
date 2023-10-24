@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createFetchResponse, expectNotNull } from "../testUtils";
-import { SkillType, loadSkills } from "./skills";
+import { SkillCategory, loadSkills } from "./skills";
 
 global.fetch = vi.fn();
 
@@ -23,7 +23,7 @@ test("Can read items", async () => {
     id: 3035,
     name: "Bind Penne Dreadful",
     image: "t_dreadful.gif",
-    type: SkillType.NoncombatNonShruggableEffect,
+    type: SkillCategory.NoncombatNonShruggableEffect,
     mpCost: 150,
     duration: 0,
     level: 11,
