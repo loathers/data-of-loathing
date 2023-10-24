@@ -89,7 +89,11 @@ const parseItem = (parts: string[]): ItemType => ({
   plural: parts[7],
 });
 
-export const loadItems = async (lastKnownSize?: number) => {
+export async function loadItems(): Promise<{ size: number; data: ItemType[] }>;
+export async function loadItems(
+  lastKnownSize: number,
+): Promise<{ size: number; data: ItemType[] } | null>;
+export async function loadItems(lastKnownSize = 0) {
   const raw = await loadMafiaData("items", lastKnownSize);
 
   if (raw === null) return null;
@@ -98,4 +102,4 @@ export const loadItems = async (lastKnownSize?: number) => {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseItem),
   };
-};
+}

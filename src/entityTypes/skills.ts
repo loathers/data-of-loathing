@@ -178,7 +178,14 @@ const parseSkill = (parts: string[]): SkillType => ({
   level: parts[6] ? Number(parts[6]) : 0,
 });
 
-export const loadSkills = async (lastKnownSize?: number) => {
+export async function loadSkills(): Promise<{
+  size: number;
+  data: SkillType[];
+}>;
+export async function loadSkills(
+  lastKnownSize: number,
+): Promise<{ size: number; data: SkillType[] } | null>;
+export async function loadSkills(lastKnownSize = 0) {
   const raw = await loadMafiaData("classskills", lastKnownSize);
 
   if (raw === null) return null;
@@ -187,4 +194,4 @@ export const loadSkills = async (lastKnownSize?: number) => {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseSkill),
   };
-};
+}

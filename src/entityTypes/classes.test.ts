@@ -97,9 +97,11 @@ test("Can read classes", async () => {
 
   const classes = await loadClasses();
 
-  expect(classes).toHaveLength(22);
+  expect(classes.size).toBe(3645);
 
-  expect(classes).toContainEqual({
+  expect(classes.data).toHaveLength(22);
+
+  expect(classes.data).toContainEqual({
     enumName: "ASTRAL_SPIRIT",
     name: "Astral Spirit",
     id: -1,
@@ -112,7 +114,7 @@ test("Can read classes", async () => {
     spleenCapacity: null,
   });
 
-  expect(classes).toContainEqual({
+  expect(classes.data).toContainEqual({
     enumName: "VAMPYRE",
     name: "Vampyre",
     id: 24,
@@ -125,7 +127,7 @@ test("Can read classes", async () => {
     spleenCapacity: null,
   });
 
-  expect(classes).toContainEqual({
+  expect(classes.data).toContainEqual({
     enumName: "CHEESE_WIZARD",
     name: "Cheese Wizard",
     id: 29,

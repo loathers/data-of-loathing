@@ -32,7 +32,14 @@ const parseEffect = (parts: string[]): EffectType => ({
   actions: parts[6]?.split("|") ?? [],
 });
 
-export const loadEffects = async (lastKnownSize?: number) => {
+export async function loadEffects(): Promise<{
+  size: number;
+  data: EffectType[];
+}>;
+export async function loadEffects(
+  lastKnownSize: number,
+): Promise<{ size: number; data: EffectType[] } | null>;
+export async function loadEffects(lastKnownSize = 0) {
   const raw = await loadMafiaData("statuseffects", lastKnownSize);
 
   if (raw === null) return null;
@@ -41,4 +48,4 @@ export const loadEffects = async (lastKnownSize?: number) => {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseEffect),
   };
-};
+}

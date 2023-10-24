@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createFetchResponse } from "./testUtils";
+import { createFetchResponse, expectNotNull } from "./testUtils";
 import { loadMafiaEnum } from "./utils";
 
 global.fetch = vi.fn();
@@ -33,23 +33,25 @@ test("Can parse a Java enum", async () => {
     "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/net/sourceforge/kolmafia/ExampleEnum.java",
   );
 
-  expect(parsed).toHaveLength(4);
-  expect(parsed).toContainEqual({
+  expectNotNull(parsed);
+
+  expect(parsed.data).toHaveLength(4);
+  expect(parsed.data).toContainEqual({
     enumName: "EXAMPLE_A",
     name: "Example A",
     number: 1,
   });
-  expect(parsed).toContainEqual({
+  expect(parsed.data).toContainEqual({
     enumName: "EXAMPLE_B",
     name: "Example B",
     number: 2,
   });
-  expect(parsed).toContainEqual({
+  expect(parsed.data).toContainEqual({
     enumName: "EXAMPLE_C",
     name: "Example C",
     number: 3,
   });
-  expect(parsed).toContainEqual({
+  expect(parsed.data).toContainEqual({
     enumName: "EXAMPLE_D",
     name: "Example D",
     number: 5,

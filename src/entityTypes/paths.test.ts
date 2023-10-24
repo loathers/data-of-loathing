@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 
-import { createFetchResponse } from "../testUtils";
+import { createFetchResponse, expectNotNull } from "../testUtils";
 import { loadPaths } from "./paths";
 
 global.fetch = vi.fn();
@@ -118,9 +118,13 @@ test("Can read paths", async () => {
 
   const paths = await loadPaths();
 
-  expect(paths).toHaveLength(48);
+  expectNotNull(paths);
 
-  expect(paths).toContainEqual({
+  expect(paths.size).toBe(5833);
+
+  expect(paths.data).toHaveLength(48);
+
+  expect(paths.data).toContainEqual({
     enumName: "NONE",
     name: "none",
     id: 0,
@@ -135,7 +139,7 @@ test("Can read paths", async () => {
     spleenCapacity: 15,
   });
 
-  expect(paths).toContainEqual({
+  expect(paths.data).toContainEqual({
     enumName: "AVATAR_OF_JARLSBERG",
     name: "Avatar of Jarlsberg",
     id: 12,
@@ -150,7 +154,7 @@ test("Can read paths", async () => {
     spleenCapacity: 15,
   });
 
-  expect(paths).toContainEqual({
+  expect(paths.data).toContainEqual({
     enumName: "SMALL",
     name: "A Shrunken Adventurer am I",
     id: 49,

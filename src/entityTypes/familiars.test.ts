@@ -15,7 +15,9 @@ test("Can read familiars", async () => {
 
   expectNotNull(familiars);
 
-  expect(familiars.data.length).toBe(1);
+  expect(familiars.size).toBe(132);
+
+  expect(familiars.data).toHaveLength(1);
 
   const familiar = familiars.data[0];
 

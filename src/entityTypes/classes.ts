@@ -22,8 +22,23 @@ const defaultClass: Omit<ClassType, "name" | "id"> = {
   spleenCapacity: null,
 };
 
-export const loadClasses = async () => {
-  const raw = await loadMafiaEnum("net.sourceforge.kolmafia.AscensionClass");
+export async function loadClasses(): Promise<{
+  size: number;
+  data: ClassType[];
+}>;
+export async function loadClasses(
+  lastKnownSize: number,
+): Promise<{ size: number; data: ClassType[] } | null>;
+export async function loadClasses(lastKnownSize = 0) {
+  const raw = await loadMafiaEnum(
+    "net.sourceforge.kolmafia.AscensionClass",
+    lastKnownSize,
+  );
 
-  return raw.map((c) => ({ ...defaultClass, ...c }) as ClassType);
-};
+  if (raw === null) return null;
+
+  return {
+    ...raw,
+    data: raw.data.map((c) => ({ ...defaultClass, ...c }) as ClassType),
+  };
+}

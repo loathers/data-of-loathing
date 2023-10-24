@@ -26,11 +26,21 @@ const defaultPath: Omit<
   spleenCapacity: 15,
 };
 
-export const loadPaths = async () => {
+export async function loadPaths(): Promise<{ size: number; data: PathType[] }>;
+export async function loadPaths(
+  lastKnownSize: number,
+): Promise<{ size: number; data: PathType[] } | null>;
+export async function loadPaths(lastKnownSize = 0) {
   const raw = await loadMafiaEnum(
     "net.sourceforge.kolmafia.AscensionPath",
+    lastKnownSize,
     "Path",
   );
 
-  return raw.map((p) => ({ ...defaultPath, ...p }) as PathType);
-};
+  if (raw === null) return null;
+
+  return {
+    ...raw,
+    data: raw.data.map((p) => ({ ...defaultPath, ...p }) as PathType),
+  };
+}

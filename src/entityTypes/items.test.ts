@@ -15,7 +15,9 @@ test("Can read items", async () => {
 
   expectNotNull(items);
 
-  expect(items.data.length).toBe(1);
+  expect(items.size).toBe(82);
+
+  expect(items.data).toHaveLength(1);
 
   const item = items.data[0];
 

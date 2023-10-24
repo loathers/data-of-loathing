@@ -72,7 +72,14 @@ const parseFamiliar = (parts: string[]): FamiliarType => ({
   attributes: parts[10]?.split(",") ?? [],
 });
 
-export const loadFamiliars = async (lastKnownSize?: number) => {
+export async function loadFamiliars(): Promise<{
+  size: number;
+  data: FamiliarType[];
+}>;
+export async function loadFamiliars(
+  lastKnownSize: number,
+): Promise<{ size: number; data: FamiliarType[] } | null>;
+export async function loadFamiliars(lastKnownSize = 0) {
   const raw = await loadMafiaData("familiars", lastKnownSize);
 
   if (raw === null) return null;
@@ -81,4 +88,4 @@ export const loadFamiliars = async (lastKnownSize?: number) => {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseFamiliar),
   };
-};
+}

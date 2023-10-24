@@ -15,7 +15,9 @@ test("Can read items", async () => {
 
   expectNotNull(skills);
 
-  expect(skills.data.length).toBe(1);
+  expect(skills.size).toBe(52);
+
+  expect(skills.data).toHaveLength(1);
 
   const skill = skills.data[0];
 

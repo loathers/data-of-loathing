@@ -1,49 +1,60 @@
 import { parse } from "java-parser";
 import { EnumCollector } from "./EnumCollector";
 
-const MAFIA_RAW_BASE =
+const MAFIA_BASE =
   "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src";
 
-const MAFIA_DATA_BASE = `${MAFIA_RAW_BASE}/data`;
+async function noSizeChange(url: string, lastKnownSize: number) {
+  if (lastKnownSize <= 0) return false;
+  const sizeCheck = await fetch(url, { method: "HEAD" });
+  const newSize = Number(sizeCheck.headers.get("Content-Length") ?? 1);
+  if (newSize === lastKnownSize) return true;
+}
 
-type MafiaData = { data: string[][]; size: number };
-export async function loadMafiaData(
-  fileName: string,
-  lastKnownSize = 0,
-): Promise<MafiaData | null> {
-  const url = `${MAFIA_DATA_BASE}/${fileName}.txt`;
-  if (lastKnownSize > 0) {
-    const sizeCheck = await fetch(url, { method: "HEAD" });
-    const newSize = Number(sizeCheck.headers.get("Content-Length") ?? 1);
-    if (newSize === lastKnownSize) return null;
-  }
-
+async function load<T>(
+  url: string,
+  lastKnownSize: number,
+  processRaw: (raw: string) => T,
+) {
+  if (await noSizeChange(url, lastKnownSize)) return null;
   const request = await fetch(url);
   const raw = await request.text();
 
   return {
-    data: raw
-      .split("\n")
-      .slice(1)
-      .filter((r) => r !== "" && !r.startsWith("#"))
-      .map((r) => r.split("\t")),
+    data: processRaw(raw),
     size: Number(request.headers.get("Content-Length")),
   };
 }
 
-export async function loadMafiaEnum(module: string, enumName?: string) {
+export async function loadMafiaData(fileName: string, lastKnownSize = 0) {
+  const url = `${MAFIA_BASE}/data/${fileName}.txt`;
+
+  return await load(url, lastKnownSize, (raw) =>
+    raw
+      .split("\n")
+      .slice(1)
+      .filter((r) => r !== "" && !r.startsWith("#"))
+      .map((r) => r.split("\t")),
+  );
+}
+
+export async function loadMafiaEnum(
+  module: string,
+  lastKnownSize = 0,
+  enumName?: string,
+) {
   const pieces = module.split(".");
-  const url = `${MAFIA_RAW_BASE}/${pieces.join("/")}.java`;
-  if (!enumName) enumName = pieces[pieces.length - 1];
+  const url = `${MAFIA_BASE}/${pieces.join("/")}.java`;
 
-  const request = await fetch(url);
-  const raw = await request.text();
+  return await load(url, lastKnownSize, (raw) => {
+    const cst = parse(raw);
 
-  const cst = parse(raw);
-
-  const enumCollector = new EnumCollector(enumName);
-  enumCollector.visit(cst);
-  return enumCollector.parserResult;
+    const enumCollector = new EnumCollector(
+      enumName || pieces[pieces.length - 1],
+    );
+    enumCollector.visit(cst);
+    return enumCollector.parserResult;
+  });
 }
 
 export const tuple = <T extends unknown[]>(args: [...T]): T => args;

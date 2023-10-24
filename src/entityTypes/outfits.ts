@@ -34,7 +34,14 @@ const parseOutfit = (parts: string[]): OutfitType => ({
   treats: parseTreats(parts[0] === "80" ? "double-ice gum" : parts[4] ?? ""),
 });
 
-export const loadOutfits = async (lastKnownSize?: number) => {
+export async function loadOutfits(): Promise<{
+  size: number;
+  data: OutfitType[];
+}>;
+export async function loadOutfits(
+  lastKnownSize: number,
+): Promise<{ size: number; data: OutfitType[] } | null>;
+export async function loadOutfits(lastKnownSize = 0) {
   const raw = await loadMafiaData("outfits", lastKnownSize);
 
   if (raw === null) return null;
@@ -43,4 +50,4 @@ export const loadOutfits = async (lastKnownSize?: number) => {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseOutfit),
   };
-};
+}
