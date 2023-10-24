@@ -4,7 +4,7 @@ import { SkillCategory, loadSkills } from "./skills";
 
 global.fetch = vi.fn();
 
-test("Can read items", async () => {
+test("Can read skills", async () => {
   vi.mocked(fetch).mockResolvedValue(
     createFetchResponse(
       "1\n3035\tBind Penne Dreadful\tt_dreadful.gif\t3\t150\t0\t11",

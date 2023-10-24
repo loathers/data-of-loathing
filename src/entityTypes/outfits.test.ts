@@ -4,7 +4,7 @@ import { loadOutfits } from "./outfits";
 
 global.fetch = vi.fn();
 
-test("Can read items", async () => {
+test("Can read outfits", async () => {
   vi.mocked(fetch).mockResolvedValue(
     createFetchResponse(
       "1\n35\tBlack Armaments\tblacktat.gif\tblack helmet, black sword, black shield, black greaves\tblack pudding (0.16), Blackfly Chardonnay (0.16), black & tan (0.16), black pepper (0.16), black forest cake (0.16), black forest ham (0.16)",
