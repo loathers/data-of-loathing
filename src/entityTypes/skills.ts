@@ -1,4 +1,4 @@
-import { isMemberOfEnum, loadMafiaData } from "../utils";
+import { loadMafiaData, memberOfEnumElse } from "../utils";
 
 export enum SkillCategory {
   Passive = 0,
@@ -15,7 +15,7 @@ export enum SkillCategory {
   NoncombatHealingPassive = 11,
 }
 
-const isValidType = isMemberOfEnum(SkillCategory);
+const validType = memberOfEnumElse(SkillCategory, SkillCategory.Passive);
 
 export type SkillType = {
   id: number;
@@ -170,9 +170,7 @@ const parseSkill = (parts: string[]): SkillType => ({
   id: Number(parts[0]),
   name: parts[1],
   image: parts[2],
-  category: isValidType(Number(parts[3]))
-    ? Number(parts[3])
-    : SkillCategory.Passive,
+  category: validType(Number(parts[3])),
   mpCost: Number(parts[4]),
   duration: Number(parts[5]),
   level: parts[6] ? Number(parts[6]) : 0,

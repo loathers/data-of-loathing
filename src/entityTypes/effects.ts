@@ -1,4 +1,4 @@
-import { isMemberOfEnum, loadMafiaData } from "../utils";
+import { loadMafiaData, memberOfEnumElse } from "../utils";
 
 export enum EffectQuality {
   Good = "good",
@@ -6,7 +6,7 @@ export enum EffectQuality {
   Bad = "bad",
 }
 
-const isValidQuality = isMemberOfEnum(EffectQuality);
+const validQuality = memberOfEnumElse(EffectQuality, EffectQuality.Neutral);
 
 export type EffectType = {
   id: number;
@@ -23,7 +23,7 @@ const parseEffect = (parts: string[]): EffectType => ({
   name: parts[1],
   image: parts[2],
   descid: parts[3],
-  quality: isValidQuality(parts[4]) ? parts[4] : EffectQuality.Neutral,
+  quality: validQuality(parts[4]),
   attributes:
     parts[5]
       ?.split(",")
