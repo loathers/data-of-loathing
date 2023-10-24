@@ -86,3 +86,19 @@ export function zip(...arrays: unknown[][]) {
     Array.from({ length: arrays.length }, (_, k) => arrays[k][i]),
   );
 }
+
+export function disambiguate(entities: { id: number; name: string }[]) {
+  return Object.entries(
+    entities
+      .filter(({ name }) => name?.trim())
+      .reduce(
+        (acc, { id, name }) => ({
+          ...acc,
+          [name]: [...(acc[name] ?? []), id],
+        }),
+        {} as Record<string, number[]>,
+      ),
+  ).flatMap(([name, ids]) =>
+    ids.length > 1 ? ids.map((id) => `[${id}]${name}`) : name,
+  );
+}

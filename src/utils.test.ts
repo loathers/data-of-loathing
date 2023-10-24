@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createFetchResponse, expectNotNull } from "./testUtils";
-import { loadMafiaEnum } from "./utils";
+import { disambiguate, loadMafiaEnum } from "./utils";
 
 global.fetch = vi.fn();
 
@@ -56,4 +56,21 @@ test("Can parse a Java enum", async () => {
     name: "Example D",
     number: 5,
   });
+});
+
+test("Disambiguate", () => {
+  const example = [
+    { id: 1, name: "rock" },
+    { id: 2, name: "paper" },
+    { id: 3, name: "scissors" },
+    { id: 4, name: "rock" },
+  ];
+
+  const disambiguated = disambiguate(example);
+
+  expect(disambiguated).toHaveLength(4);
+  expect(disambiguated).toContain("[1]rock");
+  expect(disambiguated).toContain("paper");
+  expect(disambiguated).toContain("scissors");
+  expect(disambiguated).toContain("[4]rock");
 });

@@ -6,3 +6,5 @@ export * from "./entityTypes/locations";
 export * from "./entityTypes/outfits";
 export * from "./entityTypes/paths";
 export * from "./entityTypes/skills";
+
+export { disambiguate } from "./utils";
