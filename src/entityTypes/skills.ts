@@ -17,11 +17,11 @@ export enum SkillCategory {
 
 const isValidType = isMemberOfEnum(SkillCategory);
 
-export type Skill = {
+export type SkillType = {
   id: number;
   name: string;
   image: string;
-  type: SkillCategory;
+  category: SkillCategory;
   mpCost: number;
   duration: number;
   level: number;
@@ -166,11 +166,11 @@ export const isSkillPermable = ({ id }: { id: number }) => {
   return true;
 };
 
-const parseSkill = (parts: string[]): Skill => ({
+const parseSkill = (parts: string[]): SkillType => ({
   id: Number(parts[0]),
   name: parts[1],
   image: parts[2],
-  type: isValidType(Number(parts[3]))
+  category: isValidType(Number(parts[3]))
     ? Number(parts[3])
     : SkillCategory.Passive,
   mpCost: Number(parts[4]),

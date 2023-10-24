@@ -23,7 +23,7 @@ test("Can read familiars", async () => {
     id: 7,
     name: "Spooky Pirate Skeleton",
     image: "familiar7.gif",
-    types: [FamiliarCategory.Combat1, FamiliarCategory.Delevel],
+    categories: [FamiliarCategory.Combat1, FamiliarCategory.Delevel],
     larva: "spooky pirate skeleton",
     equipment: "blundarrrbus",
     arenaStats: {

@@ -23,7 +23,7 @@ test("Can read items", async () => {
     id: 3035,
     name: "Bind Penne Dreadful",
     image: "t_dreadful.gif",
-    type: SkillCategory.NoncombatNonShruggableEffect,
+    category: SkillCategory.NoncombatNonShruggableEffect,
     mpCost: 150,
     duration: 0,
     level: 11,
