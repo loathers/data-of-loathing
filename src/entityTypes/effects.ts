@@ -1,3 +1,4 @@
+import { populateEntity } from "../db";
 import { loadMafiaData, memberOfEnumElse } from "../utils";
 
 export enum EffectQuality {
@@ -48,4 +49,16 @@ export async function loadEffects(lastKnownSize = 0) {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseEffect),
   };
+}
+
+export async function populateEffects() {
+  return populateEntity(loadEffects, "effects", [
+    ["id", "INTEGER PRIMARY KEY"],
+    ["name", "TEXT NOT NULL"],
+    ["descid", "TEXT UNIQUE"],
+    ["image", "TEXT NOT NULL"],
+    ["quality", "TEXT NOT NULL"],
+    ["attributes", "JSONB NOT NULL"],
+    ["actions", "JSONB NOT NULL"],
+  ]);
 }

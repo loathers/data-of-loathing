@@ -1,3 +1,4 @@
+import { populateEntity, resolveReference } from "../db";
 import {
   loadMafiaData,
   memberOfEnumElse,
@@ -39,43 +40,43 @@ export type MonsterDrop = {
 
 export type MonsterType = {
   article: string;
-  attack: number;
+  attack: number | string;
   boss: boolean;
-  defence: number;
+  defence: number | string;
   drippy: boolean;
   drops: MonsterDrop[];
   element: MonsterElement;
   elementalAttack: MonsterElement;
   elementalDefence: MonsterElement;
-  elementalResistance: number;
-  experience: number | null;
+  elementalResistance: number | string;
+  experience: number | string | null;
   free: boolean;
   ghost: boolean;
   groupSize: number;
-  hp: number;
+  hp: number | string;
   id: number;
   image: string[];
-  initiative: number;
+  initiative: number | string;
   itemBlockChance: number;
   lucky: boolean;
   manuel: string | null;
-  meat: number;
-  monsterLevelMultiplier: number;
+  meat: number | string;
+  monsterLevelMultiplier: number | string;
   name: string;
   nobanish: boolean;
   nocopy: boolean;
   nomanuel: boolean;
   nowander: boolean;
   phylum: string;
-  physicalResistance: number;
+  physicalResistance: number | string;
   poison: string | null;
-  scaling: number;
-  scalingCap: number;
-  scalingFloor: number;
+  scaling: number | string;
+  scalingCap: number | string;
+  scalingFloor: number | string;
   skillBlockChance: number;
   snake: boolean;
   spellBlockChance: number;
-  sprinkles: [min: number, max: number];
+  sprinkles: [min: number | string, max: number | string];
   superlikely: boolean;
   ultrarare: boolean;
   wanderer: boolean;
@@ -96,6 +97,11 @@ const parseDrops = (drops: string[]): MonsterDrop[] => {
     .filter(notNull);
 };
 
+const parseExpression = (exp: string | boolean, fallback = 0) => {
+  if (typeof exp === "string" && exp.startsWith("[")) return exp;
+  return Number(exp ?? `${fallback}`);
+};
+
 const parseAttributes = (
   attributesString: string,
 ): Omit<MonsterType, "id" | "name" | "image" | "drops"> => {
@@ -103,41 +109,41 @@ const parseAttributes = (
 
   return {
     article: String(attributes["Article"]),
-    attack: Number(attributes["Atk"] ?? "0"),
+    attack: parseExpression(attributes["Atk"]),
     boss: !!attributes["BOSS"],
-    defence: Number(attributes["Def"] ?? "0"),
+    defence: parseExpression(attributes["Def"]),
     drippy: !!attributes["DRIPPY"],
     element: validElement(attributes["E"]),
     elementalAttack: validElement(attributes["EA"]),
     elementalDefence: validElement(attributes["ED"]),
-    elementalResistance: Number(attributes["Elem"] ?? "0"),
-    experience: Number(attributes["Exp"] ?? "0") || null,
+    elementalResistance: parseExpression(attributes["Elem"]),
+    experience: parseExpression(attributes["Exp"]) || null,
     free: !!attributes["FREE"],
     ghost: !!attributes["GHOST"],
     groupSize: Number(attributes["Group"] ?? "1"),
-    hp: Number(attributes["HP"] ?? "0"),
-    initiative: Number(attributes["Init"] ?? "0"),
+    hp: parseExpression(attributes["HP"]),
+    initiative: parseExpression(attributes["Init"]),
     itemBlockChance: Number(attributes["Item"] ?? "0") / 100,
     lucky: !!attributes["LUCKY"],
     manuel: String(attributes["Manuel"] ?? "") || null,
-    meat: Number(attributes["Meat"] ?? "0"),
-    monsterLevelMultiplier: Number(attributes["MLMult"] ?? "1"),
+    meat: parseExpression(attributes["Meat"]),
+    monsterLevelMultiplier: parseExpression(attributes["MLMult"], 1),
     nobanish: !!attributes["NOBANISH"],
     nocopy: !!attributes["NOCOPY"],
     nomanuel: !!attributes["NOMANUEL"],
     nowander: !!attributes["NOWANDER"],
     phylum: String(attributes["P"]),
-    physicalResistance: Number(attributes["Phys"] ?? "0"),
+    physicalResistance: parseExpression(attributes["Phys"]),
     poison: String(attributes["Poison"] ?? "") || null,
-    scaling: Number(attributes["Scale"] ?? "0"),
-    scalingCap: Number(attributes["Cap"] ?? "0"),
-    scalingFloor: Number(attributes["Floor"] ?? "0"),
+    scaling: parseExpression(attributes["Scale"]),
+    scalingCap: parseExpression(attributes["Cap"]),
+    scalingFloor: parseExpression(attributes["Floor"]),
     skillBlockChance: Number(attributes["Skill"] ?? "0") / 100,
     snake: !!attributes["SNAKE"],
     spellBlockChance: Number(attributes["Spell"] ?? "0") / 100,
     sprinkles: [
-      Number(attributes["SprinkleMin"] ?? "0"),
-      Number(attributes["SprinkleMax"] ?? "0"),
+      parseExpression(attributes["SprinkleMin"]),
+      parseExpression(attributes["SprinkleMax"]),
     ],
     superlikely: !!attributes["SUPERLIKELY"],
     ultrarare: !!attributes["ULTRARARE"],
@@ -170,4 +176,72 @@ export async function loadMonsters(lastKnownSize = 0) {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseMonster),
   };
+}
+
+export async function populateMonsters() {
+  const monsters = await loadMonsters();
+
+  const uniqueMonsters = monsters.data.filter((m) => m.id !== 0);
+
+  await populateEntity(uniqueMonsters, "monsters", [
+    ["article", "TEXT NOT NULL"],
+    ["attack", "TEXT NOT NULL"],
+    ["boss", "BOOLEAN NOT NULL"],
+    ["defence", "TEXT NOT NULL"],
+    ["drippy", "BOOLEAN NOT NULL"],
+    ["element", "TEXT NOT NULL"],
+    ["elementalAttack", "TEXT NOT NULL"],
+    ["elementalDefence", "TEXT NOT NULL"],
+    ["elementalResistance", "TEXT NOT NULL"],
+    ["experience", "TEXT"],
+    ["free", "BOOLEAN NOT NULL"],
+    ["ghost", "BOOLEAN NOT NULL"],
+    ["groupSize", "INTEGER NOT NULL"],
+    ["hp", "TEXT NOT NULL"],
+    ["id", "INTEGER PRIMARY KEY"],
+    ["image", "JSONB NOT NULL"],
+    ["initiative", "TEXT NOT NULL"],
+    ["itemBlockChance", "REAL NOT NULL"],
+    ["lucky", "BOOLEAN NOT NULL"],
+    ["manuel", "TEXT"],
+    ["meat", "TEXT NOT NULL"],
+    ["monsterLevelMultiplier", "TEXT NOT NULL"],
+    ["name", "TEXT NOT NULL"],
+    ["nobanish", "BOOLEAN NOT NULL"],
+    ["nocopy", "BOOLEAN NOT NULL"],
+    ["nomanuel", "BOOLEAN NOT NULL"],
+    ["nowander", "BOOLEAN NOT NULL"],
+    ["phylum", "TEXT NOT NULL"],
+    ["physicalResistance", "TEXT NOT NULL"],
+    ["poison", "TEXT"],
+    ["scaling", "TEXT NOT NULL"],
+    ["scalingCap", "TEXT NOT NULL"],
+    ["scalingFloor", "TEXT NOT NULL"],
+    ["skillBlockChance", "REAL NOT NULL"],
+    ["snake", "BOOLEAN NOT NULL"],
+    ["spellBlockChance", "REAL NOT NULL"],
+    ["sprinkles", "JSONB NOT NULL"],
+    ["superlikely", "BOOLEAN NOT NULL"],
+    ["ultrarare", "BOOLEAN NOT NULL"],
+    ["wanderer", "BOOLEAN NOT NULL"],
+    ["wiki", "TEXT"],
+  ]);
+
+  const monsterDrops = uniqueMonsters.flatMap((m) =>
+    m.drops.map((d) => ({ monster: m.id, ...d })),
+  );
+
+  await populateEntity<(typeof monsterDrops)[number], false>(
+    monsterDrops,
+    "monsterDrops",
+    [
+      ["monster", "INTEGER NOT NULL REFERENCES monsters(id)"],
+      ["item", "INTEGER NOT NULL REFERENCES items(id)"],
+      ["rate", "INTEGER NOT NULL"],
+      ["category", "CHAR"],
+    ],
+    async (d) => {
+      d.item = await resolveReference("items", "name", d.item);
+    },
+  );
 }

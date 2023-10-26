@@ -1,3 +1,4 @@
+import { populateEntity } from "../db";
 import { isMemberOfEnum, loadMafiaData } from "../utils";
 
 export enum ItemUse {
@@ -102,4 +103,20 @@ export async function loadItems(lastKnownSize = 0) {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseItem),
   };
+}
+
+export async function populateItems() {
+  return populateEntity(loadItems, "items", [
+    ["id", "INTEGER PRIMARY KEY"],
+    ["name", "TEXT NOT NULL"],
+    ["descid", "TEXT UNIQUE"],
+    ["image", "TEXT NOT NULL"],
+    ["uses", "JSONB NOT NULL"],
+    ["quest", "BOOLEAN NOT NULL"],
+    ["gift", "BOOLEAN NOT NULL"],
+    ["tradeable", "BOOLEAN NOT NULL"],
+    ["discardable", "BOOLEAN NOT NULL"],
+    ["autosell", "INTEGER NOT NULL"],
+    ["plural", "TEXT"],
+  ]);
 }

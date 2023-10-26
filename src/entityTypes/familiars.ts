@@ -1,3 +1,4 @@
+import { populateEntity, resolveReference } from "../db";
 import { isMemberOfEnum, loadMafiaData } from "../utils";
 
 export enum FamiliarCategory {
@@ -34,7 +35,7 @@ export type FamiliarType = {
   name: string;
   image: string;
   categories: FamiliarCategory[];
-  larva: string;
+  larva: string | null;
   equipment: string | null;
   arenaStats: {
     cageMatch: number;
@@ -61,7 +62,7 @@ const parseFamiliar = (parts: string[]): FamiliarType => ({
     .split(",")
     .map((p) => p.trim())
     .filter(isValidCategory),
-  larva: parts[4],
+  larva: parts[4] || null,
   equipment: parts[5] || null,
   arenaStats: {
     cageMatch: Number(parts[6]),
@@ -88,4 +89,29 @@ export async function loadFamiliars(lastKnownSize = 0) {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseFamiliar),
   };
+}
+
+export async function populateFamiliars() {
+  return populateEntity(
+    loadFamiliars,
+    "familiars",
+    [
+      ["id", "INTEGER PRIMARY KEY"],
+      ["name", "TEXT NOT NULL"],
+      ["image", "TEXT NOT NULL"],
+      ["categories", "JSONB NOT NULL"],
+      ["larva", "INTEGER REFERENCES items(id)"],
+      ["equipment", "INTEGER REFERENCES items(id)"],
+      ["arenaStats", "JSONB NOT NULL"],
+      ["attributes", "JSONB NOT NULL"],
+    ],
+    async (familiar) => {
+      familiar.larva = await resolveReference("items", "name", familiar.larva);
+      familiar.equipment = await resolveReference(
+        "items",
+        "name",
+        familiar.equipment,
+      );
+    },
+  );
 }

@@ -1,3 +1,4 @@
+import { populateEntity, resolveReference } from "../db";
 import { loadMafiaData } from "../utils";
 
 const parseEquipment = (equipmentList = "") => equipmentList.trim().split(", ");
@@ -50,4 +51,48 @@ export async function loadOutfits(lastKnownSize = 0) {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseOutfit),
   };
+}
+
+export async function populateOutfits() {
+  const outfits = await loadOutfits();
+
+  await populateEntity(outfits.data, "outfits", [
+    ["id", "INTEGER PRIMARY KEY"],
+    ["name", "TEXT NOT NULL"],
+    ["image", "TEXT NOT NULL"],
+  ]);
+
+  const outfitEquipment = outfits.data.flatMap((o) =>
+    o.equipment.map((e) => ({ outfit: o.id, equipment: e })),
+  );
+
+  const outfitTreats = outfits.data.flatMap((o) =>
+    o.treats.map((t) => ({ outfit: o.id, ...t })),
+  );
+
+  await Promise.all([
+    populateEntity(
+      outfitEquipment,
+      "outfitEquipment",
+      [
+        ["outfit", "INTEGER NOT NULL REFERENCES outfits(id)"],
+        ["equipment", "INTEGER NOT NULL REFERENCES items(id)"],
+      ],
+      async (d) => {
+        d.equipment = await resolveReference("items", "name", d.equipment);
+      },
+    ),
+    populateEntity(
+      outfitTreats,
+      "outfitTreats",
+      [
+        ["outfit", "INTEGER REFERENCES outfits(id)"],
+        ["item", "INTEGER REFERENCES items(id)"],
+        ["chance", "REAL NOT NULL"],
+      ],
+      async (d) => {
+        d.item = await resolveReference("items", "name", d.item);
+      },
+    ),
+  ]);
 }

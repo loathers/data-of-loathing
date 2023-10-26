@@ -1,3 +1,4 @@
+import { populateEntity } from "../db";
 import { loadMafiaData, memberOfEnumElse, tokenizeAttributes } from "../utils";
 
 export enum LocationDifficulty {
@@ -27,8 +28,8 @@ const validEnvironment = memberOfEnumElse(
 );
 
 export type LocationType = {
-  id: number;
   name: string;
+  id: number | null;
   zone: string;
   url: string;
   difficulty: LocationDifficulty;
@@ -43,7 +44,7 @@ export type LocationType = {
 };
 
 const parseSnarfblat = (url: string) =>
-  Number(url.match(/^adventure=(\d+)$/)?.[1] ?? "-1");
+  Number(url.match(/^adventure=(\d+)$/)?.[1]) || null;
 
 const parseAttributes = (attributesString: string) => {
   const attributes = tokenizeAttributes(attributesString.toLowerCase());
@@ -82,4 +83,19 @@ export async function loadLocations(lastKnownSize = 0) {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseLocation),
   };
+}
+
+export async function populateLocations() {
+  return populateEntity(loadLocations, "locations", [
+    ["id", "INTEGER"],
+    ["name", "TEXT PRIMARY KEY"],
+    ["zone", "TEXT NOT NULL"],
+    ["url", "TEXT NOT NULL"],
+    ["difficulty", "TEXT NOT NULL"],
+    ["environment", "TEXT NOT NULL"],
+    ["statRequirement", "INTEGER NOT NULL"],
+    ["waterLevel", "INTEGER"],
+    ["overdrunk", "BOOLEAN NOT NULL"],
+    ["nowander", "BOOLEAN NOT NULL"],
+  ]);
 }

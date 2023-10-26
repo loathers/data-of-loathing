@@ -1,3 +1,4 @@
+import { populateEntity } from "../db";
 import { loadMafiaData, memberOfEnumElse } from "../utils";
 
 export enum SkillCategory {
@@ -24,7 +25,7 @@ export type SkillType = {
   category: SkillCategory;
   mpCost: number;
   duration: number;
-  level: number;
+  level: number | null;
 };
 
 export const getMaxSkillLevel = ({ id }: { id: number }) => {
@@ -169,11 +170,11 @@ export const isSkillPermable = ({ id }: { id: number }) => {
 const parseSkill = (parts: string[]): SkillType => ({
   id: Number(parts[0]),
   name: parts[1],
-  image: parts[2],
+  image: parts[2] || "nopic.gif",
   category: validType(Number(parts[3])),
   mpCost: Number(parts[4]),
   duration: Number(parts[5]),
-  level: parts[6] ? Number(parts[6]) : 0,
+  level: parts[6] ? Number(parts[6]) : null,
 });
 
 export async function loadSkills(): Promise<{
@@ -192,4 +193,16 @@ export async function loadSkills(lastKnownSize = 0) {
     ...raw,
     data: raw.data.filter((p) => p.length > 2).map(parseSkill),
   };
+}
+
+export async function populateSkills() {
+  return populateEntity(loadSkills, "skills", [
+    ["id", "INTEGER PRIMARY KEY"],
+    ["name", "TEXT NOT NULL"],
+    ["image", "TEXT NOT NULL"],
+    ["category", "INTEGER NOT NULL"],
+    ["mpCost", "INTEGER NOT NULL"],
+    ["duration", "INTEGER NOT NULL"],
+    ["level", "INTEGER"],
+  ]);
 }
