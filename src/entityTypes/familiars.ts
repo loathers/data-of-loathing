@@ -1,4 +1,4 @@
-import { populateEntity, resolveReference } from "../db";
+import { defineEnum, populateEntity, resolveReference } from "../db";
 import { isMemberOfEnum, loadMafiaData } from "../utils";
 
 export enum FamiliarCategory {
@@ -37,12 +37,10 @@ export type FamiliarType = {
   categories: FamiliarCategory[];
   larva: string | null;
   equipment: string | null;
-  arenaStats: {
-    cageMatch: number;
-    scavengerHunt: number;
-    obstacleCourse: number;
-    hideAndSeek: number;
-  };
+  cageMatch: number;
+  scavengerHunt: number;
+  obstacleCourse: number;
+  hideAndSeek: number;
   attributes: string[];
 };
 
@@ -64,12 +62,10 @@ const parseFamiliar = (parts: string[]): FamiliarType => ({
     .filter(isValidCategory),
   larva: parts[4] || null,
   equipment: parts[5] || null,
-  arenaStats: {
-    cageMatch: Number(parts[6]),
-    scavengerHunt: Number(parts[7]),
-    obstacleCourse: Number(parts[8]),
-    hideAndSeek: Number(parts[9]),
-  },
+  cageMatch: Number(parts[6]),
+  scavengerHunt: Number(parts[7]),
+  obstacleCourse: Number(parts[8]),
+  hideAndSeek: Number(parts[9]),
   attributes: parts[10]?.split(",") ?? [],
 });
 
@@ -92,6 +88,7 @@ export async function loadFamiliars(lastKnownSize = 0) {
 }
 
 export async function populateFamiliars() {
+  const category = await defineEnum("FamiliarCategory", FamiliarCategory);
   return populateEntity(
     loadFamiliars,
     "familiars",
@@ -99,19 +96,19 @@ export async function populateFamiliars() {
       ["id", "INTEGER PRIMARY KEY"],
       ["name", "TEXT NOT NULL"],
       ["image", "TEXT NOT NULL"],
-      ["categories", "JSONB NOT NULL"],
+      ["categories", `${category}[] NOT NULL`],
       ["larva", "INTEGER REFERENCES items(id)"],
       ["equipment", "INTEGER REFERENCES items(id)"],
-      ["arenaStats", "JSONB NOT NULL"],
-      ["attributes", "JSONB NOT NULL"],
+      ["cageMatch", "INTEGER NOT NULL"],
+      ["scavengerHunt", "INTEGER NOT NULL"],
+      ["obstacleCourse", "INTEGER NOT NULL"],
+      ["hideAndSeek", "INTEGER NOT NULL"],
+      ["attributes", "TEXT[] NOT NULL"],
     ],
-    async (familiar) => {
-      familiar.larva = await resolveReference("items", "name", familiar.larva);
-      familiar.equipment = await resolveReference(
-        "items",
-        "name",
-        familiar.equipment,
-      );
-    },
+    async (familiar) => ({
+      ...familiar,
+      larva: await resolveReference("items", "name", familiar.larva),
+      equipment: await resolveReference("items", "name", familiar.equipment),
+    }),
   );
 }

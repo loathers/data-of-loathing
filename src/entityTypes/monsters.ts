@@ -1,4 +1,4 @@
-import { populateEntity, resolveReference } from "../db";
+import { defineEnum, populateEntity, resolveReference } from "../db";
 import {
   loadMafiaData,
   memberOfEnumElse,
@@ -183,15 +183,17 @@ export async function populateMonsters() {
 
   const uniqueMonsters = monsters.data.filter((m) => m.id !== 0);
 
+  const element = await defineEnum("monsterElement", MonsterElement);
+
   await populateEntity(uniqueMonsters, "monsters", [
     ["article", "TEXT NOT NULL"],
     ["attack", "TEXT NOT NULL"],
     ["boss", "BOOLEAN NOT NULL"],
     ["defence", "TEXT NOT NULL"],
     ["drippy", "BOOLEAN NOT NULL"],
-    ["element", "TEXT NOT NULL"],
-    ["elementalAttack", "TEXT NOT NULL"],
-    ["elementalDefence", "TEXT NOT NULL"],
+    ["element", `${element} NOT NULL`],
+    ["elementalAttack", `${element} NOT NULL`],
+    ["elementalDefence", `${element} NOT NULL`],
     ["elementalResistance", "TEXT NOT NULL"],
     ["experience", "TEXT"],
     ["free", "BOOLEAN NOT NULL"],
@@ -199,7 +201,7 @@ export async function populateMonsters() {
     ["groupSize", "INTEGER NOT NULL"],
     ["hp", "TEXT NOT NULL"],
     ["id", "INTEGER PRIMARY KEY"],
-    ["image", "JSONB NOT NULL"],
+    ["image", "TEXT[] NOT NULL"],
     ["initiative", "TEXT NOT NULL"],
     ["itemBlockChance", "REAL NOT NULL"],
     ["lucky", "BOOLEAN NOT NULL"],
@@ -220,7 +222,7 @@ export async function populateMonsters() {
     ["skillBlockChance", "REAL NOT NULL"],
     ["snake", "BOOLEAN NOT NULL"],
     ["spellBlockChance", "REAL NOT NULL"],
-    ["sprinkles", "JSONB NOT NULL"],
+    ["sprinkles", "TEXT[] NOT NULL"],
     ["superlikely", "BOOLEAN NOT NULL"],
     ["ultrarare", "BOOLEAN NOT NULL"],
     ["wanderer", "BOOLEAN NOT NULL"],
@@ -231,6 +233,11 @@ export async function populateMonsters() {
     m.drops.map((d) => ({ monster: m.id, ...d })),
   );
 
+  const dropCategory = await defineEnum(
+    "MonsterDropCategory",
+    MonsterDropCategory,
+  );
+
   await populateEntity<(typeof monsterDrops)[number], false>(
     monsterDrops,
     "monsterDrops",
@@ -238,10 +245,11 @@ export async function populateMonsters() {
       ["monster", "INTEGER NOT NULL REFERENCES monsters(id)"],
       ["item", "INTEGER NOT NULL REFERENCES items(id)"],
       ["rate", "INTEGER NOT NULL"],
-      ["category", "CHAR"],
+      ["category", `${dropCategory}`],
     ],
-    async (d) => {
-      d.item = await resolveReference("items", "name", d.item);
-    },
+    async (drop) => ({
+      ...drop,
+      item: await resolveReference("items", "name", drop.item),
+    }),
   );
 }

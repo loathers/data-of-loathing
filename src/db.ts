@@ -16,13 +16,13 @@ export async function resolveReference(
   tableName: string,
   columnName: string,
   name: string | null,
-) {
+): Promise<number | null> {
   // We cast all results to string here just to keep the type system happy.
   // Since the next step is converting to CSV, this is all handled.
 
-  if (name === null) return null as unknown as string;
+  if (name === null) return null;
   const idPrefix = name.match(/^\[(\d+)]/);
-  if (idPrefix) return Number(idPrefix[1]) as unknown as string;
+  if (idPrefix) return Number(idPrefix[1]);
 
   const cacheKey = referenceCacheKey(tableName, columnName, name);
   if (!referenceCache.has(cacheKey)) {
@@ -44,12 +44,13 @@ export async function resolveReference(
     }
   }
 
-  return referenceCache.get(cacheKey) as unknown as string;
+  return referenceCache.get(cacheKey)!;
 }
 
 export async function populateEntity<
   T extends Record<string, unknown>,
   ColumnsMatch extends boolean = true,
+  U = Record<keyof T, unknown>,
 >(
   loader: (() => Promise<{ data: T[] }>) | T[],
   tableName: string,
@@ -57,35 +58,46 @@ export async function populateEntity<
     columnName: ColumnsMatch extends true ? keyof T : string,
     typeAndConstraints: string,
   ][],
-  transform?: (datum: T) => Promise<void>,
+  transform?: (datum: T) => Promise<U>,
 ) {
   console.log("Populating", tableName);
   await sql`SET client_min_messages = warning`;
   await sql`DROP TABLE IF EXISTS ${sql(tableName)} CASCADE`;
-  await sql.unsafe(`
-        CREATE TABLE "${tableName}" (
-          ${columns
-            .map(
-              ([columnName, typeAndConstraint]) =>
-                `"${String(columnName)}" ${typeAndConstraint}`,
-            )
-            .join(", ")}
-        )
-      `);
+  const createQuery = `
+  CREATE TABLE "${tableName}" (
+    ${columns
+      .map(
+        ([columnName, typeAndConstraint]) =>
+          `"${String(columnName)}" ${typeAndConstraint}`,
+      )
+      .join(", ")}
+  )
+`;
+  console.log(createQuery);
+  await sql.unsafe(createQuery);
 
   // Load items and set up readable CSV stream
   const { data } = Array.isArray(loader) ? { data: loader } : await loader();
 
-  if (transform) {
-    for (const datum of data) {
-      await transform(datum);
-    }
-  }
+  const transformed = transform
+    ? await Promise.all(data.map((d) => transform(d)))
+    : data;
 
-  const csv = stringify(data, {
+  const csv = stringify(transformed, {
     header: true,
     columns: columns.map(([columnName]) => columnName as string),
-    cast: { boolean: (v) => (v ? "t" : "f") },
+    cast: {
+      boolean: (v) => (v ? "t" : "f"),
+      object: (o) => {
+        if (Array.isArray(o)) {
+          console.log(o);
+          return `{${o
+            .map((v) => `"${String(v).replaceAll(/(["'])/g, "\\$1")}"`)
+            .join(",")}}`;
+        }
+        return JSON.stringify(o);
+      },
+    },
   });
 
   // Set up writeable copy stream to database
@@ -95,4 +107,17 @@ export async function populateEntity<
 
   // Stream!
   await pipeline(csv, query);
+}
+
+export async function defineEnum<Enum extends { [s: string]: string }>(
+  name: string,
+  e: Enum,
+) {
+  await sql.unsafe(`DROP TYPE IF EXISTS "${name}" CASCADE`);
+  const createQuery = `CREATE TYPE "${name}" AS ENUM (${Object.values(e)
+    .sort()
+    .map((v) => `'${v}'`)
+    .join(",")})`;
+  await sql.unsafe(createQuery);
+  return `"${name}"`;
 }

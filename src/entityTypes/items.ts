@@ -1,4 +1,4 @@
-import { populateEntity } from "../db";
+import { defineEnum, populateEntity } from "../db";
 import { isMemberOfEnum, loadMafiaData } from "../utils";
 
 export enum ItemUse {
@@ -106,12 +106,13 @@ export async function loadItems(lastKnownSize = 0) {
 }
 
 export async function populateItems() {
+  const use = await defineEnum("ItemUse", ItemUse);
   return populateEntity(loadItems, "items", [
     ["id", "INTEGER PRIMARY KEY"],
     ["name", "TEXT NOT NULL"],
     ["descid", "TEXT UNIQUE"],
     ["image", "TEXT NOT NULL"],
-    ["uses", "JSONB NOT NULL"],
+    ["uses", `${use}[] NOT NULL`],
     ["quest", "BOOLEAN NOT NULL"],
     ["gift", "BOOLEAN NOT NULL"],
     ["tradeable", "BOOLEAN NOT NULL"],

@@ -61,8 +61,9 @@ export async function populateClasses() {
       ["liverCapacity", "INTEGER"],
       ["spleenCapacity", "INTEGER"],
     ],
-    async (clazz) => {
-      clazz.path = await resolveReference("paths", "enumName", clazz.path);
-    },
+    async (clazz) => ({
+      ...clazz,
+      path: await resolveReference("paths", "enumName", clazz.path),
+    }),
   );
 }

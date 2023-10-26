@@ -78,9 +78,10 @@ export async function populateOutfits() {
         ["outfit", "INTEGER NOT NULL REFERENCES outfits(id)"],
         ["equipment", "INTEGER NOT NULL REFERENCES items(id)"],
       ],
-      async (d) => {
-        d.equipment = await resolveReference("items", "name", d.equipment);
-      },
+      async (equip) => ({
+        ...equip,
+        equipment: await resolveReference("items", "name", equip.equipment),
+      }),
     ),
     populateEntity(
       outfitTreats,
@@ -90,9 +91,10 @@ export async function populateOutfits() {
         ["item", "INTEGER REFERENCES items(id)"],
         ["chance", "REAL NOT NULL"],
       ],
-      async (d) => {
-        d.item = await resolveReference("items", "name", d.item);
-      },
+      async (treat) => ({
+        ...treat,
+        item: await resolveReference("items", "name", treat.item),
+      }),
     ),
   ]);
 }

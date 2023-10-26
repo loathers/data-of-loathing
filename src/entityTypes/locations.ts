@@ -1,4 +1,4 @@
-import { populateEntity } from "../db";
+import { defineEnum, populateEntity } from "../db";
 import { loadMafiaData, memberOfEnumElse, tokenizeAttributes } from "../utils";
 
 export enum LocationDifficulty {
@@ -86,13 +86,17 @@ export async function loadLocations(lastKnownSize = 0) {
 }
 
 export async function populateLocations() {
+  const [environment, difficulty] = await Promise.all([
+    defineEnum("LocationEnvironment", LocationEnvironment),
+    defineEnum("LocationDifficulty", LocationDifficulty),
+  ]);
   return populateEntity(loadLocations, "locations", [
     ["id", "INTEGER"],
     ["name", "TEXT PRIMARY KEY"],
     ["zone", "TEXT NOT NULL"],
     ["url", "TEXT NOT NULL"],
-    ["difficulty", "TEXT NOT NULL"],
-    ["environment", "TEXT NOT NULL"],
+    ["difficulty", `${difficulty} NOT NULL`],
+    ["environment", `${environment} NOT NULL`],
     ["statRequirement", "INTEGER NOT NULL"],
     ["waterLevel", "INTEGER"],
     ["overdrunk", "BOOLEAN NOT NULL"],

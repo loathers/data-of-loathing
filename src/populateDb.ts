@@ -9,15 +9,25 @@ import { populatePaths } from "./entityTypes/paths";
 import { populateSkills } from "./entityTypes/skills";
 
 async function main() {
-  await Promise.all([
-    populateEffects(),
-    populateItems().then(() =>
-      Promise.all([populateFamiliars(), populateMonsters(), populateOutfits()]),
-    ),
-    populateLocations(),
-    populatePaths().then(() => populateClasses()),
-    populateSkills(),
-  ]);
+  //   await Promise.all([
+  //     populateEffects(),
+  //     populateItems().then(() =>
+  //       Promise.all([populateFamiliars(), populateMonsters(), populateOutfits()]),
+  //     ),
+  //     populateLocations(),
+  //     populatePaths().then(() => populateClasses()),
+  //     populateSkills(),
+  //   ]);
+
+  await populateEffects();
+  await populateItems();
+  await populateFamiliars();
+  await populateMonsters();
+  await populateOutfits();
+  await populateLocations();
+  await populatePaths();
+  await populateClasses();
+  await populateSkills();
 
   process.exit();
 }

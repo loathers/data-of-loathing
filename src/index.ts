@@ -29,7 +29,7 @@ app.use(
         connectionFilterRelations: true,
         connectionFilterComputedColumns: false,
         connectionFilterSetofFunctions: false,
-        connectionFilterArrays: false,
+        connectionFilterArrays: true,
         connectionFilterAllowedOperators: [
           "isNull",
           "equalTo",
@@ -40,6 +40,8 @@ app.use(
           "greaterThanOrEqualTo",
           "in",
           "notIn",
+          "anyEqualTo",
+          "anyNotEqualTo",
         ],
       },
     },
