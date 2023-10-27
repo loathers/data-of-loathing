@@ -238,7 +238,7 @@ export async function populateMonsters() {
     MonsterDropCategory,
   );
 
-  await populateEntity<(typeof monsterDrops)[number], false>(
+  await populateEntity(
     monsterDrops,
     "monsterDrops",
     [

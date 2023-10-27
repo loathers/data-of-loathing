@@ -15,8 +15,26 @@ export type EffectType = {
   image: string;
   descid: string;
   quality: EffectQuality;
-  attributes: string[];
+  nohookah: boolean;
+  nopvp: boolean;
+  noremove: boolean;
+  song: boolean;
   actions: string[];
+};
+
+const parseAttributes = (attributesString?: string) => {
+  const attributes =
+    attributesString
+      ?.split(",")
+      .map((p) => p.trim())
+      .filter((p) => p !== "none") ?? [];
+
+  return {
+    nohookah: attributes.includes("nohookah"),
+    nopvp: attributes.includes("nopvp"),
+    noremove: attributes.includes("noremove"),
+    song: attributes.includes("song"),
+  };
 };
 
 const parseEffect = (parts: string[]): EffectType => ({
@@ -25,11 +43,7 @@ const parseEffect = (parts: string[]): EffectType => ({
   image: parts[2],
   descid: parts[3],
   quality: validQuality(parts[4]),
-  attributes:
-    parts[5]
-      ?.split(",")
-      .map((p) => p.trim())
-      .filter((p) => p !== "none") ?? [],
+  ...parseAttributes(parts[5]),
   actions: parts[6]?.split("|") ?? [],
 });
 
@@ -59,7 +73,10 @@ export async function populateEffects() {
     ["descid", "TEXT UNIQUE"],
     ["image", "TEXT NOT NULL"],
     ["quality", `${quality} NOT NULL`],
-    ["attributes", "TEXT[] NOT NULL"],
+    ["nohookah", "BOOLEAN NOT NULL"],
+    ["nopvp", "BOOLEAN NOT NULL"],
+    ["noremove", "BOOLEAN NOT NULL"],
+    ["song", "BOOLEAN NOT NULL"],
     ["actions", "TEXT[] NOT NULL"],
   ]);
 }

@@ -2,7 +2,9 @@ import postgres from "postgres";
 import { stringify } from "csv-stringify";
 import { pipeline } from "stream/promises";
 
-export const sql = postgres("postgres://postgres:postgres@localhost:5432");
+export const sql = postgres("postgres://postgres:postgres@localhost:5432", {
+  onnotice: () => {},
+});
 
 const referenceCache = new Map<string, number | null>();
 
@@ -49,19 +51,14 @@ export async function resolveReference(
 
 export async function populateEntity<
   T extends Record<string, unknown>,
-  ColumnsMatch extends boolean = true,
   U = Record<keyof T, unknown>,
 >(
   loader: (() => Promise<{ data: T[] }>) | T[],
   tableName: string,
-  columns: [
-    columnName: ColumnsMatch extends true ? keyof T : string,
-    typeAndConstraints: string,
-  ][],
+  columns: [columnName: keyof T, typeAndConstraints: string][],
   transform?: (datum: T) => Promise<U>,
 ) {
   console.log("Populating", tableName);
-  await sql`SET client_min_messages = warning`;
   await sql`DROP TABLE IF EXISTS ${sql(tableName)} CASCADE`;
   const createQuery = `
   CREATE TABLE "${tableName}" (
@@ -73,7 +70,6 @@ export async function populateEntity<
       .join(", ")}
   )
 `;
-  console.log(createQuery);
   await sql.unsafe(createQuery);
 
   // Load items and set up readable CSV stream
@@ -90,7 +86,6 @@ export async function populateEntity<
       boolean: (v) => (v ? "t" : "f"),
       object: (o) => {
         if (Array.isArray(o)) {
-          console.log(o);
           return `{${o
             .map((v) => `"${String(v).replaceAll(/(["'])/g, "\\$1")}"`)
             .join(",")}}`;
