@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
-import { createFetchResponse, expectNotNull } from "../testUtils";
+import { createFetchResponse, expectNotNull } from "../../testUtils";
 import {
   LocationDifficulty,
   LocationEnvironment,

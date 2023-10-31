@@ -9,7 +9,7 @@ import { populateOutfits } from "./entityTypes/outfits";
 import { populatePaths } from "./entityTypes/paths";
 import { populateSkills } from "./entityTypes/skills";
 
-async function main() {
+export async function populateDatabase() {
   await Promise.all([
     populateEffects(),
     populateItems().then(() =>
@@ -27,5 +27,3 @@ async function main() {
 
   process.exit();
 }
-
-main();

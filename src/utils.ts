@@ -1,95 +1,3 @@
-import { parse } from "java-parser";
-import { EnumCollector } from "./EnumCollector";
-
-const MAFIA_BASE =
-  "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src";
-
-async function noSizeChange(url: string, lastKnownSize: number) {
-  if (lastKnownSize <= 0) return false;
-  const sizeCheck = await fetch(url, { method: "HEAD" });
-  const newSize = Number(sizeCheck.headers.get("Content-Length") ?? 1);
-  if (newSize === lastKnownSize) return true;
-}
-
-async function load<T>(
-  url: string,
-  lastKnownSize: number,
-  processRaw: (raw: string) => T,
-) {
-  if (await noSizeChange(url, lastKnownSize)) return null;
-  const request = await fetch(url);
-  const raw = await request.text();
-
-  return {
-    data: processRaw(raw),
-    size: Number(request.headers.get("Content-Length")),
-  };
-}
-
-export async function loadMafiaData(fileName: string, lastKnownSize = 0) {
-  const url = `${MAFIA_BASE}/data/${fileName}.txt`;
-
-  return await load(url, lastKnownSize, (raw) =>
-    raw
-      .split("\n")
-      .slice(1)
-      .filter((r) => r !== "" && !r.startsWith("#"))
-      .map((r) => r.split("\t")),
-  );
-}
-
-export async function loadMafiaEnum(
-  module: string,
-  lastKnownSize = 0,
-  enumName?: string,
-) {
-  const pieces = module.split(".");
-  const url = `${MAFIA_BASE}/${pieces.join("/")}.java`;
-
-  return await load(url, lastKnownSize, (raw) => {
-    const cst = parse(raw);
-
-    const enumCollector = new EnumCollector(
-      enumName || pieces[pieces.length - 1],
-    );
-    enumCollector.visit(cst);
-    return enumCollector.parserResult;
-  });
-}
-
-export const tuple = <T extends unknown[]>(args: [...T]): T => args;
-
-export const notNull = <T>(value: T | null): value is T => value !== null;
-
-export const arrayOf = <T>(items: T | T[]) =>
-  Array.isArray(items) ? items : [items];
-
-export const isMemberOfEnum =
-  <EnumValue, Enum extends { [s: string]: EnumValue }>(e: Enum) =>
-  (token: EnumValue): token is Enum[keyof Enum] =>
-    Object.values(e).includes(token as Enum[keyof Enum]);
-
-export const memberOfEnumElse = <
-  EnumValue,
-  Enum extends { [s: string]: EnumValue },
-  Fallback,
->(
-  e: Enum,
-  fallback: Fallback,
-) => {
-  const isMember = isMemberOfEnum(e);
-  return (token: EnumValue) => (isMember(token) ? token : fallback);
-};
-
-export function zip<A, B>(a1: A[], a2: B[]): [A, B][];
-export function zip<A, B, C>(a1: A[], a2: B[], a3: C[]): [A, B, C][];
-export function zip(...arrays: unknown[][]) {
-  const maxLength = Math.max(...arrays.map((x) => x.length));
-  return Array.from({ length: maxLength }).map((_, i) =>
-    Array.from({ length: arrays.length }, (_, k) => arrays[k][i]),
-  );
-}
-
 type Entity = { id: number; name: string };
 
 const sortEntities = (a: Entity, b: Entity) => {
@@ -119,16 +27,118 @@ export function disambiguate(entities: Entity[]) {
   return names;
 }
 
-export function tokenizeAttributes(attributesString: string) {
-  return [
-    ...attributesString.matchAll(
-      /([A-Za-z]+)(?:: (?:([^"[ ]+)|"([^"]+)"|(\[.*?])))?/g,
-    ),
-  ].reduce(
-    (acc, [, key, value, quotedValue, computedValue]) => ({
-      ...acc,
-      [key]: value ?? quotedValue ?? computedValue ?? true,
-    }),
-    {} as Record<string, string | boolean>,
-  );
-}
+export const getMaxSkillLevel = ({ id }: { id: number }) => {
+  switch (id) {
+    // Will probably be this way forever
+
+    // Slimy Sinews
+    case 46:
+      return 10;
+    // Slimy Synapes
+    case 47:
+      return 10;
+    // Slimy Shoulders
+    case 48:
+      return 10;
+    // Summon Annoyance
+    case 107:
+      return 9;
+    // Belch The Rainbow
+    case 117:
+      return 11;
+    // Implode Universe
+    case 188:
+      return 13;
+
+    // Will change in future
+
+    // Pirate Bellow
+    case 118:
+      return 7;
+    // Summon Holiday Fun
+    case 121:
+      return 6;
+    // Summon Carrot
+    case 128:
+      return 6;
+    // Bear Essence
+    case 134:
+      return 6;
+    // Summon Kokomo Resort Pass
+    case 135:
+      return 2;
+    // Calculate the Universe
+    case 144:
+      return 5;
+    // Experience Safari
+    case 180:
+      return 4;
+    // Toggle Optimality
+    case 7254:
+      return 3;
+
+    default:
+      return 0;
+  }
+};
+
+export const isSkillPermable = ({ id }: { id: number }) => {
+  // Random old skills
+  if (id < 10) return false;
+
+  // Bad Moon
+  if (id > 20 && id <= 27) return false;
+
+  // Way of the Surprising Fist skills
+  if (id > 63 && id <= 73) return false;
+
+  switch (id) {
+    // Blacklisted skills
+  
+    // VIP lounge skills
+    case 91: // Dog Tired
+    case 116: // Hollow Leg
+      return false;
+
+    // Nemesis skills
+    case 49: // Gothy Handwave
+    case 50: // Break It On Down
+    case 51: // Pop and Lock
+    case 52: // Run Like the Wind
+    case 3024: // Carboloading
+      return false;
+
+    case 6019: // Gemlli's March of Testery
+      return false;
+
+    // Avatar of West of Loathing skills
+    case 156: // Shoot
+      return false;
+
+    // Not permable but granted every ascension
+    case 174: // Incrdible Self-Estem
+      return false;
+
+    // S.I.T. Course certificate skills
+    case 218: // Cryptobotanist
+    case 219: // Insectologist
+    case 220: // Psychogeologist
+      return false;
+
+    // Replica skills
+    case 222: // Replica Emotionally Chipped
+      return false;
+
+    // Whitelisted skills
+
+    // Permable from PvP
+    case 7254: // Toggle Optimality
+      return true;
+
+    // Other skills from this class are not permable
+    case 17047: // Mild Curs
+      return true;
+  }
+
+  return id < 7000;
+};
