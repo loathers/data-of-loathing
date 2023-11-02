@@ -16,14 +16,15 @@ export async function populateDatabase() {
       Promise.all([
         populateFamiliars(),
         populateMonsters(),
-        populateOutfits(),
-        populateFoldGroups(),
       ]),
     ),
     populateLocations(),
     populatePaths().then(() => populateClasses()),
     populateSkills(),
   ]);
+
+  await populateOutfits();
+  await populateFoldGroups();
 
   process.exit();
 }
