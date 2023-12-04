@@ -2,7 +2,7 @@ import postgres from "postgres";
 import { stringify } from "csv-stringify";
 import { pipeline } from "stream/promises";
 
-export const sql = postgres("postgres://postgres:postgres@localhost:5432", {
+export const sql = postgres(process.env.DATABASE_URL!, {
   onnotice: () => {},
 });
 
