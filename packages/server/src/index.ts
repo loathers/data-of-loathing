@@ -8,32 +8,36 @@ await watch(15);
 
 const app = express();
 
-app.use(
-  postgraphile(process.env.DATABASE_URL, "public", {
-    watchPg: true,
-    graphiql: true,
-    enhanceGraphiql: true,
-    appendPlugins: [ConnectionFilterPlugin],
-    graphileBuildOptions: {
-      connectionFilterRelations: true,
-      connectionFilterComputedColumns: false,
-      connectionFilterSetofFunctions: false,
-      connectionFilterArrays: true,
-      connectionFilterAllowedOperators: [
-        "isNull",
-        "equalTo",
-        "notEqualTo",
-        "lessThan",
-        "lessThanOrEqualTo",
-        "greaterThan",
-        "greaterThanOrEqualTo",
-        "in",
-        "notIn",
-        "anyEqualTo",
-        "anyNotEqualTo",
-      ],
-    },
-  }),
-);
+app
+  .use(
+    postgraphile(process.env.DATABASE_URL, "public", {
+      watchPg: true,
+      graphiql: true,
+      enhanceGraphiql: true,
+      appendPlugins: [ConnectionFilterPlugin],
+      graphileBuildOptions: {
+        connectionFilterRelations: true,
+        connectionFilterComputedColumns: false,
+        connectionFilterSetofFunctions: false,
+        connectionFilterArrays: true,
+        connectionFilterAllowedOperators: [
+          "isNull",
+          "equalTo",
+          "notEqualTo",
+          "lessThan",
+          "lessThanOrEqualTo",
+          "greaterThan",
+          "greaterThanOrEqualTo",
+          "in",
+          "notIn",
+          "anyEqualTo",
+          "anyNotEqualTo",
+        ],
+      },
+    }),
+  )
+  .get("/", (req, res) => {
+    res.send("DATA OF LOATHING");
+  });
 
 app.listen(process.env.PORT || 3000);
