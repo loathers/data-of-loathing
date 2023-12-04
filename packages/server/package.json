@@ -25,5 +25,6 @@
     "postgraphile": "4.13.0",
     "postgraphile-plugin-connection-filter": "^2.3.0",
     "data-of-loathing-etl": "workspace:*"
-  }
+  },
+  "packageManager": "bun@1.0.6"
 }
