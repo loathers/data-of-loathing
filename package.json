@@ -3,10 +3,6 @@
   "version": "0.0.1",
   "author": "Sam Gaus <sam@gaus.co.uk>",
   "license": "MIT",
-  "devDependencies": {
-    "sst": "^2.33.2",
-    "typescript": "^5.2.2"
-  },
   "packageManager": "yarn@4.0.0",
   "workspaces": [
     "packages/*"

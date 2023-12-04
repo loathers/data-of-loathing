@@ -180,6 +180,6 @@ export class EnumCollector extends BaseJavaCstVisitorWithDefaults {
   }
 
   variableDeclaratorId(ctx: VariableDeclaratorIdCtx) {
-    return ctx.Identifier[0].image;
+    return ctx.Identifier?.[0].image;
   }
 }

@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createFetchResponse } from "../../testUtils";
+import { createFetchResponse } from "../../packages/functions/src/testUtils";
 import { loadClasses } from "./classes";
 import { dedent } from "ts-dedent";
 

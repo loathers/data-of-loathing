@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createFetchResponse, expectNotNull } from "../../testUtils";
+import { createFetchResponse, expectNotNull } from "../../packages/functions/src/testUtils";
 import { MonsterDropCategory, loadMonsters } from "./monsters";
 import { dedent } from "ts-dedent";
 

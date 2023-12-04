@@ -116,3 +116,7 @@ export async function defineEnum<Enum extends { [s: string]: string }>(
   await sql.unsafe(createQuery);
   return `"${name}"`;
 }
+
+export async function initialiseDatabase() {
+  
+}
