@@ -94,7 +94,7 @@ export const isSkillPermable = ({ id }: { id: number }) => {
 
   switch (id) {
     // Blacklisted skills
-  
+
     // VIP lounge skills
     case 91: // Dog Tired
     case 116: // Hollow Leg

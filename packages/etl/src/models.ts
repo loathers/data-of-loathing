@@ -88,9 +88,39 @@ export interface Monsters {
   boss: boolean;
   defence: string;
   drippy: boolean;
-  element: "bad spelling" | "cold" | "cute" | "hot" | "shadow" | "sleaze" | "slime" | "spooky" | "stench" | "supercold";
-  elementalAttack: "bad spelling" | "cold" | "cute" | "hot" | "shadow" | "sleaze" | "slime" | "spooky" | "stench" | "supercold";
-  elementalDefence: "bad spelling" | "cold" | "cute" | "hot" | "shadow" | "sleaze" | "slime" | "spooky" | "stench" | "supercold";
+  element:
+    | "bad spelling"
+    | "cold"
+    | "cute"
+    | "hot"
+    | "shadow"
+    | "sleaze"
+    | "slime"
+    | "spooky"
+    | "stench"
+    | "supercold";
+  elementalAttack:
+    | "bad spelling"
+    | "cold"
+    | "cute"
+    | "hot"
+    | "shadow"
+    | "sleaze"
+    | "slime"
+    | "spooky"
+    | "stench"
+    | "supercold";
+  elementalDefence:
+    | "bad spelling"
+    | "cold"
+    | "cute"
+    | "hot"
+    | "shadow"
+    | "sleaze"
+    | "slime"
+    | "spooky"
+    | "stench"
+    | "supercold";
   elementalResistance: string;
   experience: string | null;
   free: boolean;

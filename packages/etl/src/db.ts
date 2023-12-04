@@ -117,6 +117,4 @@ export async function defineEnum<Enum extends { [s: string]: string }>(
   return `"${name}"`;
 }
 
-export async function initialiseDatabase() {
-  
-}
+export async function initialiseDatabase() {}

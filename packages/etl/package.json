@@ -13,19 +13,17 @@
     "eslint-config-prettier": "^9.0.0",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2",
+    "ts-dedent": "^2.2.0",
     "vitest": "^0.34.6"
   },
   "scripts": {
-    "build": "tsc",
     "format": "prettier --write .",
-    "prepack": "yarn run build",
     "test": "vitest"
   },
   "dependencies": {
     "croner": "^7.0.5",
     "csv-stringify": "^6.4.4",
     "java-parser": "^2.0.5",
-    "postgres": "^3.4.1",
-    "ts-dedent": "^2.2.0"
+    "postgres": "^3.4.1"
   }
 }

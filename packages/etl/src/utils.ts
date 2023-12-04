@@ -95,7 +95,6 @@ export function tokenizeAttributes(attributesString: string) {
   );
 }
 
-
 export function zip<A, B>(a1: A[], a2: B[]): [A, B][];
 export function zip<A, B, C>(a1: A[], a2: B[], a3: C[]): [A, B, C][];
 export function zip(...arrays: unknown[][]) {
