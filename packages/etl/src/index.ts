@@ -12,7 +12,33 @@ import { populatePaths } from "./entityTypes/paths";
 import { populateSkills } from "./entityTypes/skills";
 import { sql } from "./db";
 
+async function createReadonlyRole() {
+  await sql`
+    DO
+    $do$
+    BEGIN
+      IF EXISTS (
+        SELECT FROM pg_catalog.pg_roles
+        WHERE rolname = 'readonly_role'
+      ) THEN
+        RAISE NOTICE 'Role "readonly_role" already exists. Skipping.';
+      ELSE
+        CREATE ROLE "readonly_role" LOGIN PASSWORD 'readonly_role';
+        GRANT CONNECT ON DATABASE "postgres" TO "readonly_role";
+        GRANT USAGE ON SCHEMA "public" TO "readonly_role";
+        GRANT SELECT ON ALL TABLES IN SCHEMA "public" TO "readonly_role";
+        GRANT SELECT ON ALL SEQUENCES IN SCHEMA "public" TO "readonly_role";
+        ALTER DEFAULT PRIVILEGES IN SCHEMA "public" GRANT SELECT ON TABLES TO "readonly_role";
+        ALTER DEFAULT PRIVILEGES IN SCHEMA "public" GRANT SELECT ON SEQUENCES TO "readonly_role";
+      END IF;
+    END
+    $do$;
+  `;
+}
+
 export async function populateDatabase() {
+  await createReadonlyRole();
+
   await Promise.all([
     populateEffects(),
     populateItems(),

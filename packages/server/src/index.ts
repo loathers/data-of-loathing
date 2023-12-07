@@ -10,7 +10,7 @@ const app = express();
 
 app
   .use(
-    postgraphile(process.env.DATABASE_URL, "public", {
+    postgraphile(process.env.READONLY_DATABASE_URL, "public", {
       watchPg: true,
       graphiql: true,
       enhanceGraphiql: true,
