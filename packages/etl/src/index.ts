@@ -49,7 +49,7 @@ export async function watch(every: number) {
         );
         const json =
           (await response.json()) as Endpoints["GET /repos/{owner}/{repo}/commits"]["response"]["data"];
-        return new Date(json.at(0)?.commit.author?.date ?? 0).getTime();
+        return new Date(json[0]?.commit.author?.date ?? 0).getTime();
       }),
     );
 
