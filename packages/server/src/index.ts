@@ -40,6 +40,7 @@ app
       graphiql: true,
       enhanceGraphiql: true,
       appendPlugins: [ConnectionFilterPlugin],
+      ownerConnectionString: process.env.DATABASE_URL,
       graphileBuildOptions: {
         connectionFilterRelations: true,
         connectionFilterComputedColumns: false,
