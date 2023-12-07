@@ -67,6 +67,7 @@ export type MonsterType = {
   nocopy: boolean;
   nomanuel: boolean;
   nowander: boolean;
+  nowish: boolean;
   phylum: string;
   physicalResistance: number | string;
   poison: string | null;
@@ -81,6 +82,7 @@ export type MonsterType = {
   ultrarare: boolean;
   wanderer: boolean;
   wiki: string | null;
+  wish: boolean;
 };
 
 const parseDrops = (drops: string[]): MonsterDrop[] => {
@@ -132,6 +134,7 @@ const parseAttributes = (
     nocopy: !!attributes["NOCOPY"],
     nomanuel: !!attributes["NOMANUEL"],
     nowander: !!attributes["NOWANDER"],
+    nowish: !!attributes["NOWISH"],
     phylum: String(attributes["P"]),
     physicalResistance: parseExpression(attributes["Phys"]),
     poison: String(attributes["Poison"] ?? "") || null,
@@ -148,6 +151,7 @@ const parseAttributes = (
     superlikely: !!attributes["SUPERLIKELY"],
     ultrarare: !!attributes["ULTRARARE"],
     wanderer: !!attributes["WANDERER"],
+    wish: !!attributes["WISH"],
     wiki: String(attributes["Wiki"] ?? "") || null,
   };
 };
@@ -213,6 +217,7 @@ export async function populateMonsters() {
     ["nocopy", "BOOLEAN NOT NULL"],
     ["nomanuel", "BOOLEAN NOT NULL"],
     ["nowander", "BOOLEAN NOT NULL"],
+    ["nowish", "BOOLEAN NOT NULL"],
     ["phylum", "TEXT NOT NULL"],
     ["physicalResistance", "TEXT NOT NULL"],
     ["poison", "TEXT"],
@@ -227,6 +232,7 @@ export async function populateMonsters() {
     ["ultrarare", "BOOLEAN NOT NULL"],
     ["wanderer", "BOOLEAN NOT NULL"],
     ["wiki", "TEXT"],
+    ["wish", "BOOLEAN NOT NULL"],
   ]);
 
   const monsterDrops = uniqueMonsters.flatMap((m) =>
