@@ -1,5 +1,8 @@
 import { defineEnum, populateEntity, resolveReference } from "../db";
-import { isMemberOfEnum, loadMafiaData } from "../utils";
+import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils";
+
+const VERSION = 1;
+const FILENAME = "familiars";
 
 export enum FamiliarCategory {
   Stat0 = "stat0", // vollyball-like
@@ -69,6 +72,10 @@ const parseFamiliar = (parts: string[]): FamiliarType => ({
   attributes: parts[10]?.split(",") ?? [],
 });
 
+export async function checkFamiliarsVersion() {
+  return await checkVersion("Familiars", FILENAME, VERSION);
+}
+
 export async function loadFamiliars(): Promise<{
   size: number;
   data: FamiliarType[];
@@ -77,7 +84,7 @@ export async function loadFamiliars(
   lastKnownSize: number,
 ): Promise<{ size: number; data: FamiliarType[] } | null>;
 export async function loadFamiliars(lastKnownSize = 0) {
-  const raw = await loadMafiaData("familiars", lastKnownSize);
+  const raw = await loadMafiaData(FILENAME, lastKnownSize);
 
   if (raw === null) return null;
 

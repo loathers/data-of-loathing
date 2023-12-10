@@ -1,5 +1,8 @@
 import { defineEnum, populateEntity } from "../db";
-import { isMemberOfEnum, loadMafiaData } from "../utils";
+import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils";
+
+const VERSION = 1;
+const FILENAME = "items";
 
 export enum ItemUse {
   // Primary
@@ -90,12 +93,16 @@ const parseItem = (parts: string[]): ItemType => ({
   plural: parts[7],
 });
 
+export async function checkItemsVersion() {
+  return await checkVersion("Items", FILENAME, VERSION);
+}
+
 export async function loadItems(): Promise<{ size: number; data: ItemType[] }>;
 export async function loadItems(
   lastKnownSize: number,
 ): Promise<{ size: number; data: ItemType[] } | null>;
 export async function loadItems(lastKnownSize = 0) {
-  const raw = await loadMafiaData("items", lastKnownSize);
+  const raw = await loadMafiaData(FILENAME, lastKnownSize);
 
   if (raw === null) return null;
 

@@ -1,5 +1,8 @@
 import { populateEntity } from "../db";
-import { loadMafiaData, memberOfEnumElse } from "../utils";
+import { checkVersion, loadMafiaData, memberOfEnumElse } from "../utils";
+
+const VERSION = 5;
+const FILENAME = "classskills";
 
 export enum SkillCategory {
   Passive = 0,
@@ -26,6 +29,25 @@ export type SkillType = {
   mpCost: number;
   duration: number;
   guildLevel: number | null;
+  maxLevel: number | null;
+  permable: boolean;
+};
+
+const parseAttributes = (id: number, attributesString = "") => {
+  const tokens = attributesString.split(",").reduce(
+    (acc, attr) => {
+      if (!attr.trim()) return acc;
+      const [key, value] = attr.split(":");
+      return { ...acc, [key.toLowerCase().trim()]: value.trim() };
+    },
+    {} as Record<string, string>,
+  );
+
+  return {
+    guildLevel: tokens["level"] ? Number(tokens["level"]) : null,
+    maxLevel: tokens["max level"] ? Number(tokens["max level"]) : null,
+    permable: tokens["permable"] ? tokens["permable"] === "true" : id < 7000,
+  };
 };
 
 const parseSkill = (parts: string[]): SkillType => ({
@@ -35,8 +57,12 @@ const parseSkill = (parts: string[]): SkillType => ({
   category: validType(Number(parts[3])),
   mpCost: Number(parts[4]),
   duration: Number(parts[5]),
-  guildLevel: parts[6] ? Number(parts[6]) : null,
+  ...parseAttributes(Number(parts[0]), parts[6]),
 });
+
+export async function checkSkillsVersion() {
+  return await checkVersion("Skills", FILENAME, VERSION);
+}
 
 export async function loadSkills(): Promise<{
   size: number;
@@ -46,7 +72,7 @@ export async function loadSkills(
   lastKnownSize: number,
 ): Promise<{ size: number; data: SkillType[] } | null>;
 export async function loadSkills(lastKnownSize = 0) {
-  const raw = await loadMafiaData("classskills", lastKnownSize);
+  const raw = await loadMafiaData(FILENAME, lastKnownSize);
 
   if (raw === null) return null;
 
@@ -65,5 +91,7 @@ export async function populateSkills() {
     ["mpCost", "INTEGER NOT NULL"],
     ["duration", "INTEGER NOT NULL"],
     ["guildLevel", "INTEGER"],
+    ["maxLevel", "INTEGER"],
+    ["permable", "BOOLEAN NOT NULL"],
   ]);
 }

@@ -1,25 +1,43 @@
 import type { Endpoints } from "@octokit/types";
 import Cron from "croner";
 import { populateClasses } from "./entityTypes/classes";
-import { populateEffects } from "./entityTypes/effects";
+import { checkEffectsVersion, populateEffects } from "./entityTypes/effects";
 import { populateFamiliars } from "./entityTypes/familiars";
-import { populateFoldGroups } from "./entityTypes/foldGroups";
-import { populateItems } from "./entityTypes/items";
-import { populateLocations } from "./entityTypes/locations";
-import { populateMonsters } from "./entityTypes/monsters";
-import { populateOutfits } from "./entityTypes/outfits";
+import {
+  checkFoldGroupsVersion,
+  populateFoldGroups,
+} from "./entityTypes/foldGroups";
+import { checkItemsVersion, populateItems } from "./entityTypes/items";
+import {
+  checkLocationsVersion,
+  populateLocations,
+} from "./entityTypes/locations";
+import { checkMonstersVersion, populateMonsters } from "./entityTypes/monsters";
+import { checkOutfitsVersion, populateOutfits } from "./entityTypes/outfits";
 import { populatePaths } from "./entityTypes/paths";
-import { populateSkills } from "./entityTypes/skills";
+import { checkSkillsVersion, populateSkills } from "./entityTypes/skills";
 import { sql } from "./db";
 
-export async function populateDatabase() {
-  await Promise.all([
-    populateEffects(),
-    populateItems(),
-    populateLocations(),
-    populatePaths(),
-    populateSkills(),
+export async function checkVersions() {
+  const checks = await Promise.all([
+    checkEffectsVersion(),
+    checkFoldGroupsVersion(),
+    checkItemsVersion(),
+    checkLocationsVersion(),
+    checkMonstersVersion(),
+    checkOutfitsVersion(),
+    checkSkillsVersion(),
   ]);
+
+  return checks.every((v) => v);
+}
+
+export async function populateDatabase() {
+  await populateEffects();
+  await populateItems();
+  await populateLocations();
+  await populatePaths();
+  await populateSkills();
 
   await populateClasses();
   await populateFamiliars();
@@ -57,6 +75,10 @@ export async function watch(every: number) {
     const lastGitHubUpdate = new Date(Math.max(...lastGitHubUpdates));
 
     if (lastGitHubUpdate <= lastUpdate) return;
+
+    const check = checkVersions();
+
+    if (!check) return;
 
     await populateDatabase();
     await sql`UPDATE "meta" SET "lastUpdate" = ${lastGitHubUpdate}`;

@@ -38,6 +38,28 @@ export async function loadMafiaData(fileName: string, lastKnownSize = 0) {
   );
 }
 
+export async function getMafiaDataVersion(fileName: string) {
+  const url = `${MAFIA_BASE}/data/${fileName}.txt`;
+  const { data } = (await load(url, 0, (raw) => raw.split("\n")[0])) ?? {
+    data: "0",
+  };
+  return Number(data);
+}
+
+export async function checkVersion(
+  name: string,
+  filename: string,
+  version: number,
+) {
+  const remoteVersion = await getMafiaDataVersion(filename);
+  const equal = remoteVersion === version;
+  if (!equal)
+    console.error(
+      `${name} version mismatch. Supported: ${version}, Remote: ${remoteVersion}`,
+    );
+  return equal;
+}
+
 export async function loadMafiaEnum(
   module: string,
   lastKnownSize = 0,

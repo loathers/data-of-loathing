@@ -1,5 +1,13 @@
 import { defineEnum, populateEntity } from "../db";
-import { loadMafiaData, memberOfEnumElse, tokenizeAttributes } from "../utils";
+import {
+  checkVersion,
+  loadMafiaData,
+  memberOfEnumElse,
+  tokenizeAttributes,
+} from "../utils";
+
+const VERSION = 6;
+const FILENAME = "adventures";
 
 export enum LocationDifficulty {
   None = "none",
@@ -67,6 +75,10 @@ const parseLocation = (parts: string[]): LocationType => ({
   ...parseAttributes(parts[2]),
 });
 
+export async function checkLocationsVersion() {
+  return await checkVersion("Locations", FILENAME, VERSION);
+}
+
 export async function loadLocations(): Promise<{
   size: number;
   data: LocationType[];
@@ -75,7 +87,7 @@ export async function loadLocations(
   lastKnownSize: number,
 ): Promise<{ size: number; data: LocationType[] } | null>;
 export async function loadLocations(lastKnownSize = 0) {
-  const raw = await loadMafiaData("adventures", lastKnownSize);
+  const raw = await loadMafiaData(FILENAME, lastKnownSize);
 
   if (raw === null) return null;
 

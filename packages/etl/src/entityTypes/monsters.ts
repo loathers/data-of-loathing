@@ -1,10 +1,14 @@
 import { defineEnum, populateEntity, resolveReference } from "../db";
 import {
+  checkVersion,
   loadMafiaData,
   memberOfEnumElse,
   notNull,
   tokenizeAttributes,
 } from "../utils";
+
+const VERSION = 8;
+const FILENAME = "monsters";
 
 export enum MonsterElement {
   BadSpelling = "bad spelling",
@@ -164,6 +168,10 @@ const parseMonster = (parts: string[]): MonsterType => ({
   ...parseAttributes(parts[3]),
 });
 
+export async function checkMonstersVersion() {
+  return await checkVersion("Monsters", FILENAME, VERSION);
+}
+
 export async function loadMonsters(): Promise<{
   size: number;
   data: MonsterType[];
@@ -172,7 +180,7 @@ export async function loadMonsters(
   lastKnownSize: number,
 ): Promise<{ size: number; data: MonsterType[] } | null>;
 export async function loadMonsters(lastKnownSize = 0) {
-  const raw = await loadMafiaData("monsters", lastKnownSize);
+  const raw = await loadMafiaData(FILENAME, lastKnownSize);
 
   if (raw === null) return null;
 

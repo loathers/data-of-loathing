@@ -1,5 +1,8 @@
 import { populateEntity, resolveReference } from "../db";
-import { loadMafiaData } from "../utils";
+import { checkVersion, loadMafiaData } from "../utils";
+
+const VERSION = 3;
+const FILENAME = "outfits";
 
 const parseEquipment = (equipmentList = "") => equipmentList.trim().split(", ");
 
@@ -35,6 +38,10 @@ const parseOutfit = (parts: string[]): OutfitType => ({
   treats: parseTreats(parts[0] === "80" ? "double-ice gum" : parts[4] ?? ""),
 });
 
+export async function checkOutfitsVersion() {
+  return await checkVersion("Outfits", FILENAME, VERSION);
+}
+
 export async function loadOutfits(): Promise<{
   size: number;
   data: OutfitType[];
@@ -43,7 +50,7 @@ export async function loadOutfits(
   lastKnownSize: number,
 ): Promise<{ size: number; data: OutfitType[] } | null>;
 export async function loadOutfits(lastKnownSize = 0) {
-  const raw = await loadMafiaData("outfits", lastKnownSize);
+  const raw = await loadMafiaData(FILENAME, lastKnownSize);
 
   if (raw === null) return null;
 

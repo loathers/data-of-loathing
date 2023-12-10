@@ -1,5 +1,8 @@
 import { populateEntity, resolveReference } from "../db";
-import { loadMafiaData } from "../utils";
+import { checkVersion, loadMafiaData } from "../utils";
+
+const VERSION = 1;
+const FILENAME = "foldgroups";
 
 export type FoldGroupType = {
   id: number;
@@ -13,6 +16,10 @@ const parseFoldGroup = (parts: string[], index: number): FoldGroupType => ({
   items: parts.slice(1),
 });
 
+export async function checkFoldGroupsVersion() {
+  return await checkVersion("Fold Groups", FILENAME, VERSION);
+}
+
 export async function loadFoldGroups(): Promise<{
   size: number;
   data: FoldGroupType[];
@@ -21,7 +28,7 @@ export async function loadFoldGroups(
   lastKnownSize: number,
 ): Promise<{ size: number; data: FoldGroupType[] } | null>;
 export async function loadFoldGroups(lastKnownSize = 0) {
-  const raw = await loadMafiaData("foldgroups", lastKnownSize);
+  const raw = await loadMafiaData(FILENAME, lastKnownSize);
 
   if (raw === null) return null;
 
