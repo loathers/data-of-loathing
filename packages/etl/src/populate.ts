@@ -1,0 +1,11 @@
+import { checkVersions, populateDatabase } from ".";
+
+async function main() {
+  if (!(await checkVersions())) {
+    process.exit(1);
+  }
+  await populateDatabase();
+  process.exit(0);
+}
+
+main();
