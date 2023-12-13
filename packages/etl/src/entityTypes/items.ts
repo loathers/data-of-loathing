@@ -1,4 +1,4 @@
-import { defineEnum, populateEntity } from "../db";
+import { defineEnum, markAmbiguous, populateEntity } from "../db";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils";
 
 const VERSION = 1;
@@ -70,6 +70,7 @@ export type ItemType = {
   tradeable: boolean;
   discardable: boolean;
   plural?: string;
+  ambiguous: boolean;
 };
 
 const parseAccess = (accessString: string) => {
@@ -91,6 +92,7 @@ const parseItem = (parts: string[]): ItemType => ({
   ...parseAccess(parts[5]),
   autosell: Number(parts[6]),
   plural: parts[7],
+  ambiguous: false,
 });
 
 export async function checkItemsVersion() {
@@ -114,7 +116,7 @@ export async function loadItems(lastKnownSize = 0) {
 
 export async function populateItems() {
   const use = await defineEnum("ItemUse", ItemUse);
-  return populateEntity(loadItems, "items", [
+  await populateEntity(loadItems, "items", [
     ["id", "INTEGER PRIMARY KEY"],
     ["name", "TEXT NOT NULL"],
     ["descid", "TEXT UNIQUE"],
@@ -126,5 +128,7 @@ export async function populateItems() {
     ["discardable", "BOOLEAN NOT NULL"],
     ["autosell", "INTEGER NOT NULL"],
     ["plural", "TEXT"],
+    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
   ]);
+  await markAmbiguous("items");
 }

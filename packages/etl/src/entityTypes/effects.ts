@@ -1,4 +1,4 @@
-import { defineEnum, populateEntity } from "../db";
+import { defineEnum, markAmbiguous, populateEntity } from "../db";
 import { checkVersion, loadMafiaData, memberOfEnumElse } from "../utils";
 
 const VERSION = 4;
@@ -23,6 +23,7 @@ export type EffectType = {
   noremove: boolean;
   song: boolean;
   actions: string[];
+  ambiguous: boolean;
 };
 
 const parseAttributes = (attributesString?: string) => {
@@ -48,6 +49,7 @@ const parseEffect = (parts: string[]): EffectType => ({
   quality: validQuality(parts[4]),
   ...parseAttributes(parts[5]),
   actions: parts[6]?.split("|") ?? [],
+  ambiguous: false,
 });
 
 export async function checkEffectsVersion() {
@@ -74,7 +76,7 @@ export async function loadEffects(lastKnownSize = 0) {
 
 export async function populateEffects() {
   const quality = await defineEnum("EffectQuality", EffectQuality);
-  return populateEntity(loadEffects, "effects", [
+  await populateEntity(loadEffects, "effects", [
     ["id", "INTEGER PRIMARY KEY"],
     ["name", "TEXT NOT NULL"],
     ["descid", "TEXT UNIQUE"],
@@ -85,5 +87,7 @@ export async function populateEffects() {
     ["noremove", "BOOLEAN NOT NULL"],
     ["song", "BOOLEAN NOT NULL"],
     ["actions", "TEXT[] NOT NULL"],
+    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
   ]);
+  await markAmbiguous("effects");
 }

@@ -43,6 +43,7 @@ export type MonsterDrop = {
 };
 
 export type MonsterType = {
+  ambiguous: boolean;
   article: string;
   attack: number | string;
   boss: boolean;
@@ -110,7 +111,7 @@ const parseExpression = (exp: string | boolean, fallback = 0) => {
 
 const parseAttributes = (
   attributesString: string,
-): Omit<MonsterType, "id" | "name" | "image" | "drops"> => {
+): Omit<MonsterType, "id" | "name" | "image" | "drops" | "ambiguous"> => {
   const attributes = tokenizeAttributes(attributesString);
 
   return {
@@ -165,6 +166,7 @@ const parseMonster = (parts: string[]): MonsterType => ({
   name: parts[0],
   image: parts[2].split(","),
   drops: parseDrops(parts.slice(4)),
+  ambiguous: false,
   ...parseAttributes(parts[3]),
 });
 
@@ -198,6 +200,7 @@ export async function populateMonsters() {
   const element = await defineEnum("monsterElement", MonsterElement);
 
   await populateEntity(uniqueMonsters, "monsters", [
+    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
     ["article", "TEXT NOT NULL"],
     ["attack", "TEXT NOT NULL"],
     ["boss", "BOOLEAN NOT NULL"],

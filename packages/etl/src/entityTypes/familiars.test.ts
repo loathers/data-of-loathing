@@ -1,10 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
 
-import {
-  createFetchResponse,
-  expectNotNull,
-} from "../../packages/functions/src/testUtils";
+import { createFetchResponse, expectNotNull } from "../testUtils";
 import { FamiliarCategory, loadFamiliars } from "./familiars";
 
 global.fetch = vi.fn();
@@ -34,12 +31,10 @@ test("Can read familiars", async () => {
     categories: [FamiliarCategory.Combat1, FamiliarCategory.Delevel],
     larva: "spooky pirate skeleton",
     equipment: "blundarrrbus",
-    arenaStats: {
-      cageMatch: 2,
-      hideAndSeek: 0,
-      obstacleCourse: 1,
-      scavengerHunt: 3,
-    },
+    cageMatch: 2,
+    hideAndSeek: 0,
+    obstacleCourse: 1,
+    scavengerHunt: 3,
     attributes: ["hashands", "haseyes", "undead", "cantalk"],
   });
 });

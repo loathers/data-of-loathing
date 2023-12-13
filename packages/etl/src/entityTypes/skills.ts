@@ -1,4 +1,4 @@
-import { populateEntity } from "../db";
+import { markAmbiguous, populateEntity } from "../db";
 import { checkVersion, loadMafiaData, memberOfEnumElse } from "../utils";
 
 const VERSION = 5;
@@ -31,6 +31,7 @@ export type SkillType = {
   guildLevel: number | null;
   maxLevel: number | null;
   permable: boolean;
+  ambiguous: boolean;
 };
 
 const parseAttributes = (id: number, attributesString = "") => {
@@ -57,6 +58,7 @@ const parseSkill = (parts: string[]): SkillType => ({
   category: validType(Number(parts[3])),
   mpCost: Number(parts[4]),
   duration: Number(parts[5]),
+  ambiguous: false,
   ...parseAttributes(Number(parts[0]), parts[6]),
 });
 
@@ -83,7 +85,7 @@ export async function loadSkills(lastKnownSize = 0) {
 }
 
 export async function populateSkills() {
-  return populateEntity(loadSkills, "skills", [
+  await populateEntity(loadSkills, "skills", [
     ["id", "INTEGER PRIMARY KEY"],
     ["name", "TEXT NOT NULL"],
     ["image", "TEXT NOT NULL"],
@@ -93,5 +95,7 @@ export async function populateSkills() {
     ["guildLevel", "INTEGER"],
     ["maxLevel", "INTEGER"],
     ["permable", "BOOLEAN NOT NULL"],
+    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
   ]);
+  await markAmbiguous("skills");
 }

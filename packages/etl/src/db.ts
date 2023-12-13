@@ -69,7 +69,7 @@ export async function populateEntity<
       )
       .join(", ")}
   )
-`;
+  `;
   await sql.unsafe(createQuery);
 
   // Load items and set up readable CSV stream
@@ -118,3 +118,21 @@ export async function defineEnum<Enum extends { [s: string]: string }>(
 }
 
 export async function initialiseDatabase() {}
+
+export async function markAmbiguous(tableName: string) {
+  await sql`
+    UPDATE ${sql(tableName)}
+      SET "ambiguous" = TRUE
+    FROM ( 
+      SELECT 
+        "name" 
+      FROM 
+        ${sql(tableName)}
+      GROUP BY 
+        "name" 
+      HAVING 
+        COUNT(*) > 1
+    ) as "d"
+    WHERE ${sql(tableName)}."name" = "d"."name"
+  `;
+}

@@ -1,8 +1,5 @@
 import { expect, test, vi } from "vitest";
-import {
-  createFetchResponse,
-  expectNotNull,
-} from "../../packages/functions/src/testUtils";
+import { createFetchResponse, expectNotNull } from "../testUtils";
 import { MonsterDropCategory, loadMonsters } from "./monsters";
 import { dedent } from "ts-dedent";
 
@@ -27,6 +24,7 @@ test("Can read monsters", async () => {
   expect(monsters.data).toContainEqual({
     id: 141,
     name: "1335 HaXx0r",
+    ambiguous: false,
     image: ["1335.gif"],
     drops: [
       {
@@ -74,6 +72,7 @@ test("Can read monsters", async () => {
     nocopy: false,
     nomanuel: false,
     nowander: false,
+    nowish: false,
     phylum: "dude",
     physicalResistance: 0,
     poison: null,
@@ -88,5 +87,6 @@ test("Can read monsters", async () => {
     ultrarare: false,
     wanderer: false,
     wiki: null,
+    wish: false,
   });
 });

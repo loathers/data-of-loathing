@@ -1,9 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { loadEffects } from "./effects";
-import {
-  createFetchResponse,
-  expectNotNull,
-} from "../../packages/functions/src/testUtils";
+import { createFetchResponse, expectNotNull } from "../testUtils";
 import { dedent } from "ts-dedent";
 
 global.fetch = vi.fn();
@@ -31,8 +28,12 @@ test("Can read effects", async () => {
     name: "Far Out",
     image: "farout.gif",
     descid: "5ad503e9df2df73bfbbb5377b622c8c4",
-    attributes: [],
+    nopvp: false,
+    nohookah: false,
+    noremove: false,
+    song: false,
     quality: "good",
     actions: ["use 1 patchouli incense stick"],
+    ambiguous: false,
   });
 });

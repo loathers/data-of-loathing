@@ -1,9 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
-import {
-  createFetchResponse,
-  expectNotNull,
-} from "../../packages/functions/src/testUtils";
+import { createFetchResponse, expectNotNull } from "../testUtils";
 import {
   LocationDifficulty,
   LocationEnvironment,
@@ -48,7 +45,7 @@ test("Can read locations", async () => {
   });
 
   expect(locations.data).toContainEqual({
-    id: -1,
+    id: null,
     name: "Pump Up Muscle",
     zone: "Gyms",
     url: "clan_gym=MUSCLE",
@@ -61,7 +58,7 @@ test("Can read locations", async () => {
   });
 
   expect(locations.data).toContainEqual({
-    id: -1,
+    id: null,
     name: "Summoning Chamber",
     zone: "Manor0",
     url: "place=manor4_chamberboss",
