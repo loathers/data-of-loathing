@@ -1,7 +1,7 @@
 import { defineEnum, markAmbiguous, populateEntity } from "../db";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils";
 
-const VERSION = 5;
+const VERSION = 6;
 const FILENAME = "classskills";
 
 export enum SkillTag {
