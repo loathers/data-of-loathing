@@ -267,7 +267,7 @@ export async function populateMonsters() {
     ],
     async (drop) => ({
       ...drop,
-      item: await resolveReference("items", "name", drop.item),
+      item: await resolveReference("items", "name", drop.item, true),
     }),
   );
 }

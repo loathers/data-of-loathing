@@ -18,6 +18,7 @@ export async function resolveReference(
   tableName: string,
   columnName: string,
   name: string | null,
+  caseInsensitive = false,
 ): Promise<number | null> {
   // We cast all results to string here just to keep the type system happy.
   // Since the next step is converting to CSV, this is all handled.
@@ -30,7 +31,9 @@ export async function resolveReference(
   if (!referenceCache.has(cacheKey)) {
     const results = await sql<{ id: number }[]>`SELECT id FROM ${sql(
       tableName,
-    )} WHERE ${sql(columnName)} = ${name}`;
+    )} WHERE ${sql(columnName)} ${
+      caseInsensitive ? sql`ILIKE` : sql`=`
+    } ${name}`;
 
     if (results.length < 1) {
       console.log(`Could not find ${tableName} with ${columnName} "${name}"`);
