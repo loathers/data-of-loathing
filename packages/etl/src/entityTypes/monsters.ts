@@ -32,6 +32,7 @@ export enum MonsterDropCategory {
   Conditional = "c",
   Fixed = "f",
   Accordion = "a",
+  Multi = "m",
 }
 
 const validDropCategory = memberOfEnumElse(MonsterDropCategory, null);
