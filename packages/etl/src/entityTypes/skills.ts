@@ -1,31 +1,30 @@
-import { markAmbiguous, populateEntity } from "../db";
-import { checkVersion, loadMafiaData, memberOfEnumElse } from "../utils";
+import { defineEnum, markAmbiguous, populateEntity } from "../db";
+import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils";
 
 const VERSION = 5;
 const FILENAME = "classskills";
 
-export enum SkillCategory {
-  Passive = 0,
-  NoncombatItemSummon = 1,
-  NoncombatHealing = 2,
-  NoncombatNonShruggableEffect = 3,
-  NoncombatShruggableEffect = 4,
-  Combat = 5,
-  OneAtATimeNoncombatSong = 6,
-  CombatNoncombatHealing = 7,
-  CombatPassive = 8,
-  OneAtATimeNoncombatExpression = 9,
-  OneAtATimeNoncombatWalk = 10,
-  NoncombatHealingPassive = 11,
+export enum SkillTag {
+  Passive = "passive",
+  Combat = "combat",
+  NonCombat = "nc",
+  Heal = "heal",
+  ItemSummon = "item",
+  Effect = "effect",
+  Self = "self",
+  Other = "other",
+  Song = "song",
+  Expression = "expression",
+  Walk = "walk",
 }
 
-const validType = memberOfEnumElse(SkillCategory, SkillCategory.Passive);
+const isValidTag = isMemberOfEnum(SkillTag);
 
 export type SkillType = {
   id: number;
   name: string;
   image: string;
-  category: SkillCategory;
+  tags: SkillTag[];
   mpCost: number;
   duration: number;
   guildLevel: number | null;
@@ -55,7 +54,10 @@ const parseSkill = (parts: string[]): SkillType => ({
   id: Number(parts[0]),
   name: parts[1],
   image: parts[2] || "nopic.gif",
-  category: validType(Number(parts[3])),
+  tags: parts[3]
+    .split(",")
+    .map((p) => p.trim())
+    .filter(isValidTag),
   mpCost: Number(parts[4]),
   duration: Number(parts[5]),
   ambiguous: false,
@@ -85,11 +87,12 @@ export async function loadSkills(lastKnownSize = 0) {
 }
 
 export async function populateSkills() {
+  const tag = await defineEnum("SkillTag", SkillTag);
   await populateEntity(loadSkills, "skills", [
     ["id", "INTEGER PRIMARY KEY"],
     ["name", "TEXT NOT NULL"],
     ["image", "TEXT NOT NULL"],
-    ["category", "INTEGER NOT NULL"],
+    ["tags", `${tag}[] NOT NULL`],
     ["mpCost", "INTEGER NOT NULL"],
     ["duration", "INTEGER NOT NULL"],
     ["guildLevel", "INTEGER"],

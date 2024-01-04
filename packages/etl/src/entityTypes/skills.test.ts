@@ -2,7 +2,7 @@ import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
 
 import { createFetchResponse, expectNotNull } from "../testUtils";
-import { SkillCategory, loadSkills } from "./skills";
+import { SkillTag, loadSkills } from "./skills";
 
 global.fetch = vi.fn();
 
@@ -10,7 +10,7 @@ test("Can read skills", async () => {
   vi.mocked(fetch).mockResolvedValue(
     createFetchResponse(dedent`
       1
-      3035\tBind Penne Dreadful\tt_dreadful.gif\t3\t150\t0\tLevel: 11
+      180	Experience Safari	jackmoustache.gif	nc,effect,other	10	15	Max Level: 4
     `),
   );
 
@@ -18,22 +18,22 @@ test("Can read skills", async () => {
 
   expectNotNull(skills);
 
-  expect(skills.size).toBe(59);
+  expect(skills.size).toBe(76);
 
   expect(skills.data).toHaveLength(1);
 
   const skill = skills.data[0];
 
   expect(skill).toMatchObject({
-    id: 3035,
+    id: 180,
     ambiguous: false,
-    name: "Bind Penne Dreadful",
-    image: "t_dreadful.gif",
-    category: SkillCategory.NoncombatNonShruggableEffect,
-    mpCost: 150,
-    duration: 0,
-    guildLevel: 11,
-    maxLevel: null,
+    name: "Experience Safari",
+    image: "jackmoustache.gif",
+    tags: [SkillTag.NonCombat, SkillTag.Effect, SkillTag.Other],
+    mpCost: 10,
+    duration: 15,
+    guildLevel: null,
+    maxLevel: 4,
     permable: true,
   });
 });
