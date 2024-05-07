@@ -6,24 +6,24 @@
   "license": "MIT",
   "devDependencies": {
     "@types/express": "^4",
-    "@types/node": "^20.8.7",
-    "@typescript-eslint/eslint-plugin": "^6.8.0",
-    "@typescript-eslint/parser": "^6.8.0",
-    "eslint": "^8.52.0",
-    "eslint-config-prettier": "^9.0.0",
-    "prettier": "^3.0.3",
-    "typescript": "^5.2.2",
+    "@types/node": "^20.12.10",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^9.2.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5",
     "ts-dedent": "^2.2.0",
-    "vitest": "^0.34.6"
+    "vitest": "^1.6.0"
   },
   "scripts": {
     "format": "prettier --write .",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "dependencies": {
-    "croner": "^7.0.5",
-    "csv-stringify": "^6.4.4",
-    "java-parser": "^2.0.5",
-    "postgres": "^3.4.1"
+    "croner": "^8.0.2",
+    "csv-stringify": "^6.4.6",
+    "java-parser": "^2.3.0",
+    "postgres": "^3.4.4"
   }
 }
