@@ -81,12 +81,14 @@ export async function watch(every: number) {
         "vs our data:",
         lastUpdate,
       );
+      return;
     }
 
     const check = await checkVersions();
 
     if (!check) {
       console.log("Cannot update due to mismatched data file versions");
+      return;
     }
 
     await populateDatabase();
