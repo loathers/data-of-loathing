@@ -74,11 +74,20 @@ export async function watch(every: number) {
     //
     const lastGitHubUpdate = new Date(Math.max(...lastGitHubUpdates));
 
-    if (lastGitHubUpdate <= lastUpdate) return;
+    if (lastGitHubUpdate <= lastUpdate) {
+      console.log(
+        "Not updating, last change:",
+        lastGitHubUpdate,
+        "vs our data:",
+        lastUpdate,
+      );
+    }
 
-    const check = checkVersions();
+    const check = await checkVersions();
 
-    if (!check) return;
+    if (!check) {
+      console.log("Cannot update due to mismatched data file versions");
+    }
 
     await populateDatabase();
     await sql`UPDATE "meta" SET "lastUpdate" = ${lastGitHubUpdate}`;
