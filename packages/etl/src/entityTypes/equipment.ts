@@ -91,7 +91,7 @@ export async function populateEquipment() {
     loadEquipment,
     "equipment",
     [
-      ["item", "INTEGER PRIMARY KEY"],
+      ["item", "INTEGER PRIMARY KEY REFERENCES items(id)"],
       ["power", "INTEGER NOT NULL"],
       ["musRequirement", "INTEGER NOT NULL"],
       ["mysRequirement", "INTEGER NOT NULL"],
@@ -106,7 +106,7 @@ export async function populateEquipment() {
         "name",
         equipment.item,
         false,
-        (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses.includes(u)),
+        (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses?.includes(u)),
       ),
     }),
   );

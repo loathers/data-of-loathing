@@ -30,7 +30,7 @@ export async function resolveReference<T extends { id: number }>(
 
   const cacheKey = referenceCacheKey(tableName, columnName, name);
   if (!referenceCache.has(cacheKey)) {
-    const results = await sql<T[]>`SELECT id FROM ${sql(
+    const results = await sql<T[]>`SELECT * FROM ${sql(
       tableName,
     )} WHERE ${sql(columnName)} ${
       caseInsensitive ? sql`ILIKE` : sql`=`
