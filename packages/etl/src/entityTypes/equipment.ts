@@ -21,6 +21,7 @@ const EQUIPMENT_ITEM_USES = [
 ];
 
 export type EquipmentType = {
+  id: string;
   item: string;
   power: number;
   musRequirement: number;
@@ -58,6 +59,7 @@ const parseRequirements = (reqString: string) => {
 };
 
 const parseEquipment = (parts: string[]): EquipmentType => ({
+  id: parts[0],
   item: parts[0],
   power: Number(parts[1]),
   ...parseRequirements(parts[2]),
@@ -91,7 +93,9 @@ export async function populateEquipment() {
     loadEquipment,
     "equipment",
     [
-      ["item", "INTEGER PRIMARY KEY REFERENCES items(id)"],
+      // We need to keep our pkey and fkeys separate
+      ["id", "INTEGER PRIMARY KEY"],
+      ["item", "INTEGER REFERENCES items(id)"],
       ["power", "INTEGER NOT NULL"],
       ["musRequirement", "INTEGER NOT NULL"],
       ["mysRequirement", "INTEGER NOT NULL"],
@@ -99,15 +103,19 @@ export async function populateEquipment() {
       ["type", "TEXT"],
       ["hands", "INTEGER"],
     ],
-    async (equipment) => ({
-      ...equipment,
-      item: await resolveReference<{ id: number; uses: ItemUse[] }>(
+    async (equipment) => {
+      const id = await resolveReference<{ id: number; uses: ItemUse[] }>(
         "items",
         "name",
         equipment.item,
         false,
         (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses?.includes(u)),
-      ),
-    }),
+      );
+      return {
+        ...equipment,
+        item: id,
+        id,
+      };
+    },
   );
 }
