@@ -5,9 +5,20 @@ import {
   resolveReference,
 } from "../db";
 import { checkVersion, loadMafiaData } from "../utils";
+import { ItemUse } from "./items";
 
 const VERSION = 2;
 const FILENAME = "equipment";
+
+const EQUIPMENT_ITEM_USES = [
+  ItemUse.Hat,
+  ItemUse.Pants,
+  ItemUse.Shirt,
+  ItemUse.Weapon,
+  ItemUse.Offhand,
+  ItemUse.Accessory,
+  ItemUse.Container,
+];
 
 export type EquipmentType = {
   item: string;
@@ -90,7 +101,13 @@ export async function populateEquipment() {
     ],
     async (equipment) => ({
       ...equipment,
-      item: await resolveReference("items", "name", equipment.item),
+      item: await resolveReference<{ id: number; uses: ItemUse[] }>(
+        "items",
+        "name",
+        equipment.item,
+        false,
+        (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses.includes(u)),
+      ),
     }),
   );
 }

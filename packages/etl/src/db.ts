@@ -14,11 +14,12 @@ const referenceCacheKey = (
   name: string,
 ) => `${tableName}.${columnName}=${name}`;
 
-export async function resolveReference(
+export async function resolveReference<T extends { id: number }>(
   tableName: string,
   columnName: string,
   name: string | null,
   caseInsensitive = false,
+  find?: (row: T) => boolean,
 ): Promise<number | null> {
   // We cast all results to string here just to keep the type system happy.
   // Since the next step is converting to CSV, this is all handled.
@@ -29,7 +30,7 @@ export async function resolveReference(
 
   const cacheKey = referenceCacheKey(tableName, columnName, name);
   if (!referenceCache.has(cacheKey)) {
-    const results = await sql<{ id: number }[]>`SELECT id FROM ${sql(
+    const results = await sql<T[]>`SELECT id FROM ${sql(
       tableName,
     )} WHERE ${sql(columnName)} ${
       caseInsensitive ? sql`ILIKE` : sql`=`
@@ -39,13 +40,20 @@ export async function resolveReference(
       console.log(`Could not find ${tableName} with ${columnName} "${name}"`);
       referenceCache.set(cacheKey, null);
     } else {
+      let index = results.length - 1;
+
       if (results.length > 1) {
-        console.log(
-          `Found multiple ${tableName} with ${columnName} "${name}", using last`,
-        );
+        const found = find ? results.findIndex(find) : -1;
+        if (found >= 0) {
+          index = found;
+        } else {
+          console.log(
+            `Could not disambiguate multiple ${tableName} with ${columnName} "${name}", using last`,
+          );
+        }
       }
 
-      referenceCache.set(cacheKey, results[results.length - 1].id);
+      referenceCache.set(cacheKey, results[index].id);
     }
   }
 
