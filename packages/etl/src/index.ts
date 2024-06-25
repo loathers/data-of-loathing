@@ -17,6 +17,7 @@ import { checkOutfitsVersion, populateOutfits } from "./entityTypes/outfits";
 import { populatePaths } from "./entityTypes/paths";
 import { checkSkillsVersion, populateSkills } from "./entityTypes/skills";
 import { sql } from "./db";
+import { populateEquipment } from "./entityTypes/equipment";
 
 export async function checkVersions() {
   const checks = await Promise.all([
@@ -35,6 +36,7 @@ export async function checkVersions() {
 export async function populateDatabase() {
   await populateEffects();
   await populateItems();
+  await populateEquipment();
   await populateLocations();
   await populatePaths();
   await populateSkills();
