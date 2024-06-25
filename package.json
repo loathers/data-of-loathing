@@ -8,7 +8,8 @@
     "packages/*"
   ],
   "scripts": {
-    "format": "bun --filter '*' format"
+    "format": "bun --filter '*' format",
+    "start": "bun --cwd packages/server start"
   },
   "private": true
 }
