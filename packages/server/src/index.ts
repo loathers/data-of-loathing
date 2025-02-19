@@ -40,6 +40,7 @@ app
       watchPg: true,
       graphiql: true,
       enhanceGraphiql: true,
+      enableCors: true,
       appendPlugins: [ConnectionFilterPlugin],
       ownerConnectionString: process.env.DATABASE_URL,
       graphileBuildOptions: {
