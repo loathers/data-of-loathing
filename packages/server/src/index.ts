@@ -3,6 +3,7 @@ import express from "express";
 import { Pool } from "pg";
 import { postgraphile } from "postgraphile";
 import ConnectionFilterPlugin from "postgraphile-plugin-connection-filter";
+import cors from "cors";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -35,6 +36,7 @@ await watch(15);
 const app = express();
 
 app
+  .use(cors())
   .use(
     postgraphile(process.env.READONLY_DATABASE_URL, "public", {
       watchPg: true,
