@@ -1,23 +1,26 @@
 import type { Endpoints } from "@octokit/types";
 import Cron from "croner";
-import { populateClasses } from "./entityTypes/classes";
-import { checkEffectsVersion, populateEffects } from "./entityTypes/effects";
-import { populateFamiliars } from "./entityTypes/familiars";
+import { populateClasses } from "./entityTypes/classes.js";
+import { checkEffectsVersion, populateEffects } from "./entityTypes/effects.js";
+import { populateFamiliars } from "./entityTypes/familiars.js";
 import {
   checkFoldGroupsVersion,
   populateFoldGroups,
-} from "./entityTypes/foldGroups";
-import { checkItemsVersion, populateItems } from "./entityTypes/items";
+} from "./entityTypes/foldGroups.js";
+import { checkItemsVersion, populateItems } from "./entityTypes/items.js";
 import {
   checkLocationsVersion,
   populateLocations,
-} from "./entityTypes/locations";
-import { checkMonstersVersion, populateMonsters } from "./entityTypes/monsters";
-import { checkOutfitsVersion, populateOutfits } from "./entityTypes/outfits";
-import { populatePaths } from "./entityTypes/paths";
-import { checkSkillsVersion, populateSkills } from "./entityTypes/skills";
-import { sql } from "./db";
-import { populateEquipment } from "./entityTypes/equipment";
+} from "./entityTypes/locations.js";
+import {
+  checkMonstersVersion,
+  populateMonsters,
+} from "./entityTypes/monsters.js";
+import { checkOutfitsVersion, populateOutfits } from "./entityTypes/outfits.js";
+import { populatePaths } from "./entityTypes/paths.js";
+import { checkSkillsVersion, populateSkills } from "./entityTypes/skills.js";
+import { sql } from "./db.js";
+import { populateEquipment } from "./entityTypes/equipment.js";
 
 export async function checkVersions() {
   const checks = await Promise.all([

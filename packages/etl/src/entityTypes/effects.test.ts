@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { loadEffects } from "./effects";
-import { createFetchResponse, expectNotNull } from "../testUtils";
+import { loadEffects } from "./effects.js";
+import { createFetchResponse, expectNotNull } from "../testUtils.js";
 import { dedent } from "ts-dedent";
 
 global.fetch = vi.fn();

@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { createFetchResponse, expectNotNull } from "./testUtils";
-import { loadMafiaEnum } from "./utils";
+import { createFetchResponse, expectNotNull } from "./testUtils.js";
+import { loadMafiaEnum } from "./utils.js";
 
 global.fetch = vi.fn();
 

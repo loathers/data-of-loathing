@@ -1,5 +1,5 @@
-import { populateEntity, resolveReference } from "../db";
-import { checkVersion, loadMafiaData } from "../utils";
+import { populateEntity, resolveReference } from "../db.js";
+import { checkVersion, loadMafiaData } from "../utils.js";
 
 const VERSION = 1;
 const FILENAME = "foldgroups";

@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { createFetchResponse, expectNotNull } from "../testUtils";
-import { MonsterDropCategory, loadMonsters } from "./monsters";
+import { createFetchResponse, expectNotNull } from "../testUtils.js";
+import { MonsterDropCategory, loadMonsters } from "./monsters.js";
 import { dedent } from "ts-dedent";
 
 global.fetch = vi.fn();

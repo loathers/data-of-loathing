@@ -1,5 +1,5 @@
-import { populateEntity, resolveReference } from "../db";
-import { checkVersion, loadMafiaData } from "../utils";
+import { populateEntity, resolveReference } from "../db.js";
+import { checkVersion, loadMafiaData } from "../utils.js";
 
 const VERSION = 3;
 const FILENAME = "outfits";
@@ -35,7 +35,7 @@ const parseOutfit = (parts: string[]): OutfitType => ({
   name: parts[1],
   image: parts[2],
   equipment: parseEquipment(parts[3] ?? ""),
-  treats: parseTreats(parts[0] === "80" ? "double-ice gum" : parts[4] ?? ""),
+  treats: parseTreats(parts[0] === "80" ? "double-ice gum" : (parts[4] ?? "")),
 });
 
 export async function checkOutfitsVersion() {

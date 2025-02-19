@@ -1,4 +1,4 @@
-import { checkVersions, populateDatabase } from ".";
+import { checkVersions, populateDatabase } from "./index.js";
 
 async function main() {
   if (!(await checkVersions())) {

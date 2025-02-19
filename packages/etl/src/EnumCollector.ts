@@ -4,6 +4,7 @@ import {
   BinaryExpressionCtx,
   BooleanLiteralCtx,
   ClassBodyDeclarationCtx,
+  ConditionalExpressionCtx,
   ConstructorDeclarationCtx,
   ConstructorDeclaratorCtx,
   EnumBodyCtx,
@@ -22,13 +23,12 @@ import {
   LiteralCtx,
   PrimaryCtx,
   PrimaryPrefixCtx,
-  TernaryExpressionCtx,
   TypeIdentifierCtx,
   UnaryExpressionCtx,
   VariableDeclaratorIdCtx,
   VariableParaRegularParameterCtx,
 } from "java-parser";
-import { zip } from "./utils";
+import { zip } from "./utils.js";
 
 type Value = string | number | boolean | null;
 type EnumConstant = { name: string; values: Value[] };
@@ -58,6 +58,10 @@ export class EnumCollector extends BaseJavaCstVisitorWithDefaults {
   classBodyDeclaration(ctx: ClassBodyDeclarationCtx, partOfEnum: boolean) {
     if (partOfEnum) return this.visit(ctx.constructorDeclaration ?? []);
     return super.classBodyDeclaration(ctx);
+  }
+
+  conditionalExpression(ctx: ConditionalExpressionCtx) {
+    return this.visit(ctx.binaryExpression);
   }
 
   constructorDeclaration(ctx: ConstructorDeclarationCtx) {
@@ -106,7 +110,7 @@ export class EnumCollector extends BaseJavaCstVisitorWithDefaults {
   }
 
   expression(ctx: ExpressionCtx) {
-    return this.visit(ctx.ternaryExpression ?? []);
+    return this.visit(ctx.conditionalExpression ?? []);
   }
 
   formalParameterList(ctx: FormalParameterListCtx) {
@@ -158,10 +162,6 @@ export class EnumCollector extends BaseJavaCstVisitorWithDefaults {
   primaryPrefix(ctx: PrimaryPrefixCtx) {
     if (ctx.literal) return this.visit(ctx.literal);
     if (ctx.fqnOrRefType) return this.visit(ctx.fqnOrRefType);
-  }
-
-  ternaryExpression(ctx: TernaryExpressionCtx) {
-    return this.visit(ctx.binaryExpression);
   }
 
   typeIdentifier(ctx: TypeIdentifierCtx) {

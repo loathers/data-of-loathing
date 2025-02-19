@@ -3,9 +3,9 @@ import {
   markAmbiguous,
   populateEntity,
   resolveReference,
-} from "../db";
-import { checkVersion, loadMafiaData } from "../utils";
-import { ItemUse } from "./items";
+} from "../db.js";
+import { checkVersion, loadMafiaData } from "../utils.js";
+import { ItemUse } from "./items.js";
 
 const VERSION = 2;
 const FILENAME = "equipment";

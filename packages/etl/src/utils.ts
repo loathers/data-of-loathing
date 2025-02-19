@@ -1,5 +1,5 @@
 import { parse } from "java-parser";
-import { EnumCollector } from "./EnumCollector";
+import { EnumCollector } from "./EnumCollector.js";
 
 const MAFIA_BASE =
   "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src";

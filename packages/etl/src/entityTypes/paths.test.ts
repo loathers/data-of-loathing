@@ -1,8 +1,8 @@
 import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
 
-import { createFetchResponse, expectNotNull } from "../testUtils";
-import { loadPaths } from "./paths";
+import { createFetchResponse, expectNotNull } from "../testUtils.js";
+import { loadPaths } from "./paths.js";
 
 global.fetch = vi.fn();
 

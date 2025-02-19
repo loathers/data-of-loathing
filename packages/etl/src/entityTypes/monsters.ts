@@ -1,11 +1,11 @@
-import { defineEnum, populateEntity, resolveReference } from "../db";
+import { defineEnum, populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
   loadMafiaData,
   memberOfEnumElse,
   notNull,
   tokenizeAttributes,
-} from "../utils";
+} from "../utils.js";
 
 const VERSION = 8;
 const FILENAME = "monsters";

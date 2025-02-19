@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { createFetchResponse } from "../testUtils";
-import { loadClasses } from "./classes";
+import { createFetchResponse } from "../testUtils.js";
+import { loadClasses } from "./classes.js";
 import { dedent } from "ts-dedent";
 
 global.fetch = vi.fn();

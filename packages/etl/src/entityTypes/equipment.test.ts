@@ -1,8 +1,8 @@
 import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
 
-import { createFetchResponse, expectNotNull } from "../testUtils";
-import { loadEquipment } from "./equipment";
+import { createFetchResponse, expectNotNull } from "../testUtils.js";
+import { loadEquipment } from "./equipment.js";
 
 global.fetch = vi.fn();
 

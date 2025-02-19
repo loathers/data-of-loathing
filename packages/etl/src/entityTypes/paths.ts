@@ -1,5 +1,5 @@
-import { populateEntity } from "../db";
-import { loadMafiaEnum } from "../utils";
+import { populateEntity } from "../db.js";
+import { loadMafiaEnum } from "../utils.js";
 
 export type PathType = {
   id: number;

@@ -3,13 +3,13 @@
   "version": "0.0.1",
   "author": "Sam Gaus <sam@gaus.co.uk>",
   "license": "MIT",
-  "packageManager": "bun@1.0.6",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "format": "bun --filter '*' format",
-    "start": "bun --cwd packages/server start"
+    "format": "yarn workspaces foreach --all run format",
+    "start": "yarn workspace data-of-loathing-server run start"
   },
-  "private": true
+  "private": true,
+  "packageManager": "yarn@4.6.0"
 }

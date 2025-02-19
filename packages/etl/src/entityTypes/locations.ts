@@ -1,10 +1,10 @@
-import { defineEnum, populateEntity } from "../db";
+import { defineEnum, populateEntity } from "../db.js";
 import {
   checkVersion,
   loadMafiaData,
   memberOfEnumElse,
   tokenizeAttributes,
-} from "../utils";
+} from "../utils.js";
 
 const VERSION = 6;
 const FILENAME = "adventures";

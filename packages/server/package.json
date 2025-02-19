@@ -6,28 +6,26 @@
   "author": "Sam Gaus <sam@gaus.co.uk>",
   "license": "MIT",
   "devDependencies": {
-    "@octokit/types": "^13.5.0",
+    "@eslint/js": "^9.20.0",
+    "@octokit/types": "^13.8.0",
     "@types/cors": "^2.8.17",
-    "@types/express": "^4",
-    "@typescript-eslint/eslint-plugin": "^7.8.0",
-    "@typescript-eslint/parser": "^7.8.0",
-    "bun-types": "latest",
-    "eslint": "^9.2.0",
-    "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.5"
+    "@types/express": "^4.17.21",
+    "eslint": "^9.20.1",
+    "prettier": "^3.5.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1"
   },
   "scripts": {
-    "start": "bun run src/index.ts",
+    "start": "node --env-file ../../.env --import tsx src/index.ts",
     "format": "prettier --write ."
   },
   "dependencies": {
     "cors": "^2.8.5",
     "data-of-loathing-etl": "workspace:*",
-    "express": "^4.19.2",
-    "pg": "^8.11.5",
-    "postgraphile": "4.13.0",
+    "express": "^4.21.2",
+    "pg": "^8.13.3",
+    "postgraphile": "4.14.0",
     "postgraphile-plugin-connection-filter": "^2.3.0"
-  },
-  "packageManager": "bun@1.0.6"
+  }
 }

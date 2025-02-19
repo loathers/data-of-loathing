@@ -1,5 +1,5 @@
-import { populateEntity, resolveReference } from "../db";
-import { loadMafiaEnum } from "../utils";
+import { populateEntity, resolveReference } from "../db.js";
+import { loadMafiaEnum } from "../utils.js";
 
 export type ClassType = {
   name: string;

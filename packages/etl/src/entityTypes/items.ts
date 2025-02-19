@@ -1,5 +1,5 @@
-import { defineEnum, markAmbiguous, populateEntity } from "../db";
-import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils";
+import { defineEnum, markAmbiguous, populateEntity } from "../db.js";
+import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
 const VERSION = 1;
 const FILENAME = "items";
