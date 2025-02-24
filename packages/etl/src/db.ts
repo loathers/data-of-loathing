@@ -69,7 +69,6 @@ export async function populateEntity<
   columns: [columnName: keyof T, typeAndConstraints: string][],
   transform?: (datum: T) => Promise<U>,
 ) {
-  console.log("Populating", tableName);
   await sql`DROP TABLE IF EXISTS ${sql(tableName)} CASCADE`;
   const createQuery = `
   CREATE TABLE "${tableName}" (
@@ -87,7 +86,9 @@ export async function populateEntity<
   const { data } = Array.isArray(loader) ? { data: loader } : await loader();
 
   const transformed = transform
-    ? await Promise.all(data.map((d) => transform(d)))
+    ? (await Promise.all(data.map((d) => transform(d)))).filter(
+        (d) => d !== null,
+      )
     : data;
 
   const csv = stringify(transformed, {

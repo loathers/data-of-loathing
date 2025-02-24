@@ -42,6 +42,7 @@ app
       watchPg: true,
       graphiql: true,
       enhanceGraphiql: true,
+      dynamicJson: true,
       enableCors: true,
       appendPlugins: [ConnectionFilterPlugin],
       ownerConnectionString: process.env.DATABASE_URL,

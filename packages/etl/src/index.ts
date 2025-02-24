@@ -21,6 +21,7 @@ import { populatePaths } from "./entityTypes/paths.js";
 import { checkSkillsVersion, populateSkills } from "./entityTypes/skills.js";
 import { sql } from "./db.js";
 import { populateEquipment } from "./entityTypes/equipment.js";
+import { populateModifiers } from "./entityTypes/modifiers.js";
 
 export async function checkVersions() {
   const checks = await Promise.all([
@@ -50,6 +51,7 @@ export async function populateDatabase() {
 
   await populateOutfits();
   await populateFoldGroups();
+  await populateModifiers();
 }
 
 export async function watch(every: number) {
