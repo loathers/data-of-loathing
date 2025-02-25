@@ -1,6 +1,4 @@
 import {
-  defineEnum,
-  markAmbiguous,
   populateEntity,
   resolveReference,
 } from "../db.js";
