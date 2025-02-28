@@ -55,6 +55,10 @@ export async function populateDatabase() {
 }
 
 export async function watch(every: number) {
+  // When we run watch for the first time, update the database even if the upstream data has not changed. This is because
+  // the server may have restarted with code for new data transforms.
+  let firstTime = true;
+
   const job = new Cron(`*/${every} * * * *`, { protect: true }, async () => {
     // If we have a new database, ensure a population by pretending we last checked a long time ago
     await sql`CREATE TABLE IF NOT EXISTS "meta" AS (SELECT '01-01-1970 00:00:00'::timestamp as "lastUpdate")`;
@@ -78,10 +82,9 @@ export async function watch(every: number) {
       }),
     );
 
-    //
     const lastGitHubUpdate = new Date(Math.max(...lastGitHubUpdates));
 
-    if (lastGitHubUpdate <= lastUpdate) {
+    if (!firstTime && lastGitHubUpdate <= lastUpdate) {
       console.log(
         "Not updating, last change:",
         lastGitHubUpdate,
@@ -100,6 +103,7 @@ export async function watch(every: number) {
 
     await populateDatabase();
     await sql`UPDATE "meta" SET "lastUpdate" = ${lastGitHubUpdate}`;
+    firstTime = false;
   });
 
   await job.trigger();
