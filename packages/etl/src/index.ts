@@ -1,5 +1,5 @@
 import type { Endpoints } from "@octokit/types";
-import Cron from "croner";
+import { Cron } from "croner";
 import { populateClasses } from "./entityTypes/classes.js";
 import { checkEffectsVersion, populateEffects } from "./entityTypes/effects.js";
 import { populateFamiliars } from "./entityTypes/familiars.js";
@@ -55,7 +55,7 @@ export async function populateDatabase() {
 }
 
 export async function watch(every: number) {
-  const job = Cron(`*/${every} * * * *`, { protect: true }, async () => {
+  const job = new Cron(`*/${every} * * * *`, { protect: true }, async () => {
     // If we have a new database, ensure a population by pretending we last checked a long time ago
     await sql`CREATE TABLE IF NOT EXISTS "meta" AS (SELECT '01-01-1970 00:00:00'::timestamp as "lastUpdate")`;
     const { lastUpdate } = (

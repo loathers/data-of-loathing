@@ -2,7 +2,6 @@ import { watch } from "data-of-loathing-etl";
 import express from "express";
 import pg from "pg";
 import { postgraphile } from "postgraphile";
-import ConnectionFilterPlugin from "postgraphile-plugin-connection-filter";
 import cors from "cors";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
@@ -44,7 +43,6 @@ app
       enhanceGraphiql: true,
       dynamicJson: true,
       enableCors: true,
-      appendPlugins: [ConnectionFilterPlugin],
       ownerConnectionString: process.env.DATABASE_URL,
       graphileBuildOptions: {
         connectionFilterRelations: true,
