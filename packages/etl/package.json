@@ -21,7 +21,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "croner": "^8.1.2",
+    "croner": "^9.0.0",
     "csv-stringify": "^6.5.2",
     "java-parser": "^2.3.3",
     "postgres": "^3.4.5"
