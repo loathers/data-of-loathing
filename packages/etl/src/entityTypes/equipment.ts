@@ -1,7 +1,4 @@
-import {
-  populateEntity,
-  resolveReference,
-} from "../db.js";
+import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 import { ItemUse } from "./items.js";
 

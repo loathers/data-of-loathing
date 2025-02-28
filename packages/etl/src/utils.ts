@@ -125,3 +125,27 @@ export function zip(...arrays: unknown[][]) {
     Array.from({ length: arrays.length }, (_, k) => arrays[k][i]),
   );
 }
+
+/**
+ * Parse the sort of range that KoLmafia encodes as a string
+ * @param range KoLmafia-style range string
+ * @returns Tuple of integers representing range
+ */
+export function getRange(range: string): [number, number] {
+  const [lower, upper] = range
+    .match(/^(-?\d+)(?:-(-?\d+))?$/)
+    ?.slice(1, 3)
+    .map((v) => parseInt(v)) ?? [0];
+  return [lower, Number.isNaN(upper) || upper === undefined ? lower : upper];
+}
+
+/**
+ * Determine the average value from the sort of range that KoLmafia encodes as a string
+ *
+ * @param range KoLmafia-style range string
+ * @returns Average value for range
+ */
+export function getAverage(range: string): number {
+  const [min, max] = getRange(range);
+  return (min + max) / 2;
+}

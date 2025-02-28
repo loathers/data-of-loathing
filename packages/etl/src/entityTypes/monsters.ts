@@ -1,6 +1,7 @@
 import { defineEnum, populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
+  getAverage,
   loadMafiaData,
   memberOfEnumElse,
   notNull,
@@ -66,7 +67,8 @@ export type MonsterType = {
   itemBlockChance: number;
   lucky: boolean;
   manuel: string | null;
-  meat: number | string;
+  meat: number | null;
+  meatExpression: string;
   monsterLevelMultiplier: number | string;
   name: string;
   nobanish: boolean;
@@ -106,8 +108,20 @@ const parseDrops = (drops: string[]): MonsterDrop[] => {
 };
 
 const parseExpression = (exp: string | boolean, fallback = 0) => {
-  if (typeof exp === "string" && exp.startsWith("[")) return exp;
-  return Number(exp ?? `${fallback}`);
+  if (typeof exp === "string") {
+    if (exp.startsWith("[") || exp === "?") return exp;
+    if (exp.includes("-")) return getAverage(exp);
+  }
+  const num = Number(exp ?? `${fallback}`);
+  return Number.isNaN(num) ? fallback : num;
+};
+
+const parseMeat = (exp: string | boolean) => {
+  const parsed = parseExpression(exp);
+  return {
+    meat: typeof parsed === "number" ? parsed : null,
+    meatExpression: (exp ?? "").toString(),
+  };
 };
 
 const parseAttributes = (
@@ -134,7 +148,7 @@ const parseAttributes = (
     itemBlockChance: Number(attributes["Item"] ?? "0") / 100,
     lucky: !!attributes["LUCKY"],
     manuel: String(attributes["Manuel"] ?? "") || null,
-    meat: parseExpression(attributes["Meat"]),
+    ...parseMeat(attributes["Meat"]),
     monsterLevelMultiplier: parseExpression(attributes["MLMult"], 1),
     nobanish: !!attributes["NOBANISH"],
     nocopy: !!attributes["NOCOPY"],
@@ -222,7 +236,8 @@ export async function populateMonsters() {
     ["itemBlockChance", "REAL NOT NULL"],
     ["lucky", "BOOLEAN NOT NULL"],
     ["manuel", "TEXT"],
-    ["meat", "TEXT NOT NULL"],
+    ["meat", "INTEGER"],
+    ["meatExpression", "TEXT"],
     ["monsterLevelMultiplier", "TEXT NOT NULL"],
     ["name", "TEXT NOT NULL"],
     ["nobanish", "BOOLEAN NOT NULL"],
