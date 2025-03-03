@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "format": "yarn workspaces foreach --all run format",
-    "start": "yarn workspace data-of-loathing-server run start"
+    "start": "yarn workspace data-of-loathing-server run start",
+    "etl": "node --env-file .env --import tsx packages/etl/src/populate.ts"
   },
   "private": true,
   "packageManager": "yarn@4.6.0",
