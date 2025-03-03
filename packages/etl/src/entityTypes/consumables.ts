@@ -51,7 +51,7 @@ export type Consumable = {
 };
 
 const parseConsumable = (type: string, parts: string[]): Consumable | null => {
-  if (parts[3] === "sushi") return null;
+  if (parts[3] === "pseudoitem") return null;
 
   return {
     id: parts[0],
