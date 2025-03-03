@@ -22,6 +22,7 @@ import { checkSkillsVersion, populateSkills } from "./entityTypes/skills.js";
 import { sql } from "./db.js";
 import { populateEquipment } from "./entityTypes/equipment.js";
 import { populateModifiers } from "./entityTypes/modifiers.js";
+import { populateConsumables } from "./entityTypes/consumables.js";
 
 export async function checkVersions() {
   const checks = await Promise.all([
@@ -45,6 +46,7 @@ export async function populateDatabase() {
   await populatePaths();
   await populateSkills();
 
+  await populateConsumables();
   await populateClasses();
   await populateFamiliars();
   await populateMonsters();
