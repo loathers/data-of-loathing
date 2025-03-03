@@ -67,6 +67,7 @@ test("Can read monsters", async () => {
     lucky: false,
     manuel: null,
     meat: 30,
+    meatExpression: "30",
     monsterLevelMultiplier: 1,
     nobanish: false,
     nocopy: false,

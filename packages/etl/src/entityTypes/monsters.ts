@@ -236,7 +236,7 @@ export async function populateMonsters() {
     ["itemBlockChance", "REAL NOT NULL"],
     ["lucky", "BOOLEAN NOT NULL"],
     ["manuel", "TEXT"],
-    ["meat", "INTEGER"],
+    ["meat", "REAL"],
     ["meatExpression", "TEXT"],
     ["monsterLevelMultiplier", "TEXT NOT NULL"],
     ["name", "TEXT NOT NULL"],
