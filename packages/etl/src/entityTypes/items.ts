@@ -117,7 +117,7 @@ export async function loadItems(lastKnownSize = 0) {
 export async function populateItems() {
   const use = await defineEnum("ItemUse", ItemUse);
   await populateEntity(loadItems, "items", [
-    ["id", "INTEGER PRIMARY KEY"],
+    ["id", "INTEGER NOT NULL PRIMARY KEY"],
     ["name", "TEXT NOT NULL"],
     ["descid", "TEXT UNIQUE"],
     ["image", "TEXT NOT NULL"],
