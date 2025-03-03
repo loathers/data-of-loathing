@@ -33,7 +33,7 @@ const transformedQuality = (quality: string) => {
 };
 
 export type Consumable = {
-  item: string;
+  id: string;
   stomach: number;
   liver: number;
   spleen: number;
@@ -54,7 +54,7 @@ const parseConsumable = (type: string, parts: string[]): Consumable | null => {
   if (parts[3] === "sushi") return null;
 
   return {
-    item: parts[0],
+    id: parts[0],
     stomach: type === "fullness" ? Number(parts[1]) : 0,
     liver: type === "inebriety" ? Number(parts[1]) : 0,
     spleen: type === "spleenhit" ? Number(parts[1]) : 0,
@@ -120,12 +120,12 @@ export async function loadConsumables(): Promise<{
     );
 
   const combined = data.reduce<Record<string, Consumable>>((acc, c) => {
-    if (acc[c.item]) {
-      acc[c.item].stomach += c.stomach;
-      acc[c.item].liver += c.liver;
-      acc[c.item].spleen += c.spleen;
+    if (acc[c.id]) {
+      acc[c.id].stomach += c.stomach;
+      acc[c.id].liver += c.liver;
+      acc[c.id].spleen += c.spleen;
     } else {
-      acc[c.item] = c;
+      acc[c.id] = c;
     }
     return acc;
   }, {});
@@ -143,7 +143,7 @@ export async function populateConsumables() {
     consumables.data,
     "consumables",
     [
-      ["item", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],
+      ["id", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],
       ["stomach", "INTEGER NOT NULL"],
       ["liver", "INTEGER NOT NULL"],
       ["spleen", "INTEGER NOT NULL"],
@@ -160,11 +160,11 @@ export async function populateConsumables() {
       ["notes", "TEXT"],
     ],
     async (consumable) => {
-      const item = await resolveReference("items", "name", consumable.item);
-      if (!item) return null;
+      const id = await resolveReference("items", "name", consumable.id);
+      if (!id) return null;
       return {
         ...consumable,
-        item,
+        id,
       };
     },
   );

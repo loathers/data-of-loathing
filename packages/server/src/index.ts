@@ -43,6 +43,7 @@ app
       enhanceGraphiql: true,
       dynamicJson: true,
       enableCors: true,
+      legacyRelations: "omit",
       ownerConnectionString: process.env.DATABASE_URL,
       graphileBuildOptions: {
         connectionFilterRelations: true,

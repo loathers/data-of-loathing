@@ -1,4 +1,4 @@
-import { populateEntity, resolveReference, sql } from "../db.js";
+import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 import { ItemUse } from "./items.js";
 
@@ -16,7 +16,7 @@ const EQUIPMENT_ITEM_USES = [
 ];
 
 export type EquipmentType = {
-  item: string;
+  id: string;
   power: number;
   musRequirement: number;
   mysRequirement: number;
@@ -53,7 +53,7 @@ const parseRequirements = (reqString: string) => {
 };
 
 const parseEquipment = (parts: string[]): EquipmentType => ({
-  item: parts[0],
+  id: parts[0],
   power: Number(parts[1]),
   ...parseRequirements(parts[2]),
   ...parseWeapon(parts[3]),
@@ -87,7 +87,7 @@ export async function populateEquipment() {
     equipment.data,
     "equipment",
     [
-      ["item", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],
+      ["id", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],
       ["power", "INTEGER NOT NULL"],
       ["musRequirement", "INTEGER NOT NULL"],
       ["mysRequirement", "INTEGER NOT NULL"],
@@ -96,18 +96,17 @@ export async function populateEquipment() {
       ["hands", "INTEGER"],
     ],
     async (equipment) => {
-      const item = await resolveReference<{ id: number; uses: ItemUse[] }>(
+      const id = await resolveReference<{ id: number; uses: ItemUse[] }>(
         "items",
         "name",
-        equipment.item,
+        equipment.id,
         false,
         (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses?.includes(u)),
       );
       return {
         ...equipment,
-        item,
+        id,
       };
     },
   );
-  await sql`COMMENT ON CONSTRAINT "equipment_item_fkey" ON "public"."equipment" IS E'@foreignSingleFieldName equipmentByItem\n@foreignFieldName equipmentsByItem';`;
 }
