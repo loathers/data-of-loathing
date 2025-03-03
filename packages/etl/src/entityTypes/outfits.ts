@@ -77,31 +77,30 @@ export async function populateOutfits() {
     o.treats.map((t) => ({ outfit: o.id, ...t })),
   );
 
-  await Promise.all([
-    populateEntity(
-      outfitEquipment,
-      "outfitEquipment",
-      [
-        ["outfit", "INTEGER NOT NULL REFERENCES outfits(id)"],
-        ["equipment", "INTEGER NOT NULL REFERENCES items(id)"],
-      ],
-      async (equip) => ({
-        ...equip,
-        equipment: await resolveReference("items", "name", equip.equipment),
-      }),
-    ),
-    populateEntity(
-      outfitTreats,
-      "outfitTreats",
-      [
-        ["outfit", "INTEGER REFERENCES outfits(id)"],
-        ["item", "INTEGER REFERENCES items(id)"],
-        ["chance", "REAL NOT NULL"],
-      ],
-      async (treat) => ({
-        ...treat,
-        item: await resolveReference("items", "name", treat.item),
-      }),
-    ),
-  ]);
+  await populateEntity(
+    outfitEquipment,
+    "outfitEquipment",
+    [
+      ["outfit", "INTEGER NOT NULL REFERENCES outfits(id)"],
+      ["equipment", "INTEGER NOT NULL REFERENCES items(id)"],
+    ],
+    async (equip) => ({
+      ...equip,
+      equipment: await resolveReference("items", "name", equip.equipment),
+    }),
+  );
+
+  await populateEntity(
+    outfitTreats,
+    "outfitTreats",
+    [
+      ["outfit", "INTEGER REFERENCES outfits(id)"],
+      ["item", "INTEGER REFERENCES items(id)"],
+      ["chance", "REAL NOT NULL"],
+    ],
+    async (treat) => ({
+      ...treat,
+      item: await resolveReference("items", "name", treat.item),
+    }),
+  );
 }
