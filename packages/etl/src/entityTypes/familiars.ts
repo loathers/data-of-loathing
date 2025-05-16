@@ -16,7 +16,8 @@ export enum FamiliarCategory {
   Combat1 = "combat1", // Elemental Attack
   Drop = "drop", // special drop
   Block = "block", // potato-like
-  Delevel = "delevel", // barrrnacle-like
+  Delevel0 = "delevel0", // barrrnacle-like, delevels at start of combat
+  Delevel1 = "delevel1", // ghost pickle-like, delevels during combat
   Hp0 = "hp0", // restore hp during combat
   Mp0 = "mp0", // restore mp during combat
   Meat1 = "meat1", // drops meat during combat
@@ -28,6 +29,7 @@ export enum FamiliarCategory {
   Other1 = "other1", // does other things after combat
   Passive = "passive", // passive effect
   Underwater = "underwater", // breaths underwater
+  Pokefam = "pokefam", // is a pokefam-only familiar
   Variable = "variable", // varies according to equipment or other factors.
 }
 
