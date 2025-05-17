@@ -1,6 +1,6 @@
 {
   "name": "data-of-loathing",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "packageManager": "yarn@4.6.0",
   "devDependencies": {
     "@genql/cli": "^6.3.3",
