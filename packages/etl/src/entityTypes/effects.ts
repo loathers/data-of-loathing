@@ -56,22 +56,9 @@ export async function checkEffectsVersion() {
   return await checkVersion("Effects", FILENAME, VERSION);
 }
 
-export async function loadEffects(): Promise<{
-  size: number;
-  data: EffectType[];
-}>;
-export async function loadEffects(
-  lastKnownSize: number,
-): Promise<{ size: number; data: EffectType[] } | null>;
-export async function loadEffects(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseEffect),
-  };
+export async function loadEffects() {
+  const raw = await loadMafiaData(FILENAME);
+  return raw.filter((p) => p.length > 2).map(parseEffect);
 }
 
 export async function populateEffects() {

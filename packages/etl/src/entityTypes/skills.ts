@@ -68,22 +68,9 @@ export async function checkSkillsVersion() {
   return await checkVersion("Skills", FILENAME, VERSION);
 }
 
-export async function loadSkills(): Promise<{
-  size: number;
-  data: SkillType[];
-}>;
-export async function loadSkills(
-  lastKnownSize: number,
-): Promise<{ size: number; data: SkillType[] } | null>;
-export async function loadSkills(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseSkill),
-  };
+export async function loadSkills() {
+  const raw = await loadMafiaData(FILENAME);
+  return raw.filter((p) => p.length > 2).map(parseSkill);
 }
 
 export async function populateSkills() {

@@ -10,7 +10,7 @@ test("Can read familiars", async () => {
   vi.mocked(fetch).mockResolvedValue(
     createFetchResponse(dedent`
       1
-      7\tSpooky Pirate Skeleton\tfamiliar7.gif\tcombat1,delevel\tspooky pirate skeleton\tblundarrrbus\t2\t3\t1\t0\thashands,haseyes,undead,cantalk
+      7\tSpooky Pirate Skeleton\tfamiliar7.gif\tcombat1,delevel0\tspooky pirate skeleton\tblundarrrbus\t2\t3\t1\t0\thashands,haseyes,undead,cantalk
     `),
   );
 
@@ -18,17 +18,15 @@ test("Can read familiars", async () => {
 
   expectNotNull(familiars);
 
-  expect(familiars.size).toBe(132);
+  expect(familiars).toHaveLength(1);
 
-  expect(familiars.data).toHaveLength(1);
-
-  const familiar = familiars.data[0];
+  const familiar = familiars[0];
 
   expect(familiar).toMatchObject({
     id: 7,
     name: "Spooky Pirate Skeleton",
     image: "familiar7.gif",
-    categories: [FamiliarCategory.Combat1, FamiliarCategory.Delevel],
+    categories: [FamiliarCategory.Combat1, FamiliarCategory.Delevel0],
     larva: "spooky pirate skeleton",
     equipment: "blundarrrbus",
     cageMatch: 2,

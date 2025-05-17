@@ -24,25 +24,9 @@ const defaultClass: Omit<ClassType, "name" | "id" | "enumName"> = {
   spleenCapacity: null,
 };
 
-export async function loadClasses(): Promise<{
-  size: number;
-  data: ClassType[];
-}>;
-export async function loadClasses(
-  lastKnownSize: number,
-): Promise<{ size: number; data: ClassType[] } | null>;
-export async function loadClasses(lastKnownSize = 0) {
-  const raw = await loadMafiaEnum(
-    "net.sourceforge.kolmafia.AscensionClass",
-    lastKnownSize,
-  );
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.map((c) => ({ ...defaultClass, ...c }) as ClassType),
-  };
+export async function loadClasses() {
+  const raw = await loadMafiaEnum("net.sourceforge.kolmafia.AscensionClass");
+  return raw.map((c) => ({ ...defaultClass, ...c }) as ClassType);
 }
 
 export async function populateClasses() {

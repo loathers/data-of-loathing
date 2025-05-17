@@ -18,11 +18,9 @@ test("Can read skills", async () => {
 
   expectNotNull(skills);
 
-  expect(skills.size).toBe(76);
+  expect(skills).toHaveLength(1);
 
-  expect(skills.data).toHaveLength(1);
-
-  const skill = skills.data[0];
+  const skill = skills[0];
 
   expect(skill).toMatchObject({
     id: 180,

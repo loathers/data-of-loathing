@@ -70,22 +70,9 @@ export async function checkModifiersVersion() {
   return await checkVersion("Modifiers", FILENAME, VERSION);
 }
 
-export async function loadModifiers(): Promise<{
-  size: number;
-  data: ModifierType[];
-}>;
-export async function loadModifiers(
-  lastKnownSize: number,
-): Promise<{ size: number; data: ModifierType[] } | null>;
-export async function loadModifiers(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseModifier),
-  };
+export async function loadModifiers() {
+  const raw = await loadMafiaData(FILENAME);
+  return raw.filter((p) => p.length > 2).map(parseModifier);
 }
 
 const modifierTypes = [
@@ -123,7 +110,7 @@ const IGNORES = [
 ];
 
 export async function populateModifiers() {
-  const { data } = await loadModifiers();
+  const data = await loadModifiers();
 
   for (const { source, target, foreignTable } of modifierTypes) {
     const dataForType = data

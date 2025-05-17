@@ -42,38 +42,25 @@ export async function checkOutfitsVersion() {
   return await checkVersion("Outfits", FILENAME, VERSION);
 }
 
-export async function loadOutfits(): Promise<{
-  size: number;
-  data: OutfitType[];
-}>;
-export async function loadOutfits(
-  lastKnownSize: number,
-): Promise<{ size: number; data: OutfitType[] } | null>;
-export async function loadOutfits(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseOutfit),
-  };
+export async function loadOutfits() {
+  const raw = await loadMafiaData(FILENAME);
+  return raw.filter((p) => p.length > 2).map(parseOutfit);
 }
 
 export async function populateOutfits() {
   const outfits = await loadOutfits();
 
-  await populateEntity(outfits.data, "outfits", [
+  await populateEntity(outfits, "outfits", [
     ["id", "INTEGER PRIMARY KEY"],
     ["name", "TEXT NOT NULL"],
     ["image", "TEXT NOT NULL"],
   ]);
 
-  const outfitEquipment = outfits.data.flatMap((o) =>
+  const outfitEquipment = outfits.flatMap((o) =>
     o.equipment.map((e) => ({ outfit: o.id, equipment: e })),
   );
 
-  const outfitTreats = outfits.data.flatMap((o) =>
+  const outfitTreats = outfits.flatMap((o) =>
     o.treats.map((t) => ({ outfit: o.id, ...t })),
   );
 

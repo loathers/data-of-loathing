@@ -27,11 +27,9 @@ test("Can read locations", async () => {
 
   expectNotNull(locations);
 
-  expect(locations.size).toBe(414);
+  expect(locations).toHaveLength(4);
 
-  expect(locations.data).toHaveLength(4);
-
-  expect(locations.data).toContainEqual({
+  expect(locations).toContainEqual({
     id: 168,
     name: "Burnbarrel Blvd.",
     zone: "Hobopolis",
@@ -44,7 +42,7 @@ test("Can read locations", async () => {
     nowander: false,
   });
 
-  expect(locations.data).toContainEqual({
+  expect(locations).toContainEqual({
     id: null,
     name: "Pump Up Muscle",
     zone: "Gyms",
@@ -57,7 +55,7 @@ test("Can read locations", async () => {
     nowander: false,
   });
 
-  expect(locations.data).toContainEqual({
+  expect(locations).toContainEqual({
     id: null,
     name: "Summoning Chamber",
     zone: "Manor0",
@@ -70,7 +68,7 @@ test("Can read locations", async () => {
     nowander: false,
   });
 
-  expect(locations.data).toContainEqual({
+  expect(locations).toContainEqual({
     id: 346,
     name: "An Overgrown Shrine (Northwest)",
     zone: "HiddenCity",

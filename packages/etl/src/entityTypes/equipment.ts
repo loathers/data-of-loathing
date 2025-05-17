@@ -63,28 +63,15 @@ export async function checkItemsVersion() {
   return await checkVersion("Equipment", FILENAME, VERSION);
 }
 
-export async function loadEquipment(): Promise<{
-  size: number;
-  data: EquipmentType[];
-}>;
-export async function loadEquipment(
-  lastKnownSize: number,
-): Promise<{ size: number; data: EquipmentType[] } | null>;
-export async function loadEquipment(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseEquipment),
-  };
+export async function loadEquipment() {
+  const raw = await loadMafiaData(FILENAME);
+  return raw.filter((p) => p.length > 2).map(parseEquipment);
 }
 
 export async function populateEquipment() {
   const equipment = await loadEquipment();
   await populateEntity(
-    equipment.data,
+    equipment,
     "equipment",
     [
       ["id", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],

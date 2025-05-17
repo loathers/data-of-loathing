@@ -99,19 +99,9 @@ export async function checkItemsVersion() {
   return await checkVersion("Items", FILENAME, VERSION);
 }
 
-export async function loadItems(): Promise<{ size: number; data: ItemType[] }>;
-export async function loadItems(
-  lastKnownSize: number,
-): Promise<{ size: number; data: ItemType[] } | null>;
-export async function loadItems(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseItem),
-  };
+export async function loadItems() {
+  const raw = await loadMafiaData(FILENAME);
+  return raw.filter((p) => p.length > 2).map(parseItem);
 }
 
 export async function populateItems() {

@@ -18,11 +18,9 @@ test("Can read outfits", async () => {
 
   expectNotNull(outfits);
 
-  expect(outfits.size).toBe(229);
+  expect(outfits).toHaveLength(1);
 
-  expect(outfits.data).toHaveLength(1);
-
-  const outfit = outfits.data[0];
+  const outfit = outfits[0];
 
   expect(outfit).toMatchObject({
     id: 35,

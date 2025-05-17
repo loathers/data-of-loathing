@@ -64,7 +64,7 @@ export async function populateEntity<
   T extends Record<string, unknown>,
   U = Record<keyof T, unknown>,
 >(
-  loader: (() => Promise<{ data: T[] }>) | T[],
+  loader: (() => Promise<T[]>) | T[],
   tableName: string,
   columns: [columnName: keyof T, typeAndConstraints: string][],
   transform?: (datum: T) => Promise<U>,
@@ -83,7 +83,7 @@ export async function populateEntity<
   await sql.unsafe(createQuery);
 
   // Load items and set up readable CSV stream
-  const { data } = Array.isArray(loader) ? { data: loader } : await loader();
+  const data = Array.isArray(loader) ? loader : await loader();
 
   const transformed = transform
     ? (await Promise.all(data.map((d) => transform(d)))).filter(

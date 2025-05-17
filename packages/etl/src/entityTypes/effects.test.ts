@@ -17,11 +17,9 @@ test("Can read effects", async () => {
 
   expectNotNull(effects);
 
-  expect(effects.size).toBe(95);
+  expect(effects).toHaveLength(1);
 
-  expect(effects.data).toHaveLength(1);
-
-  const effect = effects.data[0];
+  const effect = effects[0];
 
   expect(effect).toMatchObject({
     id: 5,

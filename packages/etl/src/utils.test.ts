@@ -35,23 +35,23 @@ test("Can parse a Java enum", async () => {
 
   expectNotNull(parsed);
 
-  expect(parsed.data).toHaveLength(4);
-  expect(parsed.data).toContainEqual({
+  expect(parsed).toHaveLength(4);
+  expect(parsed).toContainEqual({
     enumName: "EXAMPLE_A",
     name: "Example A",
     number: 1,
   });
-  expect(parsed.data).toContainEqual({
+  expect(parsed).toContainEqual({
     enumName: "EXAMPLE_B",
     name: "Example B",
     number: 2,
   });
-  expect(parsed.data).toContainEqual({
+  expect(parsed).toContainEqual({
     enumName: "EXAMPLE_C",
     name: "Example C",
     number: 3,
   });
-  expect(parsed.data).toContainEqual({
+  expect(parsed).toContainEqual({
     enumName: "EXAMPLE_D",
     name: "Example D",
     number: 5,

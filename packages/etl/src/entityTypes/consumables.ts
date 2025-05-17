@@ -88,32 +88,26 @@ export async function checkConsumablesVersion() {
   ).every(Boolean);
 }
 
-export async function loadConsumables(): Promise<{
-  size: number;
-  data: Consumable[];
-}> {
+export async function loadConsumables() {
   const fakeItems = (
-    await Promise.all([
-      loadMafiaData("cafe_food", 0),
-      loadMafiaData("cafe_booze", 0),
-    ])
+    await Promise.all([loadMafiaData("cafe_food"), loadMafiaData("cafe_booze")])
   )
     .filter((i) => i !== null)
-    .flatMap(({ data }) => data)
+    .flat()
     .map((i) => i[1]);
 
   const data = (
     await Promise.all(
       CONSUMABLES_FILES.map(
-        async ([, file]) => [file, await loadMafiaData(file, 0)] as const,
+        async ([, file]) => [file, await loadMafiaData(file)] as const,
       ),
     )
   )
     .filter(([, d]) => d !== null)
     .flatMap(
       ([type, d]) =>
-        d?.data
-          .filter((p) => p.length > 7)
+        d
+          ?.filter((p) => p.length > 7)
           .filter((p) => !fakeItems.includes(p[0]))
           .map((d) => parseConsumable(type, d))
           .filter((d) => d !== null) ?? [],
@@ -130,17 +124,14 @@ export async function loadConsumables(): Promise<{
     return acc;
   }, {});
 
-  return {
-    size: 0,
-    data: [...Object.values(combined)],
-  };
+  return [...Object.values(combined)];
 }
 
 export async function populateConsumables() {
   const consumables = await loadConsumables();
   const quality = await defineEnum("ConsumableQuality", ConsumableQuality);
   await populateEntity(
-    consumables.data,
+    consumables,
     "consumables",
     [
       ["id", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],

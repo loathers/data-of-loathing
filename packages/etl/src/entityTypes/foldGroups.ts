@@ -20,26 +20,13 @@ export async function checkFoldGroupsVersion() {
   return await checkVersion("Fold Groups", FILENAME, VERSION);
 }
 
-export async function loadFoldGroups(): Promise<{
-  size: number;
-  data: FoldGroupType[];
-}>;
-export async function loadFoldGroups(
-  lastKnownSize: number,
-): Promise<{ size: number; data: FoldGroupType[] } | null>;
-export async function loadFoldGroups(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseFoldGroup),
-  };
+export async function loadFoldGroups() {
+  const raw = await loadMafiaData(FILENAME);
+  return raw.filter((p) => p.length > 2).map(parseFoldGroup);
 }
 
 export async function populateFoldGroups() {
-  const { data } = await loadFoldGroups();
+  const data = await loadFoldGroups();
 
   await populateEntity(data, "foldGroups", [
     ["id", "INTEGER PRIMARY KEY"],

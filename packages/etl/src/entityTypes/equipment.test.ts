@@ -18,14 +18,12 @@ test("Can read equipment", async () => {
 
   expectNotNull(equips);
 
-  expect(equips.size).toBe(29);
+  expect(equips).toHaveLength(1);
 
-  expect(equips.data).toHaveLength(1);
-
-  const equip = equips.data[0];
+  const equip = equips[0];
 
   expect(equip).toMatchObject({
-    item: "brown pirate pants",
+    id: "brown pirate pants",
     power: 100,
     musRequirement: 0,
     mysRequirement: 0,
@@ -42,10 +40,10 @@ test("Can read equipment with requirements", async () => {
   );
 
   const equips = await loadEquipment();
-  const equip = equips.data[0];
+  const equip = equips[0];
 
   expect(equip).toMatchObject({
-    item: "Baron von Ratsworth's monocle",
+    id: "Baron von Ratsworth's monocle",
     power: 50,
     musRequirement: 0,
     mysRequirement: 10,
@@ -62,10 +60,10 @@ test("Can read weapons", async () => {
   );
 
   const equips = await loadEquipment();
-  const equip = equips.data[0];
+  const equip = equips[0];
 
   expect(equip).toMatchObject({
-    item: "beer-a-pult",
+    id: "beer-a-pult",
     power: 190,
     musRequirement: 0,
     mysRequirement: 0,
@@ -84,10 +82,10 @@ test("Can read shields", async () => {
   );
 
   const equips = await loadEquipment();
-  const equip = equips.data[0];
+  const equip = equips[0];
 
   expect(equip).toMatchObject({
-    item: "radiator heater shield",
+    id: "radiator heater shield",
     power: 100,
     musRequirement: 35,
     mysRequirement: 0,

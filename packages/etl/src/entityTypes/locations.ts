@@ -79,30 +79,20 @@ export async function checkLocationsVersion() {
   return await checkVersion("Locations", FILENAME, VERSION);
 }
 
-export async function loadLocations(): Promise<{
-  size: number;
-  data: LocationType[];
-}>;
-export async function loadLocations(
-  lastKnownSize: number,
-): Promise<{ size: number; data: LocationType[] } | null>;
-export async function loadLocations(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseLocation),
-  };
+export async function loadLocations() {
+  const data = await loadMafiaData(FILENAME);
+  return data.filter((p) => p.length > 2).map(parseLocation);
 }
 
 export async function populateLocations() {
+  const locations = await loadLocations();
+
   const [environment, difficulty] = await Promise.all([
     defineEnum("LocationEnvironment", LocationEnvironment),
     defineEnum("LocationDifficulty", LocationDifficulty),
   ]);
-  return populateEntity(loadLocations, "locations", [
+
+  await populateEntity(locations, "locations", [
     ["id", "INTEGER"],
     ["name", "TEXT PRIMARY KEY"],
     ["zone", "TEXT NOT NULL"],

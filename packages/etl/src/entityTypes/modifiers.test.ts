@@ -17,11 +17,9 @@ test("Can read modifiers", async () => {
 
   expectNotNull(modifiers);
 
-  expect(modifiers.size).toBe(101);
+  expect(modifiers).toHaveLength(1);
 
-  expect(modifiers.data).toHaveLength(1);
-
-  expect(modifiers.data).toContainEqual({
+  expect(modifiers).toContainEqual({
     type: "Item",
     thing: "tiny gold medal",
     modifiers: {
@@ -55,5 +53,5 @@ test.each([
 
   expectNotNull(modifiers);
 
-  expect(modifiers.data[0].modifiers).toEqual(mods);
+  expect(modifiers[0].modifiers).toEqual(mods);
 });

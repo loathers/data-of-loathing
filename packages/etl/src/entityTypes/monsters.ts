@@ -189,32 +189,21 @@ export async function checkMonstersVersion() {
   return await checkVersion("Monsters", FILENAME, VERSION);
 }
 
-export async function loadMonsters(): Promise<{
-  size: number;
-  data: MonsterType[];
-}>;
-export async function loadMonsters(
-  lastKnownSize: number,
-): Promise<{ size: number; data: MonsterType[] } | null>;
-export async function loadMonsters(lastKnownSize = 0) {
-  const raw = await loadMafiaData(FILENAME, lastKnownSize);
-
-  if (raw === null) return null;
-
-  return {
-    ...raw,
-    data: raw.data.filter((p) => p.length > 2).map(parseMonster),
-  };
+export async function loadMonsters() {
+  const raw = await loadMafiaData(FILENAME);
+  // Only return unique monsters, skipping utility monsters mafia includes with id 0
+  return raw
+    .filter((p) => p.length > 2)
+    .map(parseMonster)
+    .filter((m) => m.id !== 0);
 }
 
 export async function populateMonsters() {
   const monsters = await loadMonsters();
 
-  const uniqueMonsters = monsters.data.filter((m) => m.id !== 0);
-
   const element = await defineEnum("monsterElement", MonsterElement);
 
-  await populateEntity(uniqueMonsters, "monsters", [
+  await populateEntity(monsters, "monsters", [
     ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
     ["article", "TEXT NOT NULL"],
     ["attack", "TEXT NOT NULL"],
@@ -262,7 +251,7 @@ export async function populateMonsters() {
     ["wish", "BOOLEAN NOT NULL"],
   ]);
 
-  const monsterDrops = uniqueMonsters.flatMap((m) =>
+  const monsterDrops = monsters.flatMap((m) =>
     m.drops.map((d) => ({ monster: m.id, ...d })),
   );
 

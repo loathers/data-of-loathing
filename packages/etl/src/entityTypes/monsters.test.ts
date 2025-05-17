@@ -17,11 +17,9 @@ test("Can read monsters", async () => {
 
   expectNotNull(monsters);
 
-  expect(monsters.size).toBe(187);
+  expect(monsters).toHaveLength(1);
 
-  expect(monsters.data).toHaveLength(1);
-
-  expect(monsters.data).toContainEqual({
+  expect(monsters).toContainEqual({
     id: 141,
     name: "1335 HaXx0r",
     ambiguous: false,

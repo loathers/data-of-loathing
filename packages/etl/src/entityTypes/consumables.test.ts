@@ -35,15 +35,15 @@ test("Can read consumables", async () => {
 
   expectNotNull(consumables);
 
-  expect(consumables.data).toHaveLength(3);
+  expect(consumables).toHaveLength(3);
 
-  expect(consumables.data).toContainEqual({
-    item: "Boris's bread",
+  expect(consumables).toContainEqual({
+    id: "Boris's bread",
     stomach: 1,
     liver: 0,
     spleen: 0,
     levelRequirement: 1,
-    quality: "super EPIC",
+    quality: "super_EPIC",
     adventureRange: "6-8",
     adventures: 7,
     muscle: 60,
@@ -55,8 +55,8 @@ test("Can read consumables", async () => {
     notes: "30 Inspired Chef (+10 Muscle, +100% Muscle, +100% Meat Drop)",
   });
 
-  expect(consumables.data).toContainEqual({
-    item: "Boris's beer",
+  expect(consumables).toContainEqual({
+    id: "Boris's beer",
     stomach: 0,
     liver: 1,
     spleen: 0,
@@ -73,8 +73,8 @@ test("Can read consumables", async () => {
     notes: "30 Beery Cool (+5 Muscle, +50% Muscle, +5 Hot Resistance), BEER",
   });
 
-  expect(consumables.data).toContainEqual({
-    item: "Party-in-a-Can&trade;",
+  expect(consumables).toContainEqual({
+    id: "Party-in-a-Can&trade;",
     stomach: 0,
     liver: 0,
     spleen: 1,
@@ -116,12 +116,12 @@ test("Can combined consumables that take multiple organs", async () => {
 
   expectNotNull(consumables);
 
-  expect(consumables.data).toHaveLength(1);
+  expect(consumables).toHaveLength(1);
 
-  expect(consumables.data).toContainEqual({
+  expect(consumables).toContainEqual({
     adventureRange: "22-26",
     adventures: 24,
-    item: "green drunki-bear",
+    id: "green drunki-bear",
     levelRequirement: 6,
     liver: 4,
     moxie: 0,
