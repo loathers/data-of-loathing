@@ -78,10 +78,15 @@ const CONSUMABLES_FILES = [
   ["Spleen Items", "spleenhit", 3],
 ] as const;
 
+const CAFE_FILES = [
+  ["Cafe Food", "cafe_food", 1],
+  ["Cafe Booze", "cafe_booze", 1],
+] as const;
+
 export async function checkConsumablesVersion() {
   return (
     await Promise.all(
-      CONSUMABLES_FILES.map(([name, file, version]) =>
+      [...CONSUMABLES_FILES, ...CAFE_FILES].map(([name, file, version]) =>
         checkVersion(name, file, version),
       ),
     )
@@ -90,7 +95,7 @@ export async function checkConsumablesVersion() {
 
 export async function loadConsumables() {
   const fakeItems = (
-    await Promise.all([loadMafiaData("cafe_food"), loadMafiaData("cafe_booze")])
+    await Promise.all(CAFE_FILES.map((c) => loadMafiaData(c[1])))
   )
     .filter((i) => i !== null)
     .flat()
