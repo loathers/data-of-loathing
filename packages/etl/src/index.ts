@@ -42,7 +42,6 @@ export async function populateDatabase() {
   await populateEffects();
   await populateItems();
   await populateEquipment();
-  await populateLocations();
   await populatePaths();
   await populateSkills();
 
@@ -51,6 +50,7 @@ export async function populateDatabase() {
   await populateFamiliars();
   await populateMonsters();
 
+  await populateLocations();
   await populateOutfits();
   await populateFoldGroups();
   await populateModifiers();
