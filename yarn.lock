@@ -1836,7 +1836,7 @@ __metadata:
     croner: "npm:^9.1.0"
     csv-stringify: "npm:^6.6.0"
     eslint: "npm:^9.34.0"
-    java-parser: "npm:^2.3.4"
+    java-parser: "npm:^3.0.1"
     postgres: "npm:^3.4.7"
     prettier: "npm:^3.6.2"
     ts-dedent: "npm:^2.2.0"
@@ -3166,14 +3166,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"java-parser@npm:^2.3.4":
-  version: 2.3.4
-  resolution: "java-parser@npm:2.3.4"
+"java-parser@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "java-parser@npm:3.0.1"
   dependencies:
     chevrotain: "npm:11.0.3"
     chevrotain-allstar: "npm:0.3.1"
     lodash: "npm:4.17.21"
-  checksum: 10c0/0b0c2eacd7d962535c278f980b02fd0030b268d67d41f59a3967bd309ba469217d98774691acd1617102037b080149a800e2d697925a7e85295e02d434224be0
+  checksum: 10c0/9b60f1132b65785fe4f4c10785fc1638a4092aecf222f63706c119425d0ffb676b7229390abe289082cf837cd470df63f9b9383743d470816fa170240f8b1e22
   languageName: node
   linkType: hard
 

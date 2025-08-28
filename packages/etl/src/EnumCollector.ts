@@ -75,7 +75,7 @@ export class EnumCollector extends BaseJavaCstVisitorWithDefaults {
   enumDeclaration(ctx: EnumDeclarationCtx) {
     const name = this.visit(ctx.typeIdentifier);
     if (name === this.enumName) {
-      (this.parserResult = this.visit(ctx.enumBody)), { depth: 7 };
+      this.parserResult = this.visit(ctx.enumBody);
     }
   }
 
