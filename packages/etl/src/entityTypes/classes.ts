@@ -47,7 +47,7 @@ export async function populateClasses() {
     ],
     async (clazz) => ({
       ...clazz,
-      path: await resolveReference("paths", "enumName", clazz.path),
+      path: await resolveReference("classes", "paths", "enumName", clazz.path),
     }),
   );
 }

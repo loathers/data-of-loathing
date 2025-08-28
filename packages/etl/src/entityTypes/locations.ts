@@ -174,6 +174,7 @@ export async function populateLocations() {
     ],
     async (nativeMonster) => {
       const monster = await resolveReference(
+        "nativeMonsters",
         "monsters",
         "name",
         nativeMonster.monster,

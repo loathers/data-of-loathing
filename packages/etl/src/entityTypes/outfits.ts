@@ -73,7 +73,12 @@ export async function populateOutfits() {
     ],
     async (equip) => ({
       ...equip,
-      equipment: await resolveReference("items", "name", equip.equipment),
+      equipment: await resolveReference(
+        "outfitEquipment",
+        "items",
+        "name",
+        equip.equipment,
+      ),
     }),
   );
 
@@ -87,7 +92,7 @@ export async function populateOutfits() {
     ],
     async (treat) => ({
       ...treat,
-      item: await resolveReference("items", "name", treat.item),
+      item: await resolveReference("outfitTreats", "items", "name", treat.item),
     }),
   );
 }

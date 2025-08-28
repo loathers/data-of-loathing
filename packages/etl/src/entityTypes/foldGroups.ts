@@ -46,7 +46,7 @@ export async function populateFoldGroups() {
     ],
     async (foldable) => ({
       ...foldable,
-      item: await resolveReference("items", "name", foldable.item),
+      item: await resolveReference("foldGroup", "items", "name", foldable.item),
     }),
   );
 }

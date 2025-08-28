@@ -15,6 +15,7 @@ const referenceCacheKey = (
 ) => `${tableName}.${columnName}=${name}`;
 
 export async function resolveReference<T extends { id: number }>(
+  source: string,
   tableName: string,
   columnName: string,
   name: string | null,
@@ -37,7 +38,9 @@ export async function resolveReference<T extends { id: number }>(
     } ${name}`;
 
     if (results.length < 1) {
-      console.log(`Could not find ${tableName} with ${columnName} "${name}"`);
+      console.log(
+        `Could not find ${tableName} with ${columnName} "${name}" when resolving reference for ${source}`,
+      );
       referenceCache.set(cacheKey, null);
     } else {
       let index = results.length - 1;

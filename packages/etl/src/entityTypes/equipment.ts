@@ -84,6 +84,7 @@ export async function populateEquipment() {
     ],
     async (equipment) => {
       const id = await resolveReference<{ id: number; uses: ItemUse[] }>(
+        "equipment",
         "items",
         "name",
         equipment.id,

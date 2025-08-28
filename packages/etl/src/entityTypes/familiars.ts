@@ -103,8 +103,18 @@ export async function populateFamiliars() {
     ],
     async (familiar) => ({
       ...familiar,
-      larva: await resolveReference("items", "name", familiar.larva),
-      equipment: await resolveReference("items", "name", familiar.equipment),
+      larva: await resolveReference(
+        "familiar larva",
+        "items",
+        "name",
+        familiar.larva,
+      ),
+      equipment: await resolveReference(
+        "familiar equipment",
+        "items",
+        "name",
+        familiar.equipment,
+      ),
     }),
   );
 }

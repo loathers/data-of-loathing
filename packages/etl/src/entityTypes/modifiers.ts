@@ -135,7 +135,12 @@ export async function populateModifiers() {
             case "item:Love Potion #0":
               return 9745;
             default:
-              return resolveReference(foreignTable, "name", datum.thing);
+              return resolveReference(
+                `${target}Modifiers`,
+                foreignTable,
+                "name",
+                datum.thing,
+              );
           }
         })();
 

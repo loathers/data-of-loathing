@@ -156,7 +156,12 @@ export async function populateConsumables() {
       ["notes", "TEXT"],
     ],
     async (consumable) => {
-      const id = await resolveReference("items", "name", consumable.id);
+      const id = await resolveReference(
+        "consumables",
+        "items",
+        "name",
+        consumable.id,
+      );
       if (!id) return null;
       return {
         ...consumable,
