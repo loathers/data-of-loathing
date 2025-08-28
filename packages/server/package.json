@@ -23,7 +23,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "data-of-loathing-etl": "workspace:*",
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "pg": "^8.16.3",
     "postgraphile": "4.14.1"
   }
