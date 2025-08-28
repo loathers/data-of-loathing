@@ -61,7 +61,7 @@ export async function populateOutfits() {
   );
 
   const outfitTreats = outfits.flatMap((o) =>
-    o.treats.map((t) => ({ outfit: o.id, ...t })),
+    o.treats.map((t) => ({ outfit: o.id, ...t })).filter((t) => t.item !== ""),
   );
 
   await populateEntity(
