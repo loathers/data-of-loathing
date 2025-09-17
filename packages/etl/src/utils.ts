@@ -9,13 +9,13 @@ async function load(url: string) {
   return await request.text();
 }
 
-export async function loadMafiaData(fileName: string) {
+export async function loadMafiaData(fileName: string, stripComments = true) {
   const url = `${MAFIA_BASE}/data/${fileName}.txt`;
 
   return (await load(url))
     .split("\n")
     .slice(1)
-    .filter((r) => r !== "" && !r.startsWith("#"))
+    .filter((r) => !stripComments || (r !== "" && !r.startsWith("#")))
     .map((r) => r.split("\t"));
 }
 
