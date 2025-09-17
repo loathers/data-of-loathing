@@ -130,7 +130,6 @@ export async function populateConcoctions() {
         "items",
         "name",
         ingredient.item,
-        true,
       ),
     }),
   );
