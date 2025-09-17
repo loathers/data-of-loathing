@@ -29,6 +29,10 @@ import {
   populateModifiers,
 } from "./entityTypes/modifiers.js";
 import { populateConsumables } from "./entityTypes/consumables.js";
+import {
+  checkConcoctionsVersion,
+  populateConcoctions,
+} from "./entityTypes/concoctions.js";
 
 export async function checkVersions() {
   const checks = await Promise.all([
@@ -41,6 +45,7 @@ export async function checkVersions() {
     checkSkillsVersion(),
     checkFamiliarsVersion(),
     checkModifiersVersion(),
+    checkConcoctionsVersion(),
   ]);
 
   return checks.every((v) => v);
@@ -62,6 +67,7 @@ export async function populateDatabase() {
   await populateOutfits();
   await populateFoldGroups();
   await populateModifiers();
+  await populateConcoctions();
 }
 
 export async function watch(every: number) {
