@@ -2,7 +2,10 @@ import type { Endpoints } from "@octokit/types";
 import { Cron } from "croner";
 import { populateClasses } from "./entityTypes/classes.js";
 import { checkEffectsVersion, populateEffects } from "./entityTypes/effects.js";
-import { populateFamiliars } from "./entityTypes/familiars.js";
+import {
+  checkFamiliarsVersion,
+  populateFamiliars,
+} from "./entityTypes/familiars.js";
 import {
   checkFoldGroupsVersion,
   populateFoldGroups,
@@ -21,7 +24,10 @@ import { populatePaths } from "./entityTypes/paths.js";
 import { checkSkillsVersion, populateSkills } from "./entityTypes/skills.js";
 import { sql } from "./db.js";
 import { populateEquipment } from "./entityTypes/equipment.js";
-import { populateModifiers } from "./entityTypes/modifiers.js";
+import {
+  checkModifiersVersion,
+  populateModifiers,
+} from "./entityTypes/modifiers.js";
 import { populateConsumables } from "./entityTypes/consumables.js";
 
 export async function checkVersions() {
@@ -33,6 +39,8 @@ export async function checkVersions() {
     checkMonstersVersion(),
     checkOutfitsVersion(),
     checkSkillsVersion(),
+    checkFamiliarsVersion(),
+    checkModifiersVersion(),
   ]);
 
   return checks.every((v) => v);

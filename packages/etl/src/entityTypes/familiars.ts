@@ -1,7 +1,7 @@
 import { defineEnum, populateEntity, resolveReference } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
-const VERSION = 1;
+const VERSION = 4;
 const FILENAME = "familiars";
 
 export enum FamiliarCategory {
