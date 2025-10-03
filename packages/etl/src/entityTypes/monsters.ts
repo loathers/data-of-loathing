@@ -96,7 +96,7 @@ export type MonsterType = {
 const parseDrops = (drops: string[]): MonsterDrop[] => {
   return drops
     .map((d) => {
-      const match = d.match(/^(.*?) \(([pncfa]?)(\d+)\)$/);
+      const match = d.match(/^(.*?) \(([pncfa]?)(\d+(?:\.\d+)?)\)$/);
       if (!match) return null;
       return {
         item: match[1],
@@ -266,7 +266,7 @@ export async function populateMonsters() {
     [
       ["monster", "INTEGER NOT NULL REFERENCES monsters(id)"],
       ["item", "INTEGER NOT NULL REFERENCES items(id)"],
-      ["rate", "INTEGER NOT NULL"],
+      ["rate", "NUMERIC NOT NULL"],
       ["category", `${dropCategory}`],
     ],
     async (drop) => ({

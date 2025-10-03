@@ -89,3 +89,33 @@ test("Can read monsters", async () => {
     wish: false,
   });
 });
+
+test("Can read drops with fractional odds", async () => {
+  vi.mocked(fetch).mockResolvedValue(
+    createFetchResponse(dedent`
+      1
+      Gurgle the Turgle	1768	animturtle.gif	NOBANISH Scale: [5+20*pref(dinseyAudienceEngagement)] Cap: 11111 Floor: 100 MLMult: [3+2*pref(dinseyAudienceEngagement)] Init: -10000 P: construct E: stench	turtle voicebox (15)	fake washboard (c0.1)
+    `),
+  );
+
+  const monsters = await loadMonsters();
+
+  expectNotNull(monsters);
+
+  expect(monsters).toHaveLength(1);
+
+  expect(monsters[0]).toMatchObject({
+    drops: [
+      {
+        category: null,
+        item: "turtle voicebox",
+        rate: 15,
+      },
+      {
+        category: "c",
+        item: "fake washboard",
+        rate: 0.1,
+      },
+    ],
+  });
+});
