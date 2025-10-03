@@ -109,7 +109,7 @@ export async function populateItems() {
   await populateEntity(loadItems, "items", [
     ["id", "INTEGER NOT NULL PRIMARY KEY"],
     ["name", "TEXT NOT NULL"],
-    ["descid", "TEXT UNIQUE"],
+    ["descid", "INTEGER UNIQUE"],
     ["image", "TEXT NOT NULL"],
     ["uses", `${use}[] NOT NULL`],
     ["quest", "BOOLEAN NOT NULL"],
