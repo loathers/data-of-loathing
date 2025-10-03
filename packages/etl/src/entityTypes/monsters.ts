@@ -266,7 +266,7 @@ export async function populateMonsters() {
     [
       ["monster", "INTEGER NOT NULL REFERENCES monsters(id)"],
       ["item", "INTEGER NOT NULL REFERENCES items(id)"],
-      ["rate", "NUMERIC NOT NULL"],
+      ["rate", "REAL NOT NULL"],
       ["category", `${dropCategory}`],
     ],
     async (drop) => ({
