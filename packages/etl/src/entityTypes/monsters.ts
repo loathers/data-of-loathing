@@ -25,7 +25,7 @@ export enum MonsterElement {
 }
 
 // Might as well have some default, cold works.
-const validElement = memberOfEnumElse(MonsterElement, MonsterElement.Cold);
+const validElement = memberOfEnumElse(MonsterElement, null);
 
 export enum MonsterDropCategory {
   PickpocketOnly = "p",
@@ -52,9 +52,9 @@ export type MonsterType = {
   defence: number | string;
   drippy: boolean;
   drops: MonsterDrop[];
-  element: MonsterElement;
-  elementalAttack: MonsterElement;
-  elementalDefence: MonsterElement;
+  element: MonsterElement | null;
+  elementalAttack: MonsterElement | null;
+  elementalDefence: MonsterElement | null;
   elementalResistance: number | string;
   experience: number | string | null;
   free: boolean;
@@ -210,9 +210,9 @@ export async function populateMonsters() {
     ["boss", "BOOLEAN NOT NULL"],
     ["defence", "TEXT NOT NULL"],
     ["drippy", "BOOLEAN NOT NULL"],
-    ["element", `${element} NOT NULL`],
-    ["elementalAttack", `${element} NOT NULL`],
-    ["elementalDefence", `${element} NOT NULL`],
+    ["element", `${element}`],
+    ["elementalAttack", `${element}`],
+    ["elementalDefence", `${element}`],
     ["elementalResistance", "TEXT NOT NULL"],
     ["experience", "TEXT"],
     ["free", "BOOLEAN NOT NULL"],
