@@ -11,7 +11,11 @@ export type ZapGroupType = {
 
 const parseZapGroup = (parts: string[], index: number): ZapGroupType => ({
   id: index,
-  items: parts[0].split(",").map((s) => s.trim()),
+  items: parts[0]
+    .replace("\\,", "💀")
+    .split(",")
+    .map((p) => p.replace("💀", ","))
+    .map((s) => s.trim()),
 });
 
 export async function checkZapGroupsVersion() {
@@ -26,9 +30,7 @@ export async function loadZapGroups() {
 export async function populateZapGroups() {
   const data = await loadZapGroups();
 
-  await populateEntity(data, "zapGroups", [
-    ["id", "INTEGER PRIMARY KEY"],
-  ]);
+  await populateEntity(data, "zapGroups", [["id", "INTEGER PRIMARY KEY"]]);
 
   const junctionTable = data.flatMap(({ id, items }) =>
     items.map((item) => ({ zapGroup: id, item })),
@@ -43,7 +45,12 @@ export async function populateZapGroups() {
     ],
     async (zapGroupItem) => ({
       ...zapGroupItem,
-      item: await resolveReference("zapGroup", "items", "name", zapGroupItem.item),
+      item: await resolveReference(
+        "zapGroup",
+        "items",
+        "name",
+        zapGroupItem.item,
+      ),
     }),
   );
 }

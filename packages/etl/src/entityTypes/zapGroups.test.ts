@@ -25,10 +25,28 @@ test("Can read items", async () => {
 
   expect(group).toMatchObject({
     id: 0,
-    items: [
-      "cursed eyepatch",
-      "cursed cutlass",
-      "cursed breeches",
-    ],
+    items: ["cursed eyepatch", "cursed cutlass", "cursed breeches"],
+  });
+});
+
+test("Can read items with commas", async () => {
+  vi.mocked(fetch).mockResolvedValue(
+    createFetchResponse(dedent`
+      1
+      item with comma\\, in name, another item
+    `),
+  );
+
+  const zapGroups = await loadZapGroups();
+
+  expectNotNull(zapGroups);
+
+  expect(zapGroups).toHaveLength(1);
+
+  const group = zapGroups[0];
+
+  expect(group).toMatchObject({
+    id: 0,
+    items: ["item with comma, in name", "another item"],
   });
 });
