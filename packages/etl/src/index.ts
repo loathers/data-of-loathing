@@ -33,11 +33,13 @@ import {
   checkConcoctionsVersion,
   populateConcoctions,
 } from "./entityTypes/concoctions.js";
+import { checkZapGroupsVersion, populateZapGroups } from "./entityTypes/zapGroups.js";
 
 export async function checkVersions() {
   const checks = await Promise.all([
     checkEffectsVersion(),
     checkFoldGroupsVersion(),
+    checkZapGroupsVersion(),
     checkItemsVersion(),
     checkLocationsVersion(),
     checkMonstersVersion(),
@@ -66,6 +68,7 @@ export async function populateDatabase() {
   await populateLocations();
   await populateOutfits();
   await populateFoldGroups();
+  await populateZapGroups()
   await populateModifiers();
   await populateConcoctions();
 }
