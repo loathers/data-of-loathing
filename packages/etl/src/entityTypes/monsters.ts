@@ -82,6 +82,7 @@ export type MonsterType = {
   scaling: number | string;
   scalingCap: number | string;
   scalingFloor: number | string;
+  skeleton: boolean;
   skillBlockChance: number;
   snake: boolean;
   spellBlockChance: number;
@@ -91,6 +92,7 @@ export type MonsterType = {
   wanderer: boolean;
   wiki: string | null;
   wish: boolean;
+  zombie: boolean;
 };
 
 const parseDrops = (drops: string[]): MonsterDrop[] => {
@@ -161,6 +163,7 @@ const parseAttributes = (
     scaling: parseExpression(attributes["Scale"]),
     scalingCap: parseExpression(attributes["Cap"]),
     scalingFloor: parseExpression(attributes["Floor"]),
+    skeleton: !!attributes["SKELETON"],
     skillBlockChance: Number(attributes["Skill"] ?? "0") / 100,
     snake: !!attributes["SNAKE"],
     spellBlockChance: Number(attributes["Spell"] ?? "0") / 100,
@@ -173,6 +176,7 @@ const parseAttributes = (
     wanderer: !!attributes["WANDERER"],
     wish: !!attributes["WISH"],
     wiki: String(attributes["Wiki"] ?? "") || null,
+    zombie: !!attributes["ZOMBIE"],
   };
 };
 
