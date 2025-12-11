@@ -78,6 +78,7 @@ test("Can read monsters", async () => {
     scaling: 0,
     scalingCap: 0,
     scalingFloor: 0,
+    skeleton: false,
     skillBlockChance: 0,
     snake: false,
     spellBlockChance: 0,
@@ -87,6 +88,7 @@ test("Can read monsters", async () => {
     wanderer: false,
     wiki: null,
     wish: false,
+    zombie: false,
   });
 });
 
