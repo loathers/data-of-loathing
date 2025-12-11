@@ -244,6 +244,7 @@ export async function populateMonsters() {
     ["scaling", "TEXT NOT NULL"],
     ["scalingCap", "TEXT NOT NULL"],
     ["scalingFloor", "TEXT NOT NULL"],
+    ["skeleton", "BOOLEAN NOT NULL"],
     ["skillBlockChance", "REAL NOT NULL"],
     ["snake", "BOOLEAN NOT NULL"],
     ["spellBlockChance", "REAL NOT NULL"],
@@ -253,6 +254,7 @@ export async function populateMonsters() {
     ["wanderer", "BOOLEAN NOT NULL"],
     ["wiki", "TEXT"],
     ["wish", "BOOLEAN NOT NULL"],
+    ["zombie", "BOOLEAN NOT NULL"],
   ]);
 
   const monsterDrops = monsters.flatMap((m) =>
