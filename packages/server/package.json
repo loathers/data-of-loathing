@@ -9,12 +9,12 @@
     "@eslint/js": "^9.39.1",
     "@octokit/types": "^16.0.0",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
+    "@types/express": "^5.0.6",
     "eslint": "^9.39.1",
-    "prettier": "^3.6.2",
-    "tsx": "^4.20.6",
+    "prettier": "^3.7.4",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.4"
+    "typescript-eslint": "^8.49.0"
   },
   "scripts": {
     "start": "node --env-file-if-exists ../../.env --import tsx src/index.ts",
@@ -23,7 +23,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "data-of-loathing-etl": "workspace:*",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "pg": "^8.16.3",
     "postgraphile": "4.14.1"
   }
