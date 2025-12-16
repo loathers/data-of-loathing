@@ -6,15 +6,15 @@
   "author": "Sam Gaus <sam@gaus.co.uk>",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^9.39.2",
     "@octokit/types": "^16.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.2",
     "prettier": "^3.7.4",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.49.0"
+    "typescript-eslint": "^8.50.0"
   },
   "scripts": {
     "start": "node --env-file-if-exists ../../.env --import tsx src/index.ts",
