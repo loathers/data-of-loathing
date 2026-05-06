@@ -1,4 +1,4 @@
-import { defineEnum, populateEntity, resolveReference } from "../db.js";
+import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
   getAverage,
@@ -134,26 +134,14 @@ export async function loadConsumables() {
 
 export async function populateConsumables() {
   const consumables = await loadConsumables();
-  const quality = await defineEnum("ConsumableQuality", ConsumableQuality);
   await populateEntity(
     consumables,
     "consumables",
     [
-      ["id", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],
-      ["stomach", "INTEGER NOT NULL"],
-      ["liver", "INTEGER NOT NULL"],
-      ["spleen", "INTEGER NOT NULL"],
-      ["levelRequirement", "INTEGER NOT NULL"],
-      ["quality", `${quality}`],
-      ["adventureRange", "TEXT NOT NULL"],
-      ["adventures", "REAL NOT NULL"],
-      ["muscle", "REAL NOT NULL"],
-      ["muscleRange", "TEXT NOT NULL"],
-      ["mysticality", "REAL NOT NULL"],
-      ["mysticalityRange", "TEXT NOT NULL"],
-      ["moxie", "REAL NOT NULL"],
-      ["moxieRange", "TEXT NOT NULL"],
-      ["notes", "TEXT"],
+      "id", "stomach", "liver", "spleen", "levelRequirement",
+      "quality", "adventureRange", "adventures",
+      "muscle", "muscleRange", "mysticality", "mysticalityRange",
+      "moxie", "moxieRange", "notes",
     ],
     async (consumable) => {
       const id = await resolveReference(

@@ -22,7 +22,14 @@ import {
 import { checkOutfitsVersion, populateOutfits } from "./entityTypes/outfits.js";
 import { populatePaths } from "./entityTypes/paths.js";
 import { checkSkillsVersion, populateSkills } from "./entityTypes/skills.js";
-import { sql } from "./db.js";
+import {
+  getLastUpdate,
+  initialiseDatabase,
+  openDatabase,
+  prepareMeta,
+  setLastRevision,
+  setLastUpdate,
+} from "./db.js";
 import { populateEquipment } from "./entityTypes/equipment.js";
 import {
   checkModifiersVersion,
@@ -37,22 +44,6 @@ import {
   checkZapGroupsVersion,
   populateZapGroups,
 } from "./entityTypes/zapGroups.js";
-
-async function prepareMeta() {
-  // If we have a new database, ensure a population by pretending we last checked a long time ago
-  await sql`
-    CREATE TABLE IF NOT EXISTS "meta" (
-      id int PRIMARY KEY DEFAULT 1,
-      "lastUpdate" timestamp NOT NULL DEFAULT TIMESTAMP '1970-01-01 00:00:00',
-      "lastRevision" int NOT NULL DEFAULT 0
-    );
-  `;
-  await sql`
-    INSERT INTO "meta" (id)
-    VALUES (1)
-    ON CONFLICT (id) DO NOTHING;
-  `;
-}
 
 export async function checkVersions() {
   const checks = await Promise.all([
@@ -120,7 +111,12 @@ async function getLastGitHubUpdate() {
   return new Date(Math.max(...lastGitHubUpdates));
 }
 
+const SQLITE_PATH = process.env.SQLITE_PATH ?? "./data-of-loathing.sqlite";
+
 export async function watch(every: number) {
+  openDatabase(SQLITE_PATH);
+  await initialiseDatabase();
+
   // When we run watch for the first time, update the database even if the upstream data has not changed. This is because
   // the server may have restarted with code for new data transforms.
   let firstTime = true;
@@ -128,11 +124,7 @@ export async function watch(every: number) {
   const job = new Cron(`*/${every} * * * *`, { protect: true }, async () => {
     await prepareMeta();
 
-    const { lastUpdate } = (
-      await sql<
-        { lastUpdate: Date }[]
-      >`SELECT "lastUpdate" FROM "meta" WHERE "id" = 1;`
-    )[0];
+    const lastUpdate = await getLastUpdate();
     const lastGitHubUpdate = await getLastGitHubUpdate();
 
     if (!firstTime && lastGitHubUpdate <= lastUpdate) {
@@ -154,8 +146,8 @@ export async function watch(every: number) {
 
     await populateDatabase();
 
-    await sql`UPDATE "meta" SET "lastRevision" = ${await getKoLmafiaRevision()} WHERE "id" = 1;`;
-    await sql`UPDATE "meta" SET "lastUpdate" = ${lastGitHubUpdate} WHERE "id" = 1;`;
+    await setLastRevision(await getKoLmafiaRevision());
+    await setLastUpdate(lastGitHubUpdate);
     firstTime = false;
   });
 

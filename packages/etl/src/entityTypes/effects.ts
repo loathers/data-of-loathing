@@ -1,4 +1,4 @@
-import { defineEnum, markAmbiguous, populateEntity } from "../db.js";
+import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, loadMafiaData, memberOfEnumElse } from "../utils.js";
 
 const VERSION = 4;
@@ -62,19 +62,9 @@ export async function loadEffects() {
 }
 
 export async function populateEffects() {
-  const quality = await defineEnum("EffectQuality", EffectQuality);
   await populateEntity(loadEffects, "effects", [
-    ["id", "INTEGER PRIMARY KEY"],
-    ["name", "TEXT NOT NULL"],
-    ["descid", "TEXT UNIQUE"],
-    ["image", "TEXT NOT NULL"],
-    ["quality", `${quality} NOT NULL`],
-    ["nohookah", "BOOLEAN NOT NULL"],
-    ["nopvp", "BOOLEAN NOT NULL"],
-    ["noremove", "BOOLEAN NOT NULL"],
-    ["song", "BOOLEAN NOT NULL"],
-    ["actions", "TEXT[] NOT NULL"],
-    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
+    "id", "name", "descid", "image", "quality",
+    "nohookah", "nopvp", "noremove", "song", "actions", "ambiguous",
   ]);
   await markAmbiguous("effects");
 }

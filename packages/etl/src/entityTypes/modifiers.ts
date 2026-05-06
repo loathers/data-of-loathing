@@ -120,10 +120,7 @@ export async function populateModifiers() {
     await populateEntity(
       dataForType,
       `${target}Modifiers`,
-      [
-        [target, `INTEGER REFERENCES ${foreignTable}(id) PRIMARY KEY`],
-        ["modifiers", "JSONB NOT NULL"],
-      ],
+      [target, "modifiers"],
       async (datum) => {
         const lookup = `${target}:${datum.thing}`;
         if (IGNORES.includes(lookup)) {

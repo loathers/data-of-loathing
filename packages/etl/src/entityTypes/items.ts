@@ -1,4 +1,4 @@
-import { defineEnum, markAmbiguous, populateEntity } from "../db.js";
+import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
 const VERSION = 1;
@@ -105,20 +105,10 @@ export async function loadItems() {
 }
 
 export async function populateItems() {
-  const use = await defineEnum("ItemUse", ItemUse);
   await populateEntity(loadItems, "items", [
-    ["id", "INTEGER NOT NULL PRIMARY KEY"],
-    ["name", "TEXT NOT NULL"],
-    ["descid", "INTEGER UNIQUE"],
-    ["image", "TEXT NOT NULL"],
-    ["uses", `${use}[] NOT NULL`],
-    ["quest", "BOOLEAN NOT NULL"],
-    ["gift", "BOOLEAN NOT NULL"],
-    ["tradeable", "BOOLEAN NOT NULL"],
-    ["discardable", "BOOLEAN NOT NULL"],
-    ["autosell", "INTEGER NOT NULL"],
-    ["plural", "TEXT"],
-    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
+    "id", "name", "descid", "image", "uses",
+    "quest", "gift", "tradeable", "discardable",
+    "autosell", "plural", "ambiguous",
   ]);
   await markAmbiguous("items");
 }

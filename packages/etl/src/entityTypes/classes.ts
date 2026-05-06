@@ -34,16 +34,8 @@ export async function populateClasses() {
     loadClasses,
     "classes",
     [
-      ["id", "INTEGER PRIMARY KEY"],
-      ["name", "TEXT NOT NULL"],
-      ["enumName", "TEXT NOT NULL"],
-      ["image", "TEXT"],
-      ["primeStatIndex", "INTEGER NOT NULL"],
-      ["path", "INTEGER REFERENCES paths(id)"],
-      ["stun", "TEXT"],
-      ["stomachCapacity", "INTEGER"],
-      ["liverCapacity", "INTEGER"],
-      ["spleenCapacity", "INTEGER"],
+      "id", "name", "enumName", "image", "primeStatIndex",
+      "path", "stun", "stomachCapacity", "liverCapacity", "spleenCapacity",
     ],
     async (clazz) => ({
       ...clazz,

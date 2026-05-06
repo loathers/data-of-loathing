@@ -94,12 +94,7 @@ export async function populateConcoctions() {
   await populateEntity(
     data,
     "concoctions",
-    [
-      ["id", "INTEGER PRIMARY KEY"],
-      ["item", "INTEGER REFERENCES items(id) NOT NULL"],
-      ["methods", "TEXT[] NOT NULL"],
-      ["comment", "TEXT"],
-    ],
+    ["id", "item", "methods", "comment"],
     async (concoction) => ({
       ...concoction,
       item: await resolveReference(
@@ -118,11 +113,7 @@ export async function populateConcoctions() {
   await populateEntity(
     junctionTable,
     "ingredients",
-    [
-      ["concoction", `INTEGER REFERENCES "concoctions" (id)`],
-      ["item", "INTEGER REFERENCES items(id)"],
-      ["quantity", "INTEGER NOT NULL"],
-    ],
+    ["concoction", "item", "quantity"],
     async (ingredient) => ({
       ...ingredient,
       item: await resolveReference(

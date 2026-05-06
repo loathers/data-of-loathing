@@ -73,15 +73,7 @@ export async function populateEquipment() {
   await populateEntity(
     equipment,
     "equipment",
-    [
-      ["id", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],
-      ["power", "INTEGER NOT NULL"],
-      ["musRequirement", "INTEGER NOT NULL"],
-      ["mysRequirement", "INTEGER NOT NULL"],
-      ["moxRequirement", "INTEGER NOT NULL"],
-      ["type", "TEXT"],
-      ["hands", "INTEGER"],
-    ],
+    ["id", "power", "musRequirement", "mysRequirement", "moxRequirement", "type", "hands"],
     async (equipment) => {
       const id = await resolveReference<{ id: number; uses: ItemUse[] }>(
         "equipment",

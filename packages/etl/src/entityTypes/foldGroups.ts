@@ -28,10 +28,7 @@ export async function loadFoldGroups() {
 export async function populateFoldGroups() {
   const data = await loadFoldGroups();
 
-  await populateEntity(data, "foldGroups", [
-    ["id", "INTEGER PRIMARY KEY"],
-    ["damage", "INTEGER NOT NULL"],
-  ]);
+  await populateEntity(data, "foldGroups", ["id", "damage"]);
 
   const junctionTable = data.flatMap(({ id, items }) =>
     items.map((item) => ({ foldGroup: id, item })),
@@ -40,10 +37,7 @@ export async function populateFoldGroups() {
   await populateEntity(
     junctionTable,
     "foldables",
-    [
-      ["foldGroup", `INTEGER REFERENCES "foldGroups" (id)`],
-      ["item", "INTEGER REFERENCES items(id)"],
-    ],
+    ["foldGroup", "item"],
     async (foldable) => ({
       ...foldable,
       item: await resolveReference("foldGroup", "items", "name", foldable.item),

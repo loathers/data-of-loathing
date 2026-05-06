@@ -1,10 +1,62 @@
-import postgres from "postgres";
-import { stringify } from "csv-stringify";
-import { pipeline } from "stream/promises";
+import Database from "better-sqlite3";
+import { drizzle, BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import {
+  generateSQLiteDrizzleJson,
+  generateSQLiteMigration,
+} from "drizzle-kit/api";
+import * as schema from "data-of-loathing-schema";
+import { eq } from "drizzle-orm";
+import { meta } from "data-of-loathing-schema";
 
-export const sql = postgres(process.env.DATABASE_URL!, {
-  onnotice: () => {},
-});
+export type DB = BetterSQLite3Database<typeof schema>;
+
+let _sqlite: Database.Database;
+let _db: DB;
+
+export function openDatabase(path: string) {
+  _sqlite = new Database(path);
+  _db = drizzle(_sqlite, { schema });
+}
+
+export function getDb(): DB {
+  return _db;
+}
+
+export async function initialiseDatabase() {
+  const [emptySnapshot, currentSnapshot] = await Promise.all([
+    generateSQLiteDrizzleJson({}),
+    generateSQLiteDrizzleJson(schema),
+  ]);
+  const statements = await generateSQLiteMigration(emptySnapshot, currentSnapshot);
+  for (const statement of statements) {
+    _sqlite.exec(statement);
+  }
+}
+
+function serializeValue(value: unknown): unknown {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "boolean") return value ? 1 : 0;
+  if (Array.isArray(value) || (typeof value === "object" && value !== null))
+    return JSON.stringify(value);
+  return value;
+}
+
+function deserializeRow(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(row).map(([k, v]) => {
+      if (typeof v === "string" && (v.startsWith("[") || v.startsWith("{"))) {
+        try {
+          return [k, JSON.parse(v)];
+        } catch {
+          return [k, v];
+        }
+      }
+      return [k, v];
+    }),
+  );
+}
 
 const referenceCache = new Map<string, number | null>();
 
@@ -22,20 +74,20 @@ export async function resolveReference<T extends { id: number }>(
   caseInsensitive = false,
   find?: (row: T) => boolean,
 ): Promise<number | null> {
-  // We cast all results to string here just to keep the type system happy.
-  // Since the next step is converting to CSV, this is all handled.
-
   if (name === null) return null;
+
   const idPrefix = name.match(/^\[(\d+)]/);
   if (idPrefix) return Number(idPrefix[1]);
 
   const cacheKey = referenceCacheKey(tableName, columnName, name);
+
   if (!referenceCache.has(cacheKey)) {
-    const results = await sql<T[]>`SELECT * FROM ${sql(
-      tableName,
-    )} WHERE ${sql(columnName)} ${
-      caseInsensitive ? sql`ILIKE` : sql`=`
-    } ${name}`;
+    const query = caseInsensitive
+      ? `SELECT * FROM "${tableName}" WHERE "${columnName}" = ? COLLATE NOCASE`
+      : `SELECT * FROM "${tableName}" WHERE "${columnName}" = ?`;
+
+    const raw = _sqlite.prepare(query).all(name) as Record<string, unknown>[];
+    const results = raw.map(deserializeRow) as T[];
 
     if (results.length < 1) {
       console.log(
@@ -69,23 +121,9 @@ export async function populateEntity<
 >(
   loader: (() => Promise<T[]>) | T[],
   tableName: string,
-  columns: [columnName: keyof T, typeAndConstraints: string][],
-  transform?: (datum: T) => Promise<U>,
+  columns: (keyof T)[],
+  transform?: (datum: T) => Promise<U | null>,
 ) {
-  await sql`DROP TABLE IF EXISTS ${sql(tableName)} CASCADE`;
-  const createQuery = `
-  CREATE TABLE "${tableName}" (
-    ${columns
-      .map(
-        ([columnName, typeAndConstraint]) =>
-          `"${String(columnName)}" ${typeAndConstraint}`,
-      )
-      .join(", ")}
-  )
-  `;
-  await sql.unsafe(createQuery);
-
-  // Load items and set up readable CSV stream
   const data = Array.isArray(loader) ? loader : await loader();
 
   const transformed = transform
@@ -94,60 +132,63 @@ export async function populateEntity<
       )
     : data;
 
-  const csv = stringify(transformed, {
-    header: true,
-    columns: columns.map(([columnName]) => columnName as string),
-    cast: {
-      boolean: (v) => (v ? "t" : "f"),
-      object: (o) => {
-        if (Array.isArray(o)) {
-          return `{${o
-            .map((v) => `"${String(v).replaceAll(/(["'])/g, "\\$1")}"`)
-            .join(",")}}`;
-        }
-        return JSON.stringify(o);
-      },
-    },
+  if (transformed.length === 0) return;
+
+  const columnNames = columns.map(String);
+  const placeholders = columnNames.map(() => "?").join(", ");
+  const stmt = _sqlite.prepare(
+    `INSERT INTO "${tableName}" (${columnNames.map((n) => `"${n}"`).join(", ")}) VALUES (${placeholders})`,
+  );
+
+  const insertMany = _sqlite.transaction((rows: unknown[]) => {
+    for (const row of rows) {
+      stmt.run(
+        columnNames.map((col) =>
+          serializeValue((row as Record<string, unknown>)[col]),
+        ),
+      );
+    }
   });
 
-  // Set up writeable copy stream to database
-  const query = await sql`COPY ${sql(
-    tableName,
-  )} FROM stdin WITH (HEADER MATCH, FORMAT csv);`.writable();
-
-  // Stream!
-  await pipeline(csv, query);
+  insertMany(transformed);
 }
-
-export async function defineEnum<Enum extends { [s: string]: string }>(
-  name: string,
-  e: Enum,
-) {
-  await sql.unsafe(`DROP TYPE IF EXISTS "${name}" CASCADE`);
-  const createQuery = `CREATE TYPE "${name}" AS ENUM (${Object.values(e)
-    .sort()
-    .map((v) => `'${v}'`)
-    .join(",")})`;
-  await sql.unsafe(createQuery);
-  return `"${name}"`;
-}
-
-export async function initialiseDatabase() {}
 
 export async function markAmbiguous(tableName: string) {
-  await sql`
-    UPDATE ${sql(tableName)}
-      SET "ambiguous" = TRUE
-    FROM ( 
-      SELECT 
-        "name" 
-      FROM 
-        ${sql(tableName)}
-      GROUP BY 
-        "name" 
-      HAVING 
-        COUNT(*) > 1
-    ) as "d"
-    WHERE ${sql(tableName)}."name" = "d"."name"
-  `;
+  _sqlite.exec(`
+    UPDATE "${tableName}" SET "ambiguous" = 1
+    WHERE "name" IN (
+      SELECT "name" FROM "${tableName}"
+      GROUP BY "name"
+      HAVING COUNT(*) > 1
+    )
+  `);
+}
+
+export async function prepareMeta() {
+  _db
+    .insert(meta)
+    .values({
+      id: 1,
+      lastUpdate: new Date(0),
+      lastRevision: 0,
+    })
+    .onConflictDoNothing()
+    .run();
+}
+
+export async function getLastUpdate(): Promise<Date> {
+  const row = _db.select({ lastUpdate: meta.lastUpdate }).from(meta).get();
+  return row?.lastUpdate ?? new Date(0);
+}
+
+export async function setLastUpdate(date: Date) {
+  _db.update(meta).set({ lastUpdate: date }).where(eq(meta.id, 1)).run();
+}
+
+export async function setLastRevision(revision: number) {
+  _db
+    .update(meta)
+    .set({ lastRevision: revision })
+    .where(eq(meta.id, 1))
+    .run();
 }

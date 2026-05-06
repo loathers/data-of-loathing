@@ -50,11 +50,7 @@ export async function loadOutfits() {
 export async function populateOutfits() {
   const outfits = await loadOutfits();
 
-  await populateEntity(outfits, "outfits", [
-    ["id", "INTEGER PRIMARY KEY"],
-    ["name", "TEXT NOT NULL"],
-    ["image", "TEXT NOT NULL"],
-  ]);
+  await populateEntity(outfits, "outfits", ["id", "name", "image"]);
 
   const outfitEquipment = outfits.flatMap((o) =>
     o.equipment.map((e) => ({ outfit: o.id, equipment: e })),
@@ -67,10 +63,7 @@ export async function populateOutfits() {
   await populateEntity(
     outfitEquipment,
     "outfitEquipment",
-    [
-      ["outfit", "INTEGER NOT NULL REFERENCES outfits(id)"],
-      ["equipment", "INTEGER NOT NULL REFERENCES items(id)"],
-    ],
+    ["outfit", "equipment"],
     async (equip) => ({
       ...equip,
       equipment: await resolveReference(
@@ -85,11 +78,7 @@ export async function populateOutfits() {
   await populateEntity(
     outfitTreats,
     "outfitTreats",
-    [
-      ["outfit", "INTEGER REFERENCES outfits(id)"],
-      ["item", "INTEGER REFERENCES items(id)"],
-      ["chance", "REAL NOT NULL"],
-    ],
+    ["outfit", "item", "chance"],
     async (treat) => ({
       ...treat,
       item: await resolveReference("outfitTreats", "items", "name", treat.item),

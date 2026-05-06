@@ -1,4 +1,4 @@
-import { defineEnum, populateEntity, resolveReference } from "../db.js";
+import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
   loadMafiaData,
@@ -128,11 +128,6 @@ export async function loadNatives() {
 }
 
 export async function populateLocations() {
-  const [environment, difficulty] = await Promise.all([
-    defineEnum("LocationEnvironment", LocationEnvironment),
-    defineEnum("LocationDifficulty", LocationDifficulty),
-  ]);
-
   const locations = await loadLocations();
   const natives = await loadNatives();
 
@@ -147,17 +142,8 @@ export async function populateLocations() {
   }));
 
   await populateEntity(locationsWithCombatRate, "locations", [
-    ["id", "INTEGER"],
-    ["name", "TEXT PRIMARY KEY"],
-    ["zone", "TEXT NOT NULL"],
-    ["url", "TEXT NOT NULL"],
-    ["difficulty", `${difficulty} NOT NULL`],
-    ["environment", `${environment} NOT NULL`],
-    ["statRequirement", "INTEGER NOT NULL"],
-    ["waterLevel", "INTEGER"],
-    ["overdrunk", "BOOLEAN NOT NULL"],
-    ["nowander", "BOOLEAN NOT NULL"],
-    ["combatRate", "INTEGER NOT NULL"],
+    "id", "name", "zone", "url", "difficulty", "environment",
+    "statRequirement", "waterLevel", "overdrunk", "nowander", "combatRate",
   ]);
 
   await populateEntity(
@@ -165,13 +151,7 @@ export async function populateLocations() {
       n.monsters.map((m) => ({ ...m, location: n.location })),
     ),
     "nativeMonsters",
-    [
-      ["location", "TEXT NOT NULL REFERENCES locations(name)"],
-      ["monster", "INTEGER NOT NULL REFERENCES monsters(id)"],
-      ["weight", "REAL NOT NULL"],
-      ["rejection", "REAL NOT NULL"],
-      ["parity", "INTEGER"],
-    ],
+    ["location", "monster", "weight", "rejection", "parity"],
     async (nativeMonster) => {
       const monster = await resolveReference(
         "nativeMonsters",

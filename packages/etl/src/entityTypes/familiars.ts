@@ -1,4 +1,4 @@
-import { defineEnum, populateEntity, resolveReference } from "../db.js";
+import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
 const VERSION = 4;
@@ -84,22 +84,13 @@ export async function loadFamiliars() {
 }
 
 export async function populateFamiliars() {
-  const category = await defineEnum("FamiliarCategory", FamiliarCategory);
   return populateEntity(
     loadFamiliars,
     "familiars",
     [
-      ["id", "INTEGER PRIMARY KEY"],
-      ["name", "TEXT NOT NULL"],
-      ["image", "TEXT NOT NULL"],
-      ["categories", `${category}[] NOT NULL`],
-      ["larva", "INTEGER REFERENCES items(id)"],
-      ["equipment", "INTEGER REFERENCES items(id)"],
-      ["cageMatch", "INTEGER NOT NULL"],
-      ["scavengerHunt", "INTEGER NOT NULL"],
-      ["obstacleCourse", "INTEGER NOT NULL"],
-      ["hideAndSeek", "INTEGER NOT NULL"],
-      ["attributes", "TEXT[] NOT NULL"],
+      "id", "name", "image", "categories", "larva",
+      "equipment", "cageMatch", "scavengerHunt", "obstacleCourse",
+      "hideAndSeek", "attributes",
     ],
     async (familiar) => ({
       ...familiar,

@@ -30,7 +30,7 @@ export async function loadZapGroups() {
 export async function populateZapGroups() {
   const data = await loadZapGroups();
 
-  await populateEntity(data, "zapGroups", [["id", "INTEGER PRIMARY KEY"]]);
+  await populateEntity(data, "zapGroups", ["id"]);
 
   const junctionTable = data.flatMap(({ id, items }) =>
     items.map((item) => ({ zapGroup: id, item })),
@@ -39,10 +39,7 @@ export async function populateZapGroups() {
   await populateEntity(
     junctionTable,
     "zapGroupItems",
-    [
-      ["zapGroup", `INTEGER REFERENCES "zapGroups" (id)`],
-      ["item", "INTEGER REFERENCES items(id)"],
-    ],
+    ["zapGroup", "item"],
     async (zapGroupItem) => ({
       ...zapGroupItem,
       item: await resolveReference(

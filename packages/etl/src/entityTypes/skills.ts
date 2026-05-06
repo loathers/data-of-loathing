@@ -1,4 +1,4 @@
-import { defineEnum, markAmbiguous, populateEntity } from "../db.js";
+import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
 const VERSION = 6;
@@ -74,18 +74,9 @@ export async function loadSkills() {
 }
 
 export async function populateSkills() {
-  const tag = await defineEnum("SkillTag", SkillTag);
   await populateEntity(loadSkills, "skills", [
-    ["id", "INTEGER PRIMARY KEY"],
-    ["name", "TEXT NOT NULL"],
-    ["image", "TEXT NOT NULL"],
-    ["tags", `${tag}[] NOT NULL`],
-    ["mpCost", "INTEGER NOT NULL"],
-    ["duration", "INTEGER NOT NULL"],
-    ["guildLevel", "INTEGER"],
-    ["maxLevel", "INTEGER"],
-    ["permable", "BOOLEAN NOT NULL"],
-    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
+    "id", "name", "image", "tags", "mpCost",
+    "duration", "guildLevel", "maxLevel", "permable", "ambiguous",
   ]);
   await markAmbiguous("skills");
 }
