@@ -4,7 +4,9 @@
     "module": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "moduleResolution": "NodeNext",
     "strict": true,
     "skipLibCheck": true
   },
