@@ -7,7 +7,7 @@ async function main() {
   if (!(await checkVersions())) {
     process.exit(1);
   }
-  openDatabase(SQLITE_PATH);
+  await openDatabase(SQLITE_PATH);
   await initialiseDatabase();
   await prepareMeta();
   await populateDatabase();

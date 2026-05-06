@@ -1,3 +1,4 @@
+import { Item } from "data-of-loathing-schema";
 import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
@@ -5,7 +6,6 @@ const VERSION = 1;
 const FILENAME = "items";
 
 export enum ItemUse {
-  // Primary
   Food = "food",
   Drink = "drink",
   Spleen = "spleen",
@@ -36,7 +36,6 @@ export enum ItemUse {
   Zap = "zap",
   Sphere = "sphere",
   Guardian = "guardian",
-  // Secondary
   Combat = "combat",
   CombatReusable = "combat reusable",
   Single = "single",
@@ -105,10 +104,6 @@ export async function loadItems() {
 }
 
 export async function populateItems() {
-  await populateEntity(loadItems, "items", [
-    "id", "name", "descid", "image", "uses",
-    "quest", "gift", "tradeable", "discardable",
-    "autosell", "plural", "ambiguous",
-  ]);
+  await populateEntity(loadItems, Item);
   await markAmbiguous("items");
 }

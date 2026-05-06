@@ -1,3 +1,4 @@
+import { Consumable } from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
@@ -32,7 +33,7 @@ const transformedQuality = (quality: string) => {
   return validQuality(quality.replaceAll(" ", "_"));
 };
 
-export type Consumable = {
+export type ConsumableRow = {
   id: string;
   stomach: number;
   liver: number;
@@ -50,7 +51,10 @@ export type Consumable = {
   notes: string;
 };
 
-const parseConsumable = (type: string, parts: string[]): Consumable | null => {
+const parseConsumable = (
+  type: string,
+  parts: string[],
+): ConsumableRow | null => {
   if (parts[3] === "pseudoitem") return null;
 
   return {
@@ -118,7 +122,7 @@ export async function loadConsumables() {
           .filter((d) => d !== null) ?? [],
     );
 
-  const combined = data.reduce<Record<string, Consumable>>((acc, c) => {
+  const combined = data.reduce<Record<string, ConsumableRow>>((acc, c) => {
     if (acc[c.id]) {
       acc[c.id].stomach += c.stomach;
       acc[c.id].liver += c.liver;
@@ -136,25 +140,17 @@ export async function populateConsumables() {
   const consumables = await loadConsumables();
   await populateEntity(
     consumables,
-    "consumables",
-    [
-      "id", "stomach", "liver", "spleen", "levelRequirement",
-      "quality", "adventureRange", "adventures",
-      "muscle", "muscleRange", "mysticality", "mysticalityRange",
-      "moxie", "moxieRange", "notes",
-    ],
+    Consumable,
     async (consumable) => {
-      const id = await resolveReference(
+      const itemId = await resolveReference(
         "consumables",
         "items",
         "name",
         consumable.id,
       );
-      if (!id) return null;
-      return {
-        ...consumable,
-        id,
-      };
+      if (!itemId) return null;
+      const { id: _, ...rest } = consumable;
+      return { ...rest, item: itemId };
     },
   );
 }

@@ -1,21 +1,31 @@
 {
   "name": "data-of-loathing",
-  "version": "2.6.2",
+  "version": "3.0.0",
+  "type": "module",
   "packageManager": "yarn@4.6.0",
   "repository": {
     "url": "https://github.com/loathers/data-of-loathing"
   },
-  "devDependencies": {
-    "@genql/cli": "^6.3.3",
-    "typescript": "^5.9.3"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "files": [
     "dist"
   ],
-  "exports": {
-    ".": "./dist/index.js"
-  },
   "scripts": {
-    "build": "genql --endpoint https://data.loathers.net/graphql --output ./src && tsc"
+    "build": "tsc"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "data-of-loathing-schema": "workspace:*",
+    "drizzle-orm": "^0.44.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.0.2",
+    "typescript": "^5.9.3"
   }
 }

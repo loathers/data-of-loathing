@@ -1,4 +1,5 @@
-import { populateEntity, resolveReference } from "../db.js";
+import { ZapGroup } from "data-of-loathing-schema";
+import { populateEntity, populatePivot, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 
 const VERSION = 1;
@@ -30,24 +31,22 @@ export async function loadZapGroups() {
 export async function populateZapGroups() {
   const data = await loadZapGroups();
 
-  await populateEntity(data, "zapGroups", ["id"]);
-
-  const junctionTable = data.flatMap(({ id, items }) =>
-    items.map((item) => ({ zapGroup: id, item })),
+  await populateEntity(
+    data.map(({ items: _, ...g }) => g),
+    ZapGroup,
   );
 
-  await populateEntity(
-    junctionTable,
+  const pivotRows: { zapGroup: number; item: number | null }[] = [];
+  for (const group of data) {
+    for (const name of group.items) {
+      const itemId = await resolveReference("zapGroup", "items", "name", name);
+      pivotRows.push({ zapGroup: group.id, item: itemId });
+    }
+  }
+
+  await populatePivot(
     "zapGroupItems",
     ["zapGroup", "item"],
-    async (zapGroupItem) => ({
-      ...zapGroupItem,
-      item: await resolveReference(
-        "zapGroup",
-        "items",
-        "name",
-        zapGroupItem.item,
-      ),
-    }),
+    pivotRows.filter((r) => r.item !== null) as Record<string, unknown>[],
   );
 }

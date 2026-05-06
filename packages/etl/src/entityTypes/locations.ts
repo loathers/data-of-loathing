@@ -1,3 +1,4 @@
+import { Location, NativeMonster } from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
@@ -45,15 +46,12 @@ export type LocationType = {
   difficulty: LocationDifficulty;
   environment: LocationEnvironment;
   statRequirement: number;
-  /** Water level, for Heavy Rains locations without an environment  */
   waterLevel: number | null;
-  /** Location in which one cannot adventure while overdrunk */
   overdrunk: boolean;
-  /** Location in which wandering monsters cannot appear */
   nowander: boolean;
 };
 
-export type NativeMonster = {
+export type NativeMonsterType = {
   monster: string;
   weight: number;
   rejection: number;
@@ -63,7 +61,7 @@ export type NativeMonster = {
 export type NativesType = {
   location: string;
   combatRate: number;
-  monsters: NativeMonster[];
+  monsters: NativeMonsterType[];
 };
 
 const parseSnarfblat = (url: string) =>
@@ -90,7 +88,7 @@ const parseLocation = (parts: string[]): LocationType => ({
   ...parseAttributes(parts[2]),
 });
 
-const parseNativeMonster = (part: string): NativeMonster => {
+const parseNativeMonster = (part: string): NativeMonsterType => {
   const match = part.match(/(.*?): (-?\d+)(?:([a-z]+)(\d+)?)?/);
   if (!match) return { monster: part, weight: 1, rejection: 0, parity: null };
   const [, name, weight, flag, rejection] = match;
@@ -136,34 +134,28 @@ export async function populateLocations() {
     {},
   );
 
-  const locationsWithCombatRate = locations.map((l) => ({
-    ...l,
-    combatRate: combatRateByLocation[l.name] ?? -1,
-  }));
-
-  await populateEntity(locationsWithCombatRate, "locations", [
-    "id", "name", "zone", "url", "difficulty", "environment",
-    "statRequirement", "waterLevel", "overdrunk", "nowander", "combatRate",
-  ]);
+  await populateEntity(
+    locations.map((l) => ({
+      ...l,
+      combatRate: combatRateByLocation[l.name] ?? -1,
+    })),
+    Location,
+  );
 
   await populateEntity(
     natives.flatMap((n) =>
       n.monsters.map((m) => ({ ...m, location: n.location })),
     ),
-    "nativeMonsters",
-    ["location", "monster", "weight", "rejection", "parity"],
-    async (nativeMonster) => {
+    NativeMonster,
+    async (nm) => {
       const monster = await resolveReference(
         "nativeMonsters",
         "monsters",
         "name",
-        nativeMonster.monster,
+        nm.monster,
       );
       if (!monster) return null;
-      return {
-        ...nativeMonster,
-        monster,
-      };
+      return { ...nm, monster };
     },
   );
 }

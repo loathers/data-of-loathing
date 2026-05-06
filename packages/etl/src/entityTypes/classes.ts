@@ -1,3 +1,4 @@
+import { AscensionClass } from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import { loadMafiaEnum } from "../utils.js";
 
@@ -32,14 +33,10 @@ export async function loadClasses() {
 export async function populateClasses() {
   return populateEntity(
     loadClasses,
-    "classes",
-    [
-      "id", "name", "enumName", "image", "primeStatIndex",
-      "path", "stun", "stomachCapacity", "liverCapacity", "spleenCapacity",
-    ],
+    AscensionClass,
     async (clazz) => ({
       ...clazz,
-      path: await resolveReference("classes", "paths", "enumName", clazz.path),
+      path: await resolveReference("classes", "paths", "enum_name", clazz.path),
     }),
   );
 }

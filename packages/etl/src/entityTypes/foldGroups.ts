@@ -1,4 +1,5 @@
-import { populateEntity, resolveReference } from "../db.js";
+import { FoldGroup } from "data-of-loathing-schema";
+import { populateEntity, populatePivot, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 
 const VERSION = 1;
@@ -28,19 +29,22 @@ export async function loadFoldGroups() {
 export async function populateFoldGroups() {
   const data = await loadFoldGroups();
 
-  await populateEntity(data, "foldGroups", ["id", "damage"]);
-
-  const junctionTable = data.flatMap(({ id, items }) =>
-    items.map((item) => ({ foldGroup: id, item })),
+  await populateEntity(
+    data.map(({ items: _, ...g }) => g),
+    FoldGroup,
   );
 
-  await populateEntity(
-    junctionTable,
+  const pivotRows: { foldGroup: number; item: number | null }[] = [];
+  for (const group of data) {
+    for (const name of group.items) {
+      const itemId = await resolveReference("foldGroup", "items", "name", name);
+      pivotRows.push({ foldGroup: group.id, item: itemId });
+    }
+  }
+
+  await populatePivot(
     "foldables",
     ["foldGroup", "item"],
-    async (foldable) => ({
-      ...foldable,
-      item: await resolveReference("foldGroup", "items", "name", foldable.item),
-    }),
+    pivotRows.filter((r) => r.item !== null) as Record<string, unknown>[],
   );
 }

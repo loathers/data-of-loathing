@@ -1,3 +1,4 @@
+import { Path } from "data-of-loathing-schema";
 import { populateEntity } from "../db.js";
 import { loadMafiaEnum } from "../utils.js";
 
@@ -38,9 +39,5 @@ export async function loadPaths() {
 }
 
 export async function populatePaths() {
-  return populateEntity(loadPaths, "paths", [
-    "id", "name", "enumName", "image", "isAvatar", "article",
-    "pointsPreference", "maximumPoints", "bucket",
-    "stomachCapacity", "liverCapacity", "spleenCapacity",
-  ]);
+  return populateEntity(loadPaths, Path);
 }

@@ -1,3 +1,4 @@
+import { Concoction, Ingredient } from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 
@@ -46,7 +47,6 @@ export async function loadConcoctions() {
   let i = 0;
   const concoctions = [];
 
-  // Accumulate comments that precede a block of
   const comment = [];
   let finishedComment = true;
   for (const line of raw) {
@@ -72,7 +72,6 @@ export async function loadConcoctions() {
 
     const concoction = parseConcoction(line, i++, comment);
 
-    // Filter out concoctions that produce or consume pseudoitems
     if (
       concoction.item === "worthless item" ||
       concoction.methods.includes("SUSHI") ||
@@ -93,35 +92,34 @@ export async function populateConcoctions() {
 
   await populateEntity(
     data,
-    "concoctions",
-    ["id", "item", "methods", "comment"],
+    Concoction,
     async (concoction) => ({
-      ...concoction,
+      id: concoction.id,
       item: await resolveReference(
         "concoction result",
         "items",
         "name",
         concoction.item,
       ),
+      methods: concoction.methods,
+      comment: concoction.comment,
     }),
   );
 
-  const junctionTable = data.flatMap(({ id, ingredients }) =>
-    ingredients.map((item) => ({ concoction: id, ...item })),
-  );
-
   await populateEntity(
-    junctionTable,
-    "ingredients",
-    ["concoction", "item", "quantity"],
+    data.flatMap(({ id, ingredients }) =>
+      ingredients.map((ing) => ({ concoction: id, ...ing })),
+    ),
+    Ingredient,
     async (ingredient) => ({
-      ...ingredient,
+      concoction: ingredient.concoction,
       item: await resolveReference(
         "concoction ingredient",
         "items",
         "name",
         ingredient.item,
       ),
+      quantity: ingredient.quantity,
     }),
   );
 }

@@ -1,3 +1,4 @@
+import { Skill } from "data-of-loathing-schema";
 import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
@@ -74,9 +75,6 @@ export async function loadSkills() {
 }
 
 export async function populateSkills() {
-  await populateEntity(loadSkills, "skills", [
-    "id", "name", "image", "tags", "mpCost",
-    "duration", "guildLevel", "maxLevel", "permable", "ambiguous",
-  ]);
+  await populateEntity(loadSkills, Skill);
   await markAmbiguous("skills");
 }

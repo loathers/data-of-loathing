@@ -1,3 +1,4 @@
+import { Equipment } from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 import { ItemUse } from "./items.js";
@@ -72,21 +73,19 @@ export async function populateEquipment() {
   const equipment = await loadEquipment();
   await populateEntity(
     equipment,
-    "equipment",
-    ["id", "power", "musRequirement", "mysRequirement", "moxRequirement", "type", "hands"],
-    async (equipment) => {
-      const id = await resolveReference<{ id: number; uses: ItemUse[] }>(
+    Equipment,
+    async (equip) => {
+      const itemId = await resolveReference<{ id: number; uses: ItemUse[] }>(
         "equipment",
         "items",
         "name",
-        equipment.id,
+        equip.id,
         false,
         (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses?.includes(u)),
       );
-      return {
-        ...equipment,
-        id,
-      };
+      if (!itemId) return null;
+      const { id: _, ...rest } = equip;
+      return { ...rest, item: itemId };
     },
   );
 }

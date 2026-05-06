@@ -114,7 +114,7 @@ async function getLastGitHubUpdate() {
 const SQLITE_PATH = process.env.SQLITE_PATH ?? "./data-of-loathing.sqlite";
 
 export async function watch(every: number) {
-  openDatabase(SQLITE_PATH);
+  await openDatabase(SQLITE_PATH);
   await initialiseDatabase();
 
   // When we run watch for the first time, update the database even if the upstream data has not changed. This is because

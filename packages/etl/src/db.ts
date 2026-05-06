@@ -1,36 +1,26 @@
-import Database from "better-sqlite3";
-import { drizzle, BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import {
-  generateSQLiteDrizzleJson,
-  generateSQLiteMigration,
-} from "drizzle-kit/api";
-import * as schema from "data-of-loathing-schema";
-import { eq } from "drizzle-orm";
-import { meta } from "data-of-loathing-schema";
+import { MikroORM } from "@mikro-orm/better-sqlite";
+import { entities } from "data-of-loathing-schema";
 
-export type DB = BetterSQLite3Database<typeof schema>;
+let orm: MikroORM;
 
-let _sqlite: Database.Database;
-let _db: DB;
-
-export function openDatabase(path: string) {
-  _sqlite = new Database(path);
-  _db = drizzle(_sqlite, { schema });
+function em() {
+  return orm.em;
 }
 
-export function getDb(): DB {
-  return _db;
+function conn() {
+  return orm.em.getConnection();
+}
+
+export async function openDatabase(path: string) {
+  orm = await MikroORM.init({
+    dbName: path,
+    entities,
+    allowGlobalContext: true,
+  });
 }
 
 export async function initialiseDatabase() {
-  const [emptySnapshot, currentSnapshot] = await Promise.all([
-    generateSQLiteDrizzleJson({}),
-    generateSQLiteDrizzleJson(schema),
-  ]);
-  const statements = await generateSQLiteMigration(emptySnapshot, currentSnapshot);
-  for (const statement of statements) {
-    _sqlite.exec(statement);
-  }
+  await orm.schema.refreshDatabase();
 }
 
 function serializeValue(value: unknown): unknown {
@@ -41,9 +31,7 @@ function serializeValue(value: unknown): unknown {
   return value;
 }
 
-function deserializeRow(
-  row: Record<string, unknown>,
-): Record<string, unknown> {
+function deserializeRow(row: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(row).map(([k, v]) => {
       if (typeof v === "string" && (v.startsWith("[") || v.startsWith("{"))) {
@@ -58,13 +46,43 @@ function deserializeRow(
   );
 }
 
-const referenceCache = new Map<string, number | null>();
+export async function populateEntity<T extends Record<string, unknown>>(
+  loader: (() => Promise<T[]>) | T[],
+  Entity: new (...args: any[]) => any,
+  transform?: (datum: T) => Promise<Record<string, unknown> | null>,
+) {
+  const data = Array.isArray(loader) ? loader : await loader();
+  const transformed = transform
+    ? (await Promise.all(data.map((d) => transform(d)))).filter(
+        (d) => d !== null,
+      )
+    : data;
+  if (transformed.length === 0) return;
+  await em().insertMany(Entity as any, transformed as any[]);
+}
 
-const referenceCacheKey = (
-  tableName: string,
-  columnName: string,
-  name: string,
-) => `${tableName}.${columnName}=${name}`;
+// For pure M2M pivot tables that have no entity class.
+export async function populatePivot(
+  table: string,
+  columns: string[],
+  rows: Record<string, unknown>[],
+) {
+  if (rows.length === 0) return;
+  const c = conn();
+  const cols = columns.map((n) => `"${n}"`).join(", ");
+  const placeholders = columns.map(() => "?").join(", ");
+  await c.execute("BEGIN");
+  for (const row of rows) {
+    await c.execute(
+      `INSERT INTO "${table}" (${cols}) VALUES (${placeholders})`,
+      columns.map((col) => serializeValue(row[col])),
+      "run",
+    );
+  }
+  await c.execute("COMMIT");
+}
+
+const referenceCache = new Map<string, number | null>();
 
 export async function resolveReference<T extends { id: number }>(
   source: string,
@@ -75,120 +93,84 @@ export async function resolveReference<T extends { id: number }>(
   find?: (row: T) => boolean,
 ): Promise<number | null> {
   if (name === null) return null;
-
   const idPrefix = name.match(/^\[(\d+)]/);
   if (idPrefix) return Number(idPrefix[1]);
 
-  const cacheKey = referenceCacheKey(tableName, columnName, name);
+  const cacheKey = `${tableName}.${columnName}=${name}`;
+  if (referenceCache.has(cacheKey)) return referenceCache.get(cacheKey)!;
 
-  if (!referenceCache.has(cacheKey)) {
-    const query = caseInsensitive
-      ? `SELECT * FROM "${tableName}" WHERE "${columnName}" = ? COLLATE NOCASE`
-      : `SELECT * FROM "${tableName}" WHERE "${columnName}" = ?`;
+  const operator = caseInsensitive ? "LIKE" : "=";
+  const raw = await conn().execute<Record<string, unknown>[]>(
+    `SELECT * FROM "${tableName}" WHERE "${columnName}" ${operator} ?`,
+    [name],
+    "all",
+  );
+  const results = raw.map(deserializeRow) as T[];
 
-    const raw = _sqlite.prepare(query).all(name) as Record<string, unknown>[];
-    const results = raw.map(deserializeRow) as T[];
-
-    if (results.length < 1) {
-      console.log(
-        `Could not find ${tableName} with ${columnName} "${name}" when resolving reference for ${source}`,
-      );
-      referenceCache.set(cacheKey, null);
-    } else {
-      let index = results.length - 1;
-
-      if (results.length > 1) {
-        const found = find ? results.findIndex(find) : -1;
-        if (found >= 0) {
-          index = found;
-        } else {
-          console.log(
-            `Could not disambiguate multiple ${tableName} with ${columnName} "${name}", using last`,
-          );
-        }
+  if (results.length < 1) {
+    console.log(
+      `Could not find ${tableName} with ${columnName} "${name}" when resolving reference for ${source}`,
+    );
+    referenceCache.set(cacheKey, null);
+  } else {
+    let index = results.length - 1;
+    if (results.length > 1) {
+      const found = find ? results.findIndex(find) : -1;
+      if (found >= 0) {
+        index = found;
+      } else {
+        console.log(
+          `Could not disambiguate multiple ${tableName} with ${columnName} "${name}", using last`,
+        );
       }
-
-      referenceCache.set(cacheKey, results[index].id);
     }
+    referenceCache.set(cacheKey, results[index].id);
   }
 
   return referenceCache.get(cacheKey)!;
 }
 
-export async function populateEntity<
-  T extends Record<string, unknown>,
-  U = Record<keyof T, unknown>,
->(
-  loader: (() => Promise<T[]>) | T[],
-  tableName: string,
-  columns: (keyof T)[],
-  transform?: (datum: T) => Promise<U | null>,
-) {
-  const data = Array.isArray(loader) ? loader : await loader();
-
-  const transformed = transform
-    ? (await Promise.all(data.map((d) => transform(d)))).filter(
-        (d) => d !== null,
-      )
-    : data;
-
-  if (transformed.length === 0) return;
-
-  const columnNames = columns.map(String);
-  const placeholders = columnNames.map(() => "?").join(", ");
-  const stmt = _sqlite.prepare(
-    `INSERT INTO "${tableName}" (${columnNames.map((n) => `"${n}"`).join(", ")}) VALUES (${placeholders})`,
-  );
-
-  const insertMany = _sqlite.transaction((rows: unknown[]) => {
-    for (const row of rows) {
-      stmt.run(
-        columnNames.map((col) =>
-          serializeValue((row as Record<string, unknown>)[col]),
-        ),
-      );
-    }
-  });
-
-  insertMany(transformed);
-}
-
 export async function markAmbiguous(tableName: string) {
-  _sqlite.exec(`
-    UPDATE "${tableName}" SET "ambiguous" = 1
-    WHERE "name" IN (
-      SELECT "name" FROM "${tableName}"
-      GROUP BY "name"
-      HAVING COUNT(*) > 1
-    )
-  `);
+  await conn().execute(
+    `UPDATE "${tableName}" SET "ambiguous" = 1
+     WHERE "name" IN (
+       SELECT "name" FROM "${tableName}" GROUP BY "name" HAVING COUNT(*) > 1
+     )`,
+    [],
+    "run",
+  );
 }
+
 
 export async function prepareMeta() {
-  _db
-    .insert(meta)
-    .values({
-      id: 1,
-      lastUpdate: new Date(0),
-      lastRevision: 0,
-    })
-    .onConflictDoNothing()
-    .run();
+  await conn().execute(
+    `INSERT OR IGNORE INTO "meta" ("id", "last_update", "last_revision") VALUES (1, 0, 0)`,
+    [],
+    "run",
+  );
 }
 
 export async function getLastUpdate(): Promise<Date> {
-  const row = _db.select({ lastUpdate: meta.lastUpdate }).from(meta).get();
-  return row?.lastUpdate ?? new Date(0);
+  const rows = await conn().execute<{ last_update: number }[]>(
+    `SELECT "last_update" FROM "meta" WHERE "id" = 1`,
+    [],
+    "all",
+  );
+  return new Date((rows[0]?.last_update ?? 0) * 1000);
 }
 
 export async function setLastUpdate(date: Date) {
-  _db.update(meta).set({ lastUpdate: date }).where(eq(meta.id, 1)).run();
+  await conn().execute(
+    `UPDATE "meta" SET "last_update" = ? WHERE "id" = 1`,
+    [Math.floor(date.getTime() / 1000)],
+    "run",
+  );
 }
 
 export async function setLastRevision(revision: number) {
-  _db
-    .update(meta)
-    .set({ lastRevision: revision })
-    .where(eq(meta.id, 1))
-    .run();
+  await conn().execute(
+    `UPDATE "meta" SET "last_revision" = ? WHERE "id" = 1`,
+    [revision],
+    "run",
+  );
 }

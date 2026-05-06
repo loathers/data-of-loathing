@@ -1,5 +1,4 @@
-import { relations } from "drizzle-orm";
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { Collection, EntitySchema, type Ref } from "@mikro-orm/core";
 
 // ---- Enums ----------------------------------------------------------------
 
@@ -156,493 +155,808 @@ export enum ConsumableQuality {
   Drippy = "drippy",
 }
 
-// ---- Tables ---------------------------------------------------------------
+// ---- Entity Classes -------------------------------------------------------
 
-export const items = sqliteTable("items", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-  descid: integer("descid").unique(),
-  image: text("image").notNull(),
-  uses: text("uses", { mode: "json" }).$type<ItemUse[]>().notNull(),
-  quest: integer("quest", { mode: "boolean" }).notNull(),
-  gift: integer("gift", { mode: "boolean" }).notNull(),
-  tradeable: integer("tradeable", { mode: "boolean" }).notNull(),
-  discardable: integer("discardable", { mode: "boolean" }).notNull(),
-  autosell: integer("autosell").notNull(),
-  plural: text("plural"),
-  ambiguous: integer("ambiguous", { mode: "boolean" }).notNull().default(false),
+export class Item {
+  id!: number;
+  name!: string;
+  descid?: number;
+  image!: string;
+  uses!: ItemUse[];
+  quest!: boolean;
+  gift!: boolean;
+  tradeable!: boolean;
+  discardable!: boolean;
+  autosell!: number;
+  plural?: string;
+  ambiguous!: boolean;
+  // relations
+  equipment?: Equipment;
+  consumable?: Consumable;
+  modifiers?: ItemModifiers;
+  monsterDrops = new Collection<MonsterDrop>(this);
+  outfitEquipment = new Collection<Outfit>(this);
+  outfitTreats = new Collection<OutfitTreat>(this);
+  ingredients = new Collection<Ingredient>(this);
+  foldGroups = new Collection<FoldGroup>(this);
+  zapGroups = new Collection<ZapGroup>(this);
+}
+
+export class Effect {
+  id!: number;
+  name!: string;
+  descid?: string;
+  image!: string;
+  quality!: EffectQuality;
+  nohookah!: boolean;
+  nopvp!: boolean;
+  noremove!: boolean;
+  song!: boolean;
+  actions!: string[];
+  ambiguous!: boolean;
+  modifiers?: EffectModifiers;
+}
+
+export class Skill {
+  id!: number;
+  name!: string;
+  image!: string;
+  tags!: SkillTag[];
+  mpCost!: number;
+  duration!: number;
+  guildLevel?: number;
+  maxLevel?: number;
+  permable!: boolean;
+  ambiguous!: boolean;
+  modifiers?: SkillModifiers;
+}
+
+export class Familiar {
+  id!: number;
+  name!: string;
+  image!: string;
+  categories!: FamiliarCategory[];
+  larva?: Ref<Item>;
+  equipment?: Ref<Item>;
+  cageMatch!: number;
+  scavengerHunt!: number;
+  obstacleCourse!: number;
+  hideAndSeek!: number;
+  attributes!: string[];
+  modifiers?: FamiliarModifiers;
+}
+
+export class Monster {
+  id!: number;
+  name!: string;
+  image!: string[];
+  ambiguous!: boolean;
+  article!: string;
+  attack!: string;
+  boss!: boolean;
+  defence!: string;
+  drippy!: boolean;
+  element?: MonsterElement;
+  elementalAttack?: MonsterElement;
+  elementalDefence?: MonsterElement;
+  elementalResistance!: string;
+  experience?: string;
+  free!: boolean;
+  ghost!: boolean;
+  groupSize!: number;
+  hp!: string;
+  initiative!: string;
+  itemBlockChance!: number;
+  lucky!: boolean;
+  manuel?: string;
+  meat?: number;
+  meatExpression?: string;
+  monsterLevelMultiplier!: string;
+  nobanish!: boolean;
+  nocopy!: boolean;
+  nomanuel!: boolean;
+  nowander!: boolean;
+  nowish!: boolean;
+  phylum!: string;
+  physicalResistance!: string;
+  poison?: string;
+  scaling!: string;
+  scalingCap!: string;
+  scalingFloor!: string;
+  skeleton!: boolean;
+  skillBlockChance!: number;
+  snake!: boolean;
+  spellBlockChance!: number;
+  sprinkles!: [number | string, number | string];
+  superlikely!: boolean;
+  ultrarare!: boolean;
+  wanderer!: boolean;
+  wiki?: string;
+  wish!: boolean;
+  zombie!: boolean;
+  // relations
+  drops = new Collection<MonsterDrop>(this);
+  nativeLocations = new Collection<NativeMonster>(this);
+}
+
+export class Location {
+  name!: string;
+  id?: number;
+  zone!: string;
+  url!: string;
+  difficulty!: LocationDifficulty;
+  environment!: LocationEnvironment;
+  statRequirement!: number;
+  waterLevel?: number;
+  overdrunk!: boolean;
+  nowander!: boolean;
+  combatRate!: number;
+  // relations
+  nativeMonsters = new Collection<NativeMonster>(this);
+}
+
+export class Path {
+  id!: number;
+  name!: string;
+  enumName!: string;
+  image?: string;
+  isAvatar!: boolean;
+  article?: string;
+  pointsPreference?: string;
+  maximumPoints!: number;
+  bucket!: boolean;
+  stomachCapacity!: number;
+  liverCapacity!: number;
+  spleenCapacity!: number;
+  classes = new Collection<AscensionClass>(this);
+}
+
+export class AscensionClass {
+  id!: number;
+  name!: string;
+  enumName!: string;
+  image?: string;
+  primeStatIndex!: number;
+  path?: Ref<Path>;
+  stun?: string;
+  stomachCapacity?: number;
+  liverCapacity?: number;
+  spleenCapacity?: number;
+}
+
+export class Equipment {
+  // PK is a FK to Item. Access the id via equipment.item.id
+  item!: Ref<Item>;
+  power!: number;
+  musRequirement!: number;
+  mysRequirement!: number;
+  moxRequirement!: number;
+  type?: string;
+  hands?: number;
+}
+
+export class Consumable {
+  // PK is a FK to Item. Access the id via consumable.item.id
+  item!: Ref<Item>;
+  stomach!: number;
+  liver!: number;
+  spleen!: number;
+  levelRequirement!: number;
+  quality?: ConsumableQuality;
+  adventureRange!: string;
+  adventures!: number;
+  muscle!: number;
+  muscleRange!: string;
+  mysticality!: number;
+  mysticalityRange!: string;
+  moxie!: number;
+  moxieRange!: string;
+  notes?: string;
+}
+
+export class Concoction {
+  id!: number;
+  item!: Ref<Item>;
+  methods!: string[];
+  comment?: string;
+  ingredients = new Collection<Ingredient>(this);
+}
+
+export class Outfit {
+  id!: number;
+  name!: string;
+  image!: string;
+  equipment = new Collection<Item>(this);
+  treats = new Collection<OutfitTreat>(this);
+}
+
+export class FoldGroup {
+  id!: number;
+  damage!: number;
+  items = new Collection<Item>(this);
+}
+
+export class ZapGroup {
+  id!: number;
+  items = new Collection<Item>(this);
+}
+
+// Junction entities (surrogate autoincrement id)
+
+export class MonsterDrop {
+  id!: number;
+  monster!: Ref<Monster>;
+  item!: Ref<Item>;
+  rate!: number;
+  category?: MonsterDropCategory;
+}
+
+export class NativeMonster {
+  id!: number;
+  location!: Ref<Location>;
+  monster!: Ref<Monster>;
+  weight!: number;
+  rejection!: number;
+  parity?: number;
+}
+
+export class Ingredient {
+  id!: number;
+  concoction!: Ref<Concoction>;
+  item!: Ref<Item>;
+  quantity!: number;
+}
+
+export class OutfitTreat {
+  id!: number;
+  outfit!: Ref<Outfit>;
+  item!: Ref<Item>;
+  chance!: number;
+}
+
+// Modifier entities (FK-as-PK)
+
+export class ItemModifiers {
+  item!: Ref<Item>;
+  modifiers!: Record<string, string>;
+}
+
+export class EffectModifiers {
+  effect!: Ref<Effect>;
+  modifiers!: Record<string, string>;
+}
+
+export class SkillModifiers {
+  skill!: Ref<Skill>;
+  modifiers!: Record<string, string>;
+}
+
+export class FamiliarModifiers {
+  familiar!: Ref<Familiar>;
+  modifiers!: Record<string, string>;
+}
+
+export class Meta {
+  id!: number;
+  lastUpdate!: Date;
+  lastRevision!: number;
+}
+
+// ---- EntitySchema Definitions ---------------------------------------------
+
+export const ItemSchema = new EntitySchema<Item>({
+  class: Item,
+  tableName: "items",
+  properties: {
+    id: { type: "integer", primary: true },
+    name: { type: "string" },
+    descid: { type: "integer", nullable: true, unique: true },
+    image: { type: "string" },
+    uses: { type: "json" },
+    quest: { type: "boolean" },
+    gift: { type: "boolean" },
+    tradeable: { type: "boolean" },
+    discardable: { type: "boolean" },
+    autosell: { type: "integer" },
+    plural: { type: "string", nullable: true },
+    ambiguous: { type: "boolean", default: false },
+    equipment: {
+      kind: "1:1",
+      entity: () => Equipment,
+      mappedBy: "item",
+      nullable: true,
+    },
+    consumable: {
+      kind: "1:1",
+      entity: () => Consumable,
+      mappedBy: "item",
+      nullable: true,
+    },
+    modifiers: {
+      kind: "1:1",
+      entity: () => ItemModifiers,
+      mappedBy: "item",
+      nullable: true,
+    },
+    monsterDrops: { kind: "1:m", entity: () => MonsterDrop, mappedBy: "item" },
+    outfitEquipment: {
+      kind: "m:n",
+      entity: () => Outfit,
+      pivotTable: "outfitEquipment",
+      joinColumn: "equipment",
+      inverseJoinColumn: "outfit",
+    },
+    outfitTreats: {
+      kind: "1:m",
+      entity: () => OutfitTreat,
+      mappedBy: "item",
+    },
+    ingredients: {
+      kind: "1:m",
+      entity: () => Ingredient,
+      mappedBy: "item",
+    },
+    foldGroups: {
+      kind: "m:n",
+      entity: () => FoldGroup,
+      pivotTable: "foldables",
+      joinColumn: "item",
+      inverseJoinColumn: "foldGroup",
+    },
+    zapGroups: {
+      kind: "m:n",
+      entity: () => ZapGroup,
+      pivotTable: "zapGroupItems",
+      joinColumn: "item",
+      inverseJoinColumn: "zapGroup",
+    },
+  },
 });
 
-export const effects = sqliteTable("effects", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-  descid: text("descid").unique(),
-  image: text("image").notNull(),
-  quality: text("quality").$type<EffectQuality>().notNull(),
-  nohookah: integer("nohookah", { mode: "boolean" }).notNull(),
-  nopvp: integer("nopvp", { mode: "boolean" }).notNull(),
-  noremove: integer("noremove", { mode: "boolean" }).notNull(),
-  song: integer("song", { mode: "boolean" }).notNull(),
-  actions: text("actions", { mode: "json" }).$type<string[]>().notNull(),
-  ambiguous: integer("ambiguous", { mode: "boolean" }).notNull().default(false),
+export const EffectSchema = new EntitySchema<Effect>({
+  class: Effect,
+  tableName: "effects",
+  properties: {
+    id: { type: "integer", primary: true },
+    name: { type: "string" },
+    descid: { type: "string", nullable: true, unique: true },
+    image: { type: "string" },
+    quality: { type: "string" },
+    nohookah: { type: "boolean" },
+    nopvp: { type: "boolean" },
+    noremove: { type: "boolean" },
+    song: { type: "boolean" },
+    actions: { type: "json" },
+    ambiguous: { type: "boolean", default: false },
+    modifiers: {
+      kind: "1:1",
+      entity: () => EffectModifiers,
+      mappedBy: "effect",
+      nullable: true,
+    },
+  },
 });
 
-export const skills = sqliteTable("skills", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-  image: text("image").notNull(),
-  tags: text("tags", { mode: "json" }).$type<SkillTag[]>().notNull(),
-  mpCost: integer("mpCost").notNull(),
-  duration: integer("duration").notNull(),
-  guildLevel: integer("guildLevel"),
-  maxLevel: integer("maxLevel"),
-  permable: integer("permable", { mode: "boolean" }).notNull(),
-  ambiguous: integer("ambiguous", { mode: "boolean" }).notNull().default(false),
+export const SkillSchema = new EntitySchema<Skill>({
+  class: Skill,
+  tableName: "skills",
+  properties: {
+    id: { type: "integer", primary: true },
+    name: { type: "string" },
+    image: { type: "string" },
+    tags: { type: "json" },
+    mpCost: { type: "integer" },
+    duration: { type: "integer" },
+    guildLevel: { type: "integer", nullable: true },
+    maxLevel: { type: "integer", nullable: true },
+    permable: { type: "boolean" },
+    ambiguous: { type: "boolean", default: false },
+    modifiers: {
+      kind: "1:1",
+      entity: () => SkillModifiers,
+      mappedBy: "skill",
+      nullable: true,
+    },
+  },
 });
 
-export const familiars = sqliteTable("familiars", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-  image: text("image").notNull(),
-  categories: text("categories", { mode: "json" })
-    .$type<FamiliarCategory[]>()
-    .notNull(),
-  larva: integer("larva").references(() => items.id),
-  equipment: integer("equipment").references(() => items.id),
-  cageMatch: integer("cageMatch").notNull(),
-  scavengerHunt: integer("scavengerHunt").notNull(),
-  obstacleCourse: integer("obstacleCourse").notNull(),
-  hideAndSeek: integer("hideAndSeek").notNull(),
-  attributes: text("attributes", { mode: "json" }).$type<string[]>().notNull(),
+export const FamiliarSchema = new EntitySchema<Familiar>({
+  class: Familiar,
+  tableName: "familiars",
+  properties: {
+    id: { type: "integer", primary: true },
+    name: { type: "string" },
+    image: { type: "string" },
+    categories: { type: "json" },
+    larva: { kind: "m:1", entity: () => Item, nullable: true, fieldName: "larva" },
+    equipment: { kind: "m:1", entity: () => Item, nullable: true, fieldName: "equipment" },
+    cageMatch: { type: "integer" },
+    scavengerHunt: { type: "integer" },
+    obstacleCourse: { type: "integer" },
+    hideAndSeek: { type: "integer" },
+    attributes: { type: "json" },
+    modifiers: {
+      kind: "1:1",
+      entity: () => FamiliarModifiers,
+      mappedBy: "familiar",
+      nullable: true,
+    },
+  },
 });
 
-export const monsters = sqliteTable("monsters", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-  image: text("image", { mode: "json" }).$type<string[]>().notNull(),
-  ambiguous: integer("ambiguous", { mode: "boolean" }).notNull().default(false),
-  article: text("article").notNull(),
-  attack: text("attack").notNull(),
-  boss: integer("boss", { mode: "boolean" }).notNull(),
-  defence: text("defence").notNull(),
-  drippy: integer("drippy", { mode: "boolean" }).notNull(),
-  element: text("element").$type<MonsterElement | null>(),
-  elementalAttack: text("elementalAttack").$type<MonsterElement | null>(),
-  elementalDefence: text("elementalDefence").$type<MonsterElement | null>(),
-  elementalResistance: text("elementalResistance").notNull(),
-  experience: text("experience"),
-  free: integer("free", { mode: "boolean" }).notNull(),
-  ghost: integer("ghost", { mode: "boolean" }).notNull(),
-  groupSize: integer("groupSize").notNull(),
-  hp: text("hp").notNull(),
-  initiative: text("initiative").notNull(),
-  itemBlockChance: real("itemBlockChance").notNull(),
-  lucky: integer("lucky", { mode: "boolean" }).notNull(),
-  manuel: text("manuel"),
-  meat: real("meat"),
-  meatExpression: text("meatExpression"),
-  monsterLevelMultiplier: text("monsterLevelMultiplier").notNull(),
-  nobanish: integer("nobanish", { mode: "boolean" }).notNull(),
-  nocopy: integer("nocopy", { mode: "boolean" }).notNull(),
-  nomanuel: integer("nomanuel", { mode: "boolean" }).notNull(),
-  nowander: integer("nowander", { mode: "boolean" }).notNull(),
-  nowish: integer("nowish", { mode: "boolean" }).notNull(),
-  phylum: text("phylum").notNull(),
-  physicalResistance: text("physicalResistance").notNull(),
-  poison: text("poison"),
-  scaling: text("scaling").notNull(),
-  scalingCap: text("scalingCap").notNull(),
-  scalingFloor: text("scalingFloor").notNull(),
-  skeleton: integer("skeleton", { mode: "boolean" }).notNull(),
-  skillBlockChance: real("skillBlockChance").notNull(),
-  snake: integer("snake", { mode: "boolean" }).notNull(),
-  spellBlockChance: real("spellBlockChance").notNull(),
-  sprinkles: text("sprinkles", { mode: "json" })
-    .$type<[number | string, number | string]>()
-    .notNull(),
-  superlikely: integer("superlikely", { mode: "boolean" }).notNull(),
-  ultrarare: integer("ultrarare", { mode: "boolean" }).notNull(),
-  wanderer: integer("wanderer", { mode: "boolean" }).notNull(),
-  wiki: text("wiki"),
-  wish: integer("wish", { mode: "boolean" }).notNull(),
-  zombie: integer("zombie", { mode: "boolean" }).notNull(),
+export const MonsterSchema = new EntitySchema<Monster>({
+  class: Monster,
+  tableName: "monsters",
+  properties: {
+    id: { type: "integer", primary: true },
+    name: { type: "string" },
+    image: { type: "json" },
+    ambiguous: { type: "boolean", default: false },
+    article: { type: "string" },
+    attack: { type: "string" },
+    boss: { type: "boolean" },
+    defence: { type: "string" },
+    drippy: { type: "boolean" },
+    element: { type: "string", nullable: true },
+    elementalAttack: { type: "string", nullable: true },
+    elementalDefence: { type: "string", nullable: true },
+    elementalResistance: { type: "string" },
+    experience: { type: "string", nullable: true },
+    free: { type: "boolean" },
+    ghost: { type: "boolean" },
+    groupSize: { type: "integer" },
+    hp: { type: "string" },
+    initiative: { type: "string" },
+    itemBlockChance: { type: "float" },
+    lucky: { type: "boolean" },
+    manuel: { type: "string", nullable: true },
+    meat: { type: "float", nullable: true },
+    meatExpression: { type: "string", nullable: true },
+    monsterLevelMultiplier: { type: "string" },
+    nobanish: { type: "boolean" },
+    nocopy: { type: "boolean" },
+    nomanuel: { type: "boolean" },
+    nowander: { type: "boolean" },
+    nowish: { type: "boolean" },
+    phylum: { type: "string" },
+    physicalResistance: { type: "string" },
+    poison: { type: "string", nullable: true },
+    scaling: { type: "string" },
+    scalingCap: { type: "string" },
+    scalingFloor: { type: "string" },
+    skeleton: { type: "boolean" },
+    skillBlockChance: { type: "float" },
+    snake: { type: "boolean" },
+    spellBlockChance: { type: "float" },
+    sprinkles: { type: "json" },
+    superlikely: { type: "boolean" },
+    ultrarare: { type: "boolean" },
+    wanderer: { type: "boolean" },
+    wiki: { type: "string", nullable: true },
+    wish: { type: "boolean" },
+    zombie: { type: "boolean" },
+    drops: { kind: "1:m", entity: () => MonsterDrop, mappedBy: "monster" },
+    nativeLocations: {
+      kind: "1:m",
+      entity: () => NativeMonster,
+      mappedBy: "monster",
+    },
+  },
 });
 
-export const monsterDrops = sqliteTable("monsterDrops", {
-  monster: integer("monster")
-    .notNull()
-    .references(() => monsters.id),
-  item: integer("item")
-    .notNull()
-    .references(() => items.id),
-  rate: real("rate").notNull(),
-  category: text("category").$type<MonsterDropCategory | null>(),
+export const LocationSchema = new EntitySchema<Location>({
+  class: Location,
+  tableName: "locations",
+  properties: {
+    name: { type: "string", primary: true },
+    id: { type: "integer", nullable: true },
+    zone: { type: "string" },
+    url: { type: "string" },
+    difficulty: { type: "string" },
+    environment: { type: "string" },
+    statRequirement: { type: "integer" },
+    waterLevel: { type: "integer", nullable: true },
+    overdrunk: { type: "boolean" },
+    nowander: { type: "boolean" },
+    combatRate: { type: "integer" },
+    nativeMonsters: {
+      kind: "1:m",
+      entity: () => NativeMonster,
+      mappedBy: "location",
+    },
+  },
 });
 
-export const locations = sqliteTable("locations", {
-  id: integer("id"),
-  name: text("name").primaryKey(),
-  zone: text("zone").notNull(),
-  url: text("url").notNull(),
-  difficulty: text("difficulty").$type<LocationDifficulty>().notNull(),
-  environment: text("environment").$type<LocationEnvironment>().notNull(),
-  statRequirement: integer("statRequirement").notNull(),
-  waterLevel: integer("waterLevel"),
-  overdrunk: integer("overdrunk", { mode: "boolean" }).notNull(),
-  nowander: integer("nowander", { mode: "boolean" }).notNull(),
-  combatRate: integer("combatRate").notNull(),
+export const PathSchema = new EntitySchema<Path>({
+  class: Path,
+  tableName: "paths",
+  properties: {
+    id: { type: "integer", primary: true },
+    name: { type: "string" },
+    enumName: { type: "string" },
+    image: { type: "string", nullable: true, unique: true },
+    isAvatar: { type: "boolean" },
+    article: { type: "string", nullable: true },
+    pointsPreference: { type: "string", nullable: true },
+    maximumPoints: { type: "integer" },
+    bucket: { type: "boolean" },
+    stomachCapacity: { type: "integer" },
+    liverCapacity: { type: "integer" },
+    spleenCapacity: { type: "integer" },
+    classes: { kind: "1:m", entity: () => AscensionClass, mappedBy: "path" },
+  },
 });
 
-export const nativeMonsters = sqliteTable("nativeMonsters", {
-  location: text("location")
-    .notNull()
-    .references(() => locations.name),
-  monster: integer("monster")
-    .notNull()
-    .references(() => monsters.id),
-  weight: real("weight").notNull(),
-  rejection: real("rejection").notNull(),
-  parity: integer("parity"),
+export const AscensionClassSchema = new EntitySchema<AscensionClass>({
+  class: AscensionClass,
+  tableName: "classes",
+  properties: {
+    id: { type: "integer", primary: true },
+    name: { type: "string" },
+    enumName: { type: "string" },
+    image: { type: "string", nullable: true },
+    primeStatIndex: { type: "integer" },
+    path: { kind: "m:1", entity: () => Path, nullable: true, fieldName: "path" },
+    stun: { type: "string", nullable: true },
+    stomachCapacity: { type: "integer", nullable: true },
+    liverCapacity: { type: "integer", nullable: true },
+    spleenCapacity: { type: "integer", nullable: true },
+  },
 });
 
-export const equipment = sqliteTable("equipment", {
-  id: integer("id")
-    .primaryKey()
-    .references(() => items.id),
-  power: integer("power").notNull(),
-  musRequirement: integer("musRequirement").notNull(),
-  mysRequirement: integer("mysRequirement").notNull(),
-  moxRequirement: integer("moxRequirement").notNull(),
-  type: text("type"),
-  hands: integer("hands"),
+export const EquipmentSchema = new EntitySchema<Equipment>({
+  class: Equipment,
+  tableName: "equipment",
+  properties: {
+    item: {
+      kind: "1:1",
+      entity: () => Item,
+      primary: true,
+      fieldName: "id",
+      inversedBy: "equipment",
+    },
+    power: { type: "integer" },
+    musRequirement: { type: "integer" },
+    mysRequirement: { type: "integer" },
+    moxRequirement: { type: "integer" },
+    type: { type: "string", nullable: true },
+    hands: { type: "integer", nullable: true },
+  },
 });
 
-export const paths = sqliteTable("paths", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-  enumName: text("enumName").notNull(),
-  image: text("image").unique(),
-  isAvatar: integer("isAvatar", { mode: "boolean" }).notNull(),
-  article: text("article"),
-  pointsPreference: text("pointsPreference"),
-  maximumPoints: integer("maximumPoints").notNull(),
-  bucket: integer("bucket", { mode: "boolean" }).notNull(),
-  stomachCapacity: integer("stomachCapacity").notNull(),
-  liverCapacity: integer("liverCapacity").notNull(),
-  spleenCapacity: integer("spleenCapacity").notNull(),
+export const ConsumableSchema = new EntitySchema<Consumable>({
+  class: Consumable,
+  tableName: "consumables",
+  properties: {
+    item: {
+      kind: "1:1",
+      entity: () => Item,
+      primary: true,
+      fieldName: "id",
+      inversedBy: "consumable",
+    },
+    stomach: { type: "integer" },
+    liver: { type: "integer" },
+    spleen: { type: "integer" },
+    levelRequirement: { type: "integer" },
+    quality: { type: "string", nullable: true },
+    adventureRange: { type: "string" },
+    adventures: { type: "float" },
+    muscle: { type: "float" },
+    muscleRange: { type: "string" },
+    mysticality: { type: "float" },
+    mysticalityRange: { type: "string" },
+    moxie: { type: "float" },
+    moxieRange: { type: "string" },
+    notes: { type: "string", nullable: true },
+  },
 });
 
-export const classes = sqliteTable("classes", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-  enumName: text("enumName").notNull(),
-  image: text("image"),
-  primeStatIndex: integer("primeStatIndex").notNull(),
-  path: integer("path").references(() => paths.id),
-  stun: text("stun"),
-  stomachCapacity: integer("stomachCapacity"),
-  liverCapacity: integer("liverCapacity"),
-  spleenCapacity: integer("spleenCapacity"),
+export const ConcoctionSchema = new EntitySchema<Concoction>({
+  class: Concoction,
+  tableName: "concoctions",
+  properties: {
+    id: { type: "integer", primary: true },
+    item: { kind: "m:1", entity: () => Item, fieldName: "item" },
+    methods: { type: "json" },
+    comment: { type: "string", nullable: true },
+    ingredients: {
+      kind: "1:m",
+      entity: () => Ingredient,
+      mappedBy: "concoction",
+    },
+  },
 });
 
-export const consumables = sqliteTable("consumables", {
-  id: integer("id")
-    .primaryKey()
-    .references(() => items.id),
-  stomach: integer("stomach").notNull(),
-  liver: integer("liver").notNull(),
-  spleen: integer("spleen").notNull(),
-  levelRequirement: integer("levelRequirement").notNull(),
-  quality: text("quality").$type<ConsumableQuality>(),
-  adventureRange: text("adventureRange").notNull(),
-  adventures: real("adventures").notNull(),
-  muscle: real("muscle").notNull(),
-  muscleRange: text("muscleRange").notNull(),
-  mysticality: real("mysticality").notNull(),
-  mysticalityRange: text("mysticalityRange").notNull(),
-  moxie: real("moxie").notNull(),
-  moxieRange: text("moxieRange").notNull(),
-  notes: text("notes"),
+export const OutfitSchema = new EntitySchema<Outfit>({
+  class: Outfit,
+  tableName: "outfits",
+  properties: {
+    id: { type: "integer", primary: true },
+    name: { type: "string" },
+    image: { type: "string" },
+    equipment: {
+      kind: "m:n",
+      entity: () => Item,
+      pivotTable: "outfitEquipment",
+      joinColumn: "outfit",
+      inverseJoinColumn: "equipment",
+    },
+    treats: { kind: "1:m", entity: () => OutfitTreat, mappedBy: "outfit" },
+  },
 });
 
-export const concoctions = sqliteTable("concoctions", {
-  id: integer("id").primaryKey(),
-  item: integer("item")
-    .notNull()
-    .references(() => items.id),
-  methods: text("methods", { mode: "json" }).$type<string[]>().notNull(),
-  comment: text("comment"),
+export const FoldGroupSchema = new EntitySchema<FoldGroup>({
+  class: FoldGroup,
+  tableName: "foldGroups",
+  properties: {
+    id: { type: "integer", primary: true },
+    damage: { type: "integer" },
+    items: {
+      kind: "m:n",
+      entity: () => Item,
+      pivotTable: "foldables",
+      joinColumn: "foldGroup",
+      inverseJoinColumn: "item",
+    },
+  },
 });
 
-export const ingredients = sqliteTable("ingredients", {
-  concoction: integer("concoction").references(() => concoctions.id),
-  item: integer("item").references(() => items.id),
-  quantity: integer("quantity").notNull(),
+export const ZapGroupSchema = new EntitySchema<ZapGroup>({
+  class: ZapGroup,
+  tableName: "zapGroups",
+  properties: {
+    id: { type: "integer", primary: true },
+    items: {
+      kind: "m:n",
+      entity: () => Item,
+      pivotTable: "zapGroupItems",
+      joinColumn: "zapGroup",
+      inverseJoinColumn: "item",
+    },
+  },
 });
 
-export const outfits = sqliteTable("outfits", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-  image: text("image").notNull(),
+export const MonsterDropSchema = new EntitySchema<MonsterDrop>({
+  class: MonsterDrop,
+  tableName: "monsterDrops",
+  properties: {
+    id: { type: "integer", primary: true },
+    monster: { kind: "m:1", entity: () => Monster },
+    item: { kind: "m:1", entity: () => Item },
+    rate: { type: "float" },
+    category: { type: "string", nullable: true },
+  },
 });
 
-export const outfitEquipment = sqliteTable("outfitEquipment", {
-  outfit: integer("outfit")
-    .notNull()
-    .references(() => outfits.id),
-  equipment: integer("equipment")
-    .notNull()
-    .references(() => items.id),
+export const NativeMonsterSchema = new EntitySchema<NativeMonster>({
+  class: NativeMonster,
+  tableName: "nativeMonsters",
+  properties: {
+    id: { type: "integer", primary: true },
+    location: { kind: "m:1", entity: () => Location },
+    monster: { kind: "m:1", entity: () => Monster },
+    weight: { type: "float" },
+    rejection: { type: "float" },
+    parity: { type: "integer", nullable: true },
+  },
 });
 
-export const outfitTreats = sqliteTable("outfitTreats", {
-  outfit: integer("outfit").references(() => outfits.id),
-  item: integer("item").references(() => items.id),
-  chance: real("chance").notNull(),
+export const IngredientSchema = new EntitySchema<Ingredient>({
+  class: Ingredient,
+  tableName: "ingredients",
+  properties: {
+    id: { type: "integer", primary: true },
+    concoction: { kind: "m:1", entity: () => Concoction },
+    item: { kind: "m:1", entity: () => Item },
+    quantity: { type: "integer" },
+  },
 });
 
-export const foldGroups = sqliteTable("foldGroups", {
-  id: integer("id").primaryKey(),
-  damage: integer("damage").notNull(),
+export const OutfitTreatSchema = new EntitySchema<OutfitTreat>({
+  class: OutfitTreat,
+  tableName: "outfitTreats",
+  properties: {
+    id: { type: "integer", primary: true },
+    outfit: { kind: "m:1", entity: () => Outfit },
+    item: { kind: "m:1", entity: () => Item },
+    chance: { type: "float" },
+  },
 });
 
-export const foldables = sqliteTable("foldables", {
-  foldGroup: integer("foldGroup").references(() => foldGroups.id),
-  item: integer("item").references(() => items.id),
+export const ItemModifiersSchema = new EntitySchema<ItemModifiers>({
+  class: ItemModifiers,
+  tableName: "itemModifiers",
+  properties: {
+    item: {
+      kind: "1:1",
+      entity: () => Item,
+      primary: true,
+      fieldName: "item",
+      inversedBy: "modifiers",
+    },
+    modifiers: { type: "json" },
+  },
 });
 
-export const zapGroups = sqliteTable("zapGroups", {
-  id: integer("id").primaryKey(),
+export const EffectModifiersSchema = new EntitySchema<EffectModifiers>({
+  class: EffectModifiers,
+  tableName: "effectModifiers",
+  properties: {
+    effect: {
+      kind: "1:1",
+      entity: () => Effect,
+      primary: true,
+      fieldName: "effect",
+      inversedBy: "modifiers",
+    },
+    modifiers: { type: "json" },
+  },
 });
 
-export const zapGroupItems = sqliteTable("zapGroupItems", {
-  zapGroup: integer("zapGroup").references(() => zapGroups.id),
-  item: integer("item").references(() => items.id),
+export const SkillModifiersSchema = new EntitySchema<SkillModifiers>({
+  class: SkillModifiers,
+  tableName: "skillModifiers",
+  properties: {
+    skill: {
+      kind: "1:1",
+      entity: () => Skill,
+      primary: true,
+      fieldName: "skill",
+      inversedBy: "modifiers",
+    },
+    modifiers: { type: "json" },
+  },
 });
 
-export const itemModifiers = sqliteTable("itemModifiers", {
-  item: integer("item")
-    .primaryKey()
-    .references(() => items.id),
-  modifiers: text("modifiers", { mode: "json" })
-    .$type<Record<string, string>>()
-    .notNull(),
+export const FamiliarModifiersSchema = new EntitySchema<FamiliarModifiers>({
+  class: FamiliarModifiers,
+  tableName: "familiarModifiers",
+  properties: {
+    familiar: {
+      kind: "1:1",
+      entity: () => Familiar,
+      primary: true,
+      fieldName: "familiar",
+      inversedBy: "modifiers",
+    },
+    modifiers: { type: "json" },
+  },
 });
 
-export const effectModifiers = sqliteTable("effectModifiers", {
-  effect: integer("effect")
-    .primaryKey()
-    .references(() => effects.id),
-  modifiers: text("modifiers", { mode: "json" })
-    .$type<Record<string, string>>()
-    .notNull(),
+export const MetaSchema = new EntitySchema<Meta>({
+  class: Meta,
+  tableName: "meta",
+  properties: {
+    id: { type: "integer", primary: true, default: 1 },
+    lastUpdate: { type: "Date" },
+    lastRevision: { type: "integer" },
+  },
 });
 
-export const skillModifiers = sqliteTable("skillModifiers", {
-  skill: integer("skill")
-    .primaryKey()
-    .references(() => skills.id),
-  modifiers: text("modifiers", { mode: "json" })
-    .$type<Record<string, string>>()
-    .notNull(),
-});
-
-export const familiarModifiers = sqliteTable("familiarModifiers", {
-  familiar: integer("familiar")
-    .primaryKey()
-    .references(() => familiars.id),
-  modifiers: text("modifiers", { mode: "json" })
-    .$type<Record<string, string>>()
-    .notNull(),
-});
-
-export const meta = sqliteTable("meta", {
-  id: integer("id").primaryKey().default(1),
-  lastUpdate: integer("lastUpdate", { mode: "timestamp" }).notNull(),
-  lastRevision: integer("lastRevision").notNull(),
-});
-
-// ---- Relations ------------------------------------------------------------
-
-export const itemsRelations = relations(items, ({ one, many }) => ({
-  equipment: one(equipment, { fields: [items.id], references: [equipment.id] }),
-  consumable: one(consumables, {
-    fields: [items.id],
-    references: [consumables.id],
-  }),
-  modifiers: one(itemModifiers, {
-    fields: [items.id],
-    references: [itemModifiers.item],
-  }),
-  monsterDrops: many(monsterDrops),
-  outfitEquipment: many(outfitEquipment),
-  outfitTreats: many(outfitTreats),
-  ingredients: many(ingredients),
-  foldables: many(foldables),
-  zapGroupItems: many(zapGroupItems),
-}));
-
-export const effectsRelations = relations(effects, ({ one }) => ({
-  modifiers: one(effectModifiers, {
-    fields: [effects.id],
-    references: [effectModifiers.effect],
-  }),
-}));
-
-export const skillsRelations = relations(skills, ({ one }) => ({
-  modifiers: one(skillModifiers, {
-    fields: [skills.id],
-    references: [skillModifiers.skill],
-  }),
-}));
-
-export const familiarsRelations = relations(familiars, ({ one }) => ({
-  larvaItem: one(items, { fields: [familiars.larva], references: [items.id] }),
-  equipmentItem: one(items, {
-    fields: [familiars.equipment],
-    references: [items.id],
-  }),
-  modifiers: one(familiarModifiers, {
-    fields: [familiars.id],
-    references: [familiarModifiers.familiar],
-  }),
-}));
-
-export const monstersRelations = relations(monsters, ({ many }) => ({
-  drops: many(monsterDrops),
-  nativeMonsters: many(nativeMonsters),
-}));
-
-export const monsterDropsRelations = relations(monsterDrops, ({ one }) => ({
-  monster: one(monsters, {
-    fields: [monsterDrops.monster],
-    references: [monsters.id],
-  }),
-  item: one(items, { fields: [monsterDrops.item], references: [items.id] }),
-}));
-
-export const locationsRelations = relations(locations, ({ many }) => ({
-  nativeMonsters: many(nativeMonsters),
-}));
-
-export const nativeMonstersRelations = relations(nativeMonsters, ({ one }) => ({
-  location: one(locations, {
-    fields: [nativeMonsters.location],
-    references: [locations.name],
-  }),
-  monster: one(monsters, {
-    fields: [nativeMonsters.monster],
-    references: [monsters.id],
-  }),
-}));
-
-export const equipmentRelations = relations(equipment, ({ one }) => ({
-  item: one(items, { fields: [equipment.id], references: [items.id] }),
-}));
-
-export const pathsRelations = relations(paths, ({ many }) => ({
-  classes: many(classes),
-}));
-
-export const classesRelations = relations(classes, ({ one }) => ({
-  path: one(paths, { fields: [classes.path], references: [paths.id] }),
-}));
-
-export const consumablesRelations = relations(consumables, ({ one }) => ({
-  item: one(items, { fields: [consumables.id], references: [items.id] }),
-}));
-
-export const concoctionsRelations = relations(concoctions, ({ one, many }) => ({
-  item: one(items, { fields: [concoctions.item], references: [items.id] }),
-  ingredients: many(ingredients),
-}));
-
-export const ingredientsRelations = relations(ingredients, ({ one }) => ({
-  concoction: one(concoctions, {
-    fields: [ingredients.concoction],
-    references: [concoctions.id],
-  }),
-  item: one(items, { fields: [ingredients.item], references: [items.id] }),
-}));
-
-export const outfitsRelations = relations(outfits, ({ many }) => ({
-  equipment: many(outfitEquipment),
-  treats: many(outfitTreats),
-}));
-
-export const outfitEquipmentRelations = relations(
-  outfitEquipment,
-  ({ one }) => ({
-    outfit: one(outfits, {
-      fields: [outfitEquipment.outfit],
-      references: [outfits.id],
-    }),
-    item: one(items, {
-      fields: [outfitEquipment.equipment],
-      references: [items.id],
-    }),
-  }),
-);
-
-export const outfitTreatsRelations = relations(outfitTreats, ({ one }) => ({
-  outfit: one(outfits, {
-    fields: [outfitTreats.outfit],
-    references: [outfits.id],
-  }),
-  item: one(items, { fields: [outfitTreats.item], references: [items.id] }),
-}));
-
-export const foldGroupsRelations = relations(foldGroups, ({ many }) => ({
-  foldables: many(foldables),
-}));
-
-export const foldablesRelations = relations(foldables, ({ one }) => ({
-  foldGroup: one(foldGroups, {
-    fields: [foldables.foldGroup],
-    references: [foldGroups.id],
-  }),
-  item: one(items, { fields: [foldables.item], references: [items.id] }),
-}));
-
-export const zapGroupsRelations = relations(zapGroups, ({ many }) => ({
-  items: many(zapGroupItems),
-}));
-
-export const zapGroupItemsRelations = relations(zapGroupItems, ({ one }) => ({
-  zapGroup: one(zapGroups, {
-    fields: [zapGroupItems.zapGroup],
-    references: [zapGroups.id],
-  }),
-  item: one(items, { fields: [zapGroupItems.item], references: [items.id] }),
-}));
-
-export const itemModifiersRelations = relations(itemModifiers, ({ one }) => ({
-  item: one(items, { fields: [itemModifiers.item], references: [items.id] }),
-}));
-
-export const effectModifiersRelations = relations(
-  effectModifiers,
-  ({ one }) => ({
-    effect: one(effects, {
-      fields: [effectModifiers.effect],
-      references: [effects.id],
-    }),
-  }),
-);
-
-export const skillModifiersRelations = relations(skillModifiers, ({ one }) => ({
-  skill: one(skills, {
-    fields: [skillModifiers.skill],
-    references: [skills.id],
-  }),
-}));
-
-export const familiarModifiersRelations = relations(
-  familiarModifiers,
-  ({ one }) => ({
-    familiar: one(familiars, {
-      fields: [familiarModifiers.familiar],
-      references: [familiars.id],
-    }),
-  }),
-);
+// All schemas in dependency order for MikroORM.init({ entities })
+export const entities = [
+  ItemSchema,
+  EffectSchema,
+  SkillSchema,
+  FamiliarSchema,
+  MonsterSchema,
+  LocationSchema,
+  PathSchema,
+  AscensionClassSchema,
+  EquipmentSchema,
+  ConsumableSchema,
+  ConcoctionSchema,
+  OutfitSchema,
+  FoldGroupSchema,
+  ZapGroupSchema,
+  MonsterDropSchema,
+  NativeMonsterSchema,
+  IngredientSchema,
+  OutfitTreatSchema,
+  ItemModifiersSchema,
+  EffectModifiersSchema,
+  SkillModifiersSchema,
+  FamiliarModifiersSchema,
+  MetaSchema,
+];

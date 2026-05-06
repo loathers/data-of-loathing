@@ -1,10 +1,15 @@
+import {
+  EffectModifiers,
+  FamiliarModifiers,
+  ItemModifiers,
+  SkillModifiers,
+} from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 
 const VERSION = 3;
 const FILENAME = "modifiers";
 
-// Copied directly from mafia and translated to TypeScript
 function splitModifiers(modifiers: string): Record<string, string> {
   const mods: Record<string, string> = {};
 
@@ -62,7 +67,6 @@ export type ModifierType = {
 const parseModifier = (parts: string[]): ModifierType => ({
   type: parts[0],
   thing: parts[1],
-  // drippy diadem needs this
   modifiers: splitModifiers(parts.slice(2).join("")),
 });
 
@@ -75,17 +79,8 @@ export async function loadModifiers() {
   return raw.filter((p) => p.length > 2).map(parseModifier);
 }
 
-const modifierTypes = [
-  { source: "Item", target: "item", foreignTable: "items" },
-  { source: "Effect", target: "effect", foreignTable: "effects" },
-  { source: "Skill", target: "skill", foreignTable: "skills" },
-  { source: "Familiar", target: "familiar", foreignTable: "familiars" },
-];
-
 const IGNORES = [
-  // Used to give a default modifier for all familiars
   "familiar:(none)",
-  // Fake food for the hot dog stand
   "item:devil dog",
   "item:chilly dog",
   "item:ghost dog",
@@ -95,7 +90,6 @@ const IGNORES = [
   "item:one with everything",
   "item:sly dog",
   "item:video games hot dog",
-  // Aliased punchcards; have no modifiers anyway
   "item:El Vibrato punchcard (REPAIR)",
   "item:El Vibrato punchcard (SELF)",
   "item:El Vibrato punchcard (SPHERE)",
@@ -109,45 +103,40 @@ const IGNORES = [
   "item:El Vibrato punchcard (MODIFY)",
 ];
 
+const modifierTypes = [
+  { source: "Item", prop: "item", foreignTable: "items", Entity: ItemModifiers },
+  { source: "Effect", prop: "effect", foreignTable: "effects", Entity: EffectModifiers },
+  { source: "Skill", prop: "skill", foreignTable: "skills", Entity: SkillModifiers },
+  { source: "Familiar", prop: "familiar", foreignTable: "familiars", Entity: FamiliarModifiers },
+] as const;
+
 export async function populateModifiers() {
   const data = await loadModifiers();
 
-  for (const { source, target, foreignTable } of modifierTypes) {
+  for (const { source, prop, foreignTable, Entity } of modifierTypes) {
     const dataForType = data
       .filter(({ type }) => type === source)
-      .map(({ thing, modifiers }) => ({ thing, modifiers, [target]: null }));
+      .map(({ thing, modifiers }) => ({ thing, modifiers }));
 
     await populateEntity(
       dataForType,
-      `${target}Modifiers`,
-      [target, "modifiers"],
+      Entity,
       async (datum) => {
-        const lookup = `${target}:${datum.thing}`;
-        if (IGNORES.includes(lookup)) {
-          return null;
-        }
+        const lookup = `${prop}:${datum.thing}`;
+        if (IGNORES.includes(lookup)) return null;
 
-        const thing = await (() => {
-          switch (lookup) {
-            case "item:Love Potion #0":
-              return 9745;
-            default:
-              return resolveReference(
-                `${target}Modifiers`,
-                foreignTable,
-                "name",
-                datum.thing,
-              );
-          }
+        const id = await (() => {
+          if (lookup === "item:Love Potion #0") return Promise.resolve(9745);
+          return resolveReference(
+            `${prop}Modifiers`,
+            foreignTable,
+            "name",
+            datum.thing,
+          );
         })();
 
-        // There are many fake item ids in the modifiers file
-        if (!thing) return null;
-
-        return {
-          ...datum,
-          [target]: thing,
-        };
+        if (!id) return null;
+        return { [prop]: id, modifiers: datum.modifiers };
       },
     );
   }

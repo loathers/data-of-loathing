@@ -1,3 +1,4 @@
+import { Monster, MonsterDrop } from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
@@ -24,7 +25,6 @@ export enum MonsterElement {
   Stench = "stench",
 }
 
-// Might as well have some default, cold works.
 const validElement = memberOfEnumElse(MonsterElement, null);
 
 export enum MonsterDropCategory {
@@ -38,7 +38,7 @@ export enum MonsterDropCategory {
 
 const validDropCategory = memberOfEnumElse(MonsterDropCategory, null);
 
-export type MonsterDrop = {
+export type MonsterDropType = {
   item: string;
   rate: number;
   category: MonsterDropCategory | null;
@@ -51,7 +51,7 @@ export type MonsterType = {
   boss: boolean;
   defence: number | string;
   drippy: boolean;
-  drops: MonsterDrop[];
+  drops: MonsterDropType[];
   element: MonsterElement | null;
   elementalAttack: MonsterElement | null;
   elementalDefence: MonsterElement | null;
@@ -95,7 +95,7 @@ export type MonsterType = {
   zombie: boolean;
 };
 
-const parseDrops = (drops: string[]): MonsterDrop[] => {
+const parseDrops = (drops: string[]): MonsterDropType[] => {
   return drops
     .map((d) => {
       const match = d.match(/^(.*?) \(([pncfa]?)(\d+(?:\.\d+)?)\)$/);
@@ -195,7 +195,6 @@ export async function checkMonstersVersion() {
 
 export async function loadMonsters() {
   const raw = await loadMafiaData(FILENAME);
-  // Only return unique monsters, skipping utility monsters mafia includes with id 0
   return raw
     .filter((p) => p.length > 2)
     .map(parseMonster)
@@ -205,26 +204,18 @@ export async function loadMonsters() {
 export async function populateMonsters() {
   const monsters = await loadMonsters();
 
-  await populateEntity(monsters, "monsters", [
-    "ambiguous", "article", "attack", "boss", "defence", "drippy",
-    "element", "elementalAttack", "elementalDefence", "elementalResistance",
-    "experience", "free", "ghost", "groupSize", "hp", "id", "image",
-    "initiative", "itemBlockChance", "lucky", "manuel", "meat",
-    "meatExpression", "monsterLevelMultiplier", "name", "nobanish",
-    "nocopy", "nomanuel", "nowander", "nowish", "phylum",
-    "physicalResistance", "poison", "scaling", "scalingCap", "scalingFloor",
-    "skeleton", "skillBlockChance", "snake", "spellBlockChance", "sprinkles",
-    "superlikely", "ultrarare", "wanderer", "wiki", "wish", "zombie",
-  ]);
+  await populateEntity(
+    monsters.map(({ drops: _, ...m }) => m),
+    Monster,
+  );
 
-  const monsterDrops = monsters.flatMap((m) =>
+  const monsterDropRows = monsters.flatMap((m) =>
     m.drops.map((d) => ({ monster: m.id, ...d })),
   );
 
   await populateEntity(
-    monsterDrops,
-    "monsterDrops",
-    ["monster", "item", "rate", "category"],
+    monsterDropRows,
+    MonsterDrop,
     async (drop) => ({
       ...drop,
       item: await resolveReference("monster", "items", "name", drop.item, true),

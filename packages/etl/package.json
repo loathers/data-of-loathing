@@ -10,17 +10,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "better-sqlite3": "^11.10.0",
+    "@mikro-orm/better-sqlite": "^6.6.14",
+    "@mikro-orm/core": "^6.6.14",
     "croner": "^9.1.0",
     "data-of-loathing-schema": "workspace:*",
-    "drizzle-kit": "^0.31.1",
-    "drizzle-orm": "^0.44.2",
     "java-parser": "^3.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/express": "^5.0.6",
     "@types/node": "^25.0.2",
     "eslint": "^9.39.2",
     "prettier": "^3.7.4",

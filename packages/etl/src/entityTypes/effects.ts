@@ -1,3 +1,4 @@
+import { Effect } from "data-of-loathing-schema";
 import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, loadMafiaData, memberOfEnumElse } from "../utils.js";
 
@@ -62,9 +63,6 @@ export async function loadEffects() {
 }
 
 export async function populateEffects() {
-  await populateEntity(loadEffects, "effects", [
-    "id", "name", "descid", "image", "quality",
-    "nohookah", "nopvp", "noremove", "song", "actions", "ambiguous",
-  ]);
+  await populateEntity(loadEffects, Effect);
   await markAmbiguous("effects");
 }
