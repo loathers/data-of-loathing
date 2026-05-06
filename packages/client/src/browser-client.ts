@@ -1,16 +1,21 @@
-import { MikroORM } from "@mikro-orm/core";
-import type { EntityManager } from "@mikro-orm/core";
-import { SqliteDriver } from "mikro-orm-sqlite-wasm";
+import { type EntityManager, MikroORM } from "@mikro-orm/core";
+import { SqlMikroORM, SqliteDriver } from "@mikro-orm/sql";
+import { SQLocalKysely } from "sqlocal/kysely";
 import { entities } from "data-of-loathing-schema";
-import { resolveDbPath, type BrowserStrategy } from "./browser-strategies.js";
 
-export type { BrowserStrategy as Strategy };
+export type Strategy =
+  | { strategy?: "cache"; url?: string }
+  | { strategy: "remote"; url?: string };
+
+const DEFAULT_URL = "https://data.loathers.net/dol.sqlite";
+const ETAG_KEY = "dol-etag";
 
 export class Client {
   private _orm?: MikroORM;
-  private readonly _strategy: BrowserStrategy;
+  private _db?: SQLocalKysely;
+  private readonly _strategy: Strategy;
 
-  constructor(strategy: BrowserStrategy = {}) {
+  constructor(strategy: Strategy = {}) {
     this._strategy = strategy;
   }
 
@@ -20,18 +25,39 @@ export class Client {
   }
 
   async load(): Promise<void> {
+    if (this._strategy.strategy === "remote")
+      throw new Error("HTTP range request strategy not yet implemented");
+
     await this._orm?.close();
-    const path = await resolveDbPath(this._strategy);
-    this._orm = await MikroORM.init({
+
+    const url = this._strategy.url ?? DEFAULT_URL;
+
+    if (!this._db) {
+      this._db = new SQLocalKysely("dol.sqlite");
+    }
+
+    const storedEtag = localStorage.getItem(ETAG_KEY);
+    const head = await fetch(url, { method: "HEAD" });
+    const remoteEtag = head.headers.get("etag");
+
+    if (!storedEtag || storedEtag !== remoteEtag) {
+      const response = await fetch(url);
+      if (!response.ok)
+        throw new Error(`Failed to fetch database: ${response.status}`);
+      await this._db.overwriteDatabaseFile(await response.arrayBuffer());
+      if (remoteEtag) localStorage.setItem(ETAG_KEY, remoteEtag);
+    }
+
+    this._orm = await SqlMikroORM.init({
       driver: SqliteDriver,
-      dbName: path,
+      driverOptions: this._db.dialect,
+      dbName: "dol.sqlite",
       entities,
       allowGlobalContext: true,
-      driverOptions: { readonly: true },
     });
   }
 }
 
-export function createClient(strategy: BrowserStrategy = {}): Client {
+export function createClient(strategy: Strategy = {}): Client {
   return new Client(strategy);
 }

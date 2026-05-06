@@ -1,4 +1,5 @@
-import { MikroORM } from "@mikro-orm/better-sqlite";
+import { MikroORM } from "@mikro-orm/core";
+import { NodeSqliteDialect, SqliteDriver, SqlMikroORM } from "@mikro-orm/sql";
 import { entities } from "data-of-loathing-schema";
 
 let orm: MikroORM;
@@ -12,15 +13,17 @@ function conn() {
 }
 
 export async function openDatabase(path: string) {
-  orm = await MikroORM.init({
-    dbName: path,
+  orm = await SqlMikroORM.init({
+    driver: SqliteDriver,
+    driverOptions: new NodeSqliteDialect(path),
     entities,
     allowGlobalContext: true,
   });
 }
 
 export async function initialiseDatabase() {
-  await orm.schema.refreshDatabase();
+  await orm.schema.drop();
+  await orm.schema.create();
 }
 
 function serializeValue(value: unknown): unknown {

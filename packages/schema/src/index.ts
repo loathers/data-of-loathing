@@ -216,8 +216,8 @@ export class Familiar {
   name!: string;
   image!: string;
   categories!: FamiliarCategory[];
-  larva?: Ref<Item>;
-  equipment?: Ref<Item>;
+  larva?: Item;
+  equipment?: Item;
   cageMatch!: number;
   scavengerHunt!: number;
   obstacleCourse!: number;
@@ -317,7 +317,7 @@ export class AscensionClass {
   enumName!: string;
   image?: string;
   primeStatIndex!: number;
-  path?: Ref<Path>;
+  path?: Path;
   stun?: string;
   stomachCapacity?: number;
   liverCapacity?: number;
@@ -356,7 +356,7 @@ export class Consumable {
 
 export class Concoction {
   id!: number;
-  item!: Ref<Item>;
+  item!: Item;
   methods!: string[];
   comment?: string;
   ingredients = new Collection<Ingredient>(this);
@@ -385,16 +385,16 @@ export class ZapGroup {
 
 export class MonsterDrop {
   id!: number;
-  monster!: Ref<Monster>;
-  item!: Ref<Item>;
+  monster!: Monster;
+  item!: Item;
   rate!: number;
   category?: MonsterDropCategory;
 }
 
 export class NativeMonster {
   id!: number;
-  location!: Ref<Location>;
-  monster!: Ref<Monster>;
+  location!: Location;
+  monster!: Monster;
   weight!: number;
   rejection!: number;
   parity?: number;
@@ -402,15 +402,15 @@ export class NativeMonster {
 
 export class Ingredient {
   id!: number;
-  concoction!: Ref<Concoction>;
-  item!: Ref<Item>;
+  concoction!: Concoction;
+  item!: Item;
   quantity!: number;
 }
 
 export class OutfitTreat {
   id!: number;
-  outfit!: Ref<Outfit>;
-  item!: Ref<Item>;
+  outfit!: Outfit;
+  item!: Item;
   chance!: number;
 }
 

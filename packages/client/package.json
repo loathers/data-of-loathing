@@ -23,25 +23,20 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@mikro-orm/core": "^7.0.14",
+    "@mikro-orm/sql": "^7.0.14",
     "data-of-loathing-schema": "workspace:*"
   },
   "devDependencies": {
-    "@mikro-orm/better-sqlite": "^6.6.14",
-    "@mikro-orm/core": "^6.6.14",
     "@types/node": "^25.0.2",
-    "mikro-orm-sqlite-wasm": "^2.22.0",
+    "sqlocal": "^0.18.0",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@mikro-orm/better-sqlite": "^6",
-    "@mikro-orm/core": "^6",
-    "mikro-orm-sqlite-wasm": "^2"
+    "sqlocal": "^0.18.0"
   },
   "peerDependenciesMeta": {
-    "@mikro-orm/better-sqlite": {
-      "optional": true
-    },
-    "mikro-orm-sqlite-wasm": {
+    "sqlocal": {
       "optional": true
     }
   }

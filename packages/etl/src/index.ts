@@ -111,7 +111,7 @@ async function getLastGitHubUpdate() {
   return new Date(Math.max(...lastGitHubUpdates));
 }
 
-const SQLITE_PATH = process.env.SQLITE_PATH ?? "./data-of-loathing.sqlite";
+const SQLITE_PATH = process.env.SQLITE_PATH ?? "./dol.sqlite";
 
 export async function watch(every: number) {
   await openDatabase(SQLITE_PATH);

@@ -4,7 +4,7 @@ import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
 export const DEFAULT_URL =
-  "https://data.loathers.net/data-of-loathing.sqlite";
+  "https://data.loathers.net/dol.sqlite";
 
 export type Strategy =
   | { strategy?: "cache"; url?: string }
@@ -29,7 +29,7 @@ export async function resolveDbPath(opts: Strategy): Promise<string> {
     case "download": {
       const url = (opts as { url?: string }).url ?? DEFAULT_URL;
       const buffer = await fetchDb(url);
-      const path = join(tmpdir(), `data-of-loathing-${Date.now()}.sqlite`);
+      const path = join(tmpdir(), `dol-${Date.now()}.sqlite`);
       await writeFile(path, buffer);
       return path;
     }
@@ -37,7 +37,7 @@ export async function resolveDbPath(opts: Strategy): Promise<string> {
     case "cache": {
       const url = (opts as { url?: string }).url ?? DEFAULT_URL;
       const cacheDir = join(homedir(), ".cache", "data-of-loathing");
-      const dbPath = join(cacheDir, "data-of-loathing.sqlite");
+      const dbPath = join(cacheDir, "dol.sqlite");
       const etagPath = join(cacheDir, "etag");
 
       await mkdir(cacheDir, { recursive: true });

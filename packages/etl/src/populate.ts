@@ -1,7 +1,7 @@
 import { openDatabase, initialiseDatabase, prepareMeta } from "./db.js";
 import { checkVersions, populateDatabase } from "./index.js";
 
-const SQLITE_PATH = process.env.SQLITE_PATH ?? "./data-of-loathing.sqlite";
+const SQLITE_PATH = process.env.SQLITE_PATH ?? "./dol.sqlite";
 
 async function main() {
   if (!(await checkVersions())) {

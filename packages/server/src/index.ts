@@ -4,7 +4,7 @@ import express from "express";
 import cors from "cors";
 
 const SQLITE_PATH = path.resolve(
-  process.env.SQLITE_PATH ?? "./data-of-loathing.sqlite",
+  process.env.SQLITE_PATH ?? "./dol.sqlite",
 );
 
 await watch(15);
@@ -14,7 +14,7 @@ const app = express();
 app.use(cors());
 
 // res.sendFile handles ETag, conditional GET (304), and Range requests automatically
-app.get("/data-of-loathing.sqlite", (_req, res) => {
+app.get("/dol.sqlite", (_req, res) => {
   res.sendFile(SQLITE_PATH);
 });
 

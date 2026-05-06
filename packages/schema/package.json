@@ -17,8 +17,8 @@
   "author": "Sam Gaus <sam@gaus.co.uk>",
   "license": "MIT",
   "dependencies": {
-    "@mikro-orm/better-sqlite": "^6.6.14",
-    "@mikro-orm/core": "^6.6.14"
+    "@mikro-orm/core": "^7.0.14",
+    "@mikro-orm/sql": "^7.0.14"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",
