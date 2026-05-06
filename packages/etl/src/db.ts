@@ -16,6 +16,7 @@ export async function openDatabase(path: string) {
   orm = await SqlMikroORM.init({
     driver: SqliteDriver,
     driverOptions: new NodeSqliteDialect(path),
+    dbName: path,
     entities,
     allowGlobalContext: true,
   });
