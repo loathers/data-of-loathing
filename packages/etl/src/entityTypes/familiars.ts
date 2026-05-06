@@ -1,38 +1,9 @@
-import { Familiar } from "data-of-loathing-schema";
+import { Familiar, FamiliarCategory } from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
 const VERSION = 4;
 const FILENAME = "familiars";
-
-export enum FamiliarCategory {
-  Stat0 = "stat0",
-  Stat1 = "stat1",
-  Item0 = "item0",
-  Item1 = "item1",
-  Item2 = "item2",
-  Item3 = "item3",
-  Meat0 = "meat0",
-  Combat0 = "combat0",
-  Combat1 = "combat1",
-  Drop = "drop",
-  Block = "block",
-  Delevel0 = "delevel0",
-  Delevel1 = "delevel1",
-  Hp0 = "hp0",
-  Mp0 = "mp0",
-  Meat1 = "meat1",
-  Stat2 = "stat2",
-  Other0 = "other0",
-  Hp1 = "hp1",
-  Mp1 = "mp1",
-  Stat3 = "stat3",
-  Other1 = "other1",
-  Passive = "passive",
-  Underwater = "underwater",
-  Pokefam = "pokefam",
-  Variable = "variable",
-}
 
 const isValidCategory = isMemberOfEnum(FamiliarCategory);
 

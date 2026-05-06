@@ -1,4 +1,9 @@
-import { Monster, MonsterDrop } from "data-of-loathing-schema";
+import {
+  Monster,
+  MonsterDrop,
+  MonsterElement,
+  MonsterDropCategory,
+} from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
@@ -12,30 +17,7 @@ import {
 const VERSION = 8;
 const FILENAME = "monsters";
 
-export enum MonsterElement {
-  BadSpelling = "bad spelling",
-  Cold = "cold",
-  Cute = "cute",
-  Hot = "hot",
-  Shadow = "shadow",
-  Spooky = "spooky",
-  Sleaze = "sleaze",
-  Slime = "slime",
-  Supercold = "supercold",
-  Stench = "stench",
-}
-
 const validElement = memberOfEnumElse(MonsterElement, null);
-
-export enum MonsterDropCategory {
-  PickpocketOnly = "p",
-  NoPickpocket = "n",
-  Conditional = "c",
-  Fixed = "f",
-  Accordion = "a",
-  Multi = "m",
-}
-
 const validDropCategory = memberOfEnumElse(MonsterDropCategory, null);
 
 export type MonsterDropType = {

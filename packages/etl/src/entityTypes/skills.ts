@@ -1,23 +1,9 @@
-import { Skill } from "data-of-loathing-schema";
+import { Skill, SkillTag } from "data-of-loathing-schema";
 import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
 const VERSION = 6;
 const FILENAME = "classskills";
-
-export enum SkillTag {
-  Passive = "passive",
-  Combat = "combat",
-  NonCombat = "nc",
-  Heal = "heal",
-  ItemSummon = "item",
-  Effect = "effect",
-  Self = "self",
-  Other = "other",
-  Song = "song",
-  Expression = "expression",
-  Walk = "walk",
-}
 
 const isValidTag = isMemberOfEnum(SkillTag);
 

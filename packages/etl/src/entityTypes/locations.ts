@@ -1,4 +1,9 @@
-import { Location, NativeMonster } from "data-of-loathing-schema";
+import {
+  Location,
+  NativeMonster,
+  LocationDifficulty,
+  LocationEnvironment,
+} from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
@@ -12,27 +17,10 @@ const LOCATIONS_FILENAME = "adventures";
 const NATIVES_VERSION = 1;
 const NATIVES_FILENAME = "combats";
 
-export enum LocationDifficulty {
-  None = "none",
-  Unknown = "unknown",
-  Low = "low",
-  Medium = "medium",
-  High = "high",
-}
-
 const validDifficulty = memberOfEnumElse(
   LocationDifficulty,
   LocationDifficulty.Unknown,
 );
-
-export enum LocationEnvironment {
-  None = "none",
-  Indoor = "indoor",
-  Outdoor = "outdoor",
-  Underground = "underground",
-  Underwater = "underwater",
-}
-
 const validEnvironment = memberOfEnumElse(
   LocationEnvironment,
   LocationEnvironment.None,

@@ -1,4 +1,4 @@
-import { Consumable } from "data-of-loathing-schema";
+import { Consumable, ConsumableQuality } from "data-of-loathing-schema";
 import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
@@ -6,22 +6,6 @@ import {
   loadMafiaData,
   memberOfEnumElse,
 } from "../utils.js";
-
-export enum ConsumableQuality {
-  None = "none",
-  Crappy = "crappy",
-  Decent = "decent",
-  Good = "good",
-  Awesome = "awesome",
-  EPIC = "EPIC",
-  SuperEPIC = "super_EPIC",
-  SuperUltraEPIC = "super_ultra_EPIC",
-  SuperUltraMegaEPIC = "super_ultra_mega_EPIC",
-  SuperUltraMegaTurboEPIC = "super_ultra_mega_turbo_EPIC",
-  Quest = "quest",
-  Changing = "changing",
-  Drippy = "drippy",
-}
 
 const validQuality = memberOfEnumElse(
   ConsumableQuality,
