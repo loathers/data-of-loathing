@@ -1,6 +1,6 @@
 {
   "name": "data-of-loathing",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "type": "module",
   "packageManager": "yarn@4.6.0",
   "repository": {
@@ -14,6 +14,10 @@
       },
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
     }
   },
   "files": [
@@ -29,13 +33,23 @@
   "devDependencies": {
     "@types/node": "^25.0.2",
     "sqlocal": "^0.18.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0",
+    "vite-plugin-node-polyfills": "^0.26.0"
   },
   "peerDependencies": {
-    "sqlocal": "^0.18.0"
+    "sqlocal": "^0.18.0",
+    "vite": ">=5.0.0",
+    "vite-plugin-node-polyfills": "^0.26.0"
   },
   "peerDependenciesMeta": {
     "sqlocal": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    },
+    "vite-plugin-node-polyfills": {
       "optional": true
     }
   }
