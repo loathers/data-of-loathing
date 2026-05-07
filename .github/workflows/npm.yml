@@ -38,6 +38,6 @@ jobs:
         run: |
           yarn workspace data-of-loathing install
           yarn workspace data-of-loathing build
-          cd packages/client && npm publish --provenance
+          cd packages/client && npm publish --provenance --tag next
         env:
           STATUS: ${{ steps.check.outputs.status }}
