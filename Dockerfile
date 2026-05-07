@@ -3,7 +3,6 @@ FROM node:22
 WORKDIR /app
 
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY packages/schema/package.json packages/schema/
 COPY packages/etl/package.json packages/etl/
 COPY packages/server/package.json packages/server/
 COPY packages/client/package.json packages/client/
@@ -12,8 +11,7 @@ RUN corepack enable && yarn install --frozen-lockfile
 
 COPY . .
 
-# schema exports point to dist/, must be built before server starts
-RUN yarn workspace data-of-loathing-schema run build
+RUN yarn workspace data-of-loathing run build
 
 ENV PORT=3000
 ENV SQLITE_PATH=/dol.sqlite

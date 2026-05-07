@@ -1,4 +1,4 @@
-import { Consumable, ConsumableQuality } from "data-of-loathing-schema";
+import { Consumable, ConsumableQuality } from "data-of-loathing";
 import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,

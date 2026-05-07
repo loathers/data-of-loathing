@@ -1,4 +1,4 @@
-import { Equipment, ItemUse } from "data-of-loathing-schema";
+import { Equipment, ItemUse } from "data-of-loathing";
 import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 

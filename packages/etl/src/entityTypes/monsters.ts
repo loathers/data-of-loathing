@@ -3,7 +3,7 @@ import {
   MonsterDrop,
   MonsterElement,
   MonsterDropCategory,
-} from "data-of-loathing-schema";
+} from "data-of-loathing";
 import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,

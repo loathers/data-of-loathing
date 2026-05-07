@@ -2,7 +2,7 @@ import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
 
 import { createFetchResponse, expectNotNull } from "../testUtils.js";
-import { ItemUse } from "data-of-loathing-schema";
+import { ItemUse } from "data-of-loathing";
 import { loadItems } from "./items.js";
 
 global.fetch = vi.fn();

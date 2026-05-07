@@ -1,4 +1,4 @@
-import { Effect, EffectQuality } from "data-of-loathing-schema";
+import { Effect, EffectQuality } from "data-of-loathing";
 import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, loadMafiaData, memberOfEnumElse } from "../utils.js";
 

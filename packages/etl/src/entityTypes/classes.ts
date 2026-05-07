@@ -1,4 +1,4 @@
-import { AscensionClass } from "data-of-loathing-schema";
+import { AscensionClass } from "data-of-loathing";
 import { populateEntity, resolveReference } from "../db.js";
 import { loadMafiaEnum } from "../utils.js";
 

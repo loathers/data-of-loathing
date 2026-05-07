@@ -1,6 +1,6 @@
 {
   "name": "data-of-loathing",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "type": "module",
   "packageManager": "yarn@4.6.0",
   "repository": {
@@ -24,8 +24,7 @@
   },
   "dependencies": {
     "@mikro-orm/core": "^7.0.14",
-    "@mikro-orm/sql": "^7.0.14",
-    "data-of-loathing-schema": "workspace:*"
+    "@mikro-orm/sql": "^7.0.14"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",

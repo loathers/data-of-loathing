@@ -1,4 +1,4 @@
-import { Path } from "data-of-loathing-schema";
+import { Path } from "data-of-loathing";
 import { populateEntity } from "../db.js";
 import { loadMafiaEnum } from "../utils.js";
 

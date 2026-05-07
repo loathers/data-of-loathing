@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { SqlMikroORM, SqliteDriver, NodeSqliteDialect } from "@mikro-orm/sql";
-import { entities } from "data-of-loathing-schema";
+import { entities } from "./schema.js";
 import { BaseClient, DEFAULT_URL } from "./BaseClient.js";
 
 export type Strategy =
@@ -64,4 +64,4 @@ export function createClient(strategy: Strategy = {}): Client {
   return new Client(strategy);
 }
 
-export * from "data-of-loathing-schema";
+export * from "./schema.js";

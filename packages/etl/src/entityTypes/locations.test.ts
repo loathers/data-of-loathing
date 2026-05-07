@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
 import { createFetchResponse, expectNotNull } from "../testUtils.js";
-import { LocationDifficulty, LocationEnvironment } from "data-of-loathing-schema";
+import { LocationDifficulty, LocationEnvironment } from "data-of-loathing";
 import { loadLocations, loadNatives } from "./locations.js";
 
 global.fetch = vi.fn();

@@ -1,4 +1,4 @@
-import { Familiar, FamiliarCategory } from "data-of-loathing-schema";
+import { Familiar, FamiliarCategory } from "data-of-loathing";
 import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 

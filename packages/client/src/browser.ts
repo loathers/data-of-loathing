@@ -1,6 +1,6 @@
 import { SqlMikroORM, SqliteDriver } from "@mikro-orm/sql";
 import { SQLocalKysely } from "sqlocal/kysely";
-import { entities } from "data-of-loathing-schema";
+import { entities } from "./schema.js";
 import { BaseClient, DEFAULT_URL, ETAG_KEY } from "./BaseClient.js";
 
 export type Strategy = { strategy?: "url"; url?: string; force?: boolean };
@@ -47,4 +47,4 @@ export function createClient(strategy: Strategy = {}): Client {
   return new Client(strategy);
 }
 
-export * from "data-of-loathing-schema";
+export * from "./schema.js";

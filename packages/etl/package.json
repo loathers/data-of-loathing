@@ -13,7 +13,7 @@
     "@mikro-orm/core": "^7.0.14",
     "@mikro-orm/sql": "^7.0.14",
     "croner": "^9.1.0",
-    "data-of-loathing-schema": "workspace:*",
+    "data-of-loathing": "workspace:*",
     "java-parser": "^3.0.1"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 import { MikroORM } from "@mikro-orm/core";
 import { NodeSqliteDialect, SqliteDriver, SqlMikroORM } from "@mikro-orm/sql";
-import { entities } from "data-of-loathing-schema";
+import { entities } from "data-of-loathing";
 
 let orm: MikroORM;
 

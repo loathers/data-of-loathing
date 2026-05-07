@@ -1535,7 +1535,7 @@ __metadata:
     "@mikro-orm/sql": "npm:^7.0.14"
     "@types/node": "npm:^25.0.2"
     croner: "npm:^9.1.0"
-    data-of-loathing-schema: "workspace:*"
+    data-of-loathing: "workspace:*"
     eslint: "npm:^9.39.2"
     java-parser: "npm:^3.0.1"
     prettier: "npm:^3.7.4"
@@ -1549,17 +1549,6 @@ __metadata:
 "data-of-loathing-project@workspace:.":
   version: 0.0.0-use.local
   resolution: "data-of-loathing-project@workspace:."
-  languageName: unknown
-  linkType: soft
-
-"data-of-loathing-schema@workspace:*, data-of-loathing-schema@workspace:packages/schema":
-  version: 0.0.0-use.local
-  resolution: "data-of-loathing-schema@workspace:packages/schema"
-  dependencies:
-    "@mikro-orm/core": "npm:^7.0.14"
-    "@mikro-orm/sql": "npm:^7.0.14"
-    "@types/node": "npm:^25.0.2"
-    typescript: "npm:^5.9.3"
   languageName: unknown
   linkType: soft
 
@@ -1582,14 +1571,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"data-of-loathing@workspace:packages/client":
+"data-of-loathing@workspace:*, data-of-loathing@workspace:packages/client":
   version: 0.0.0-use.local
   resolution: "data-of-loathing@workspace:packages/client"
   dependencies:
     "@mikro-orm/core": "npm:^7.0.14"
     "@mikro-orm/sql": "npm:^7.0.14"
     "@types/node": "npm:^25.0.2"
-    data-of-loathing-schema: "workspace:*"
     sqlocal: "npm:^0.18.0"
     typescript: "npm:^5.9.3"
   peerDependencies:

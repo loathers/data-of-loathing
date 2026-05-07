@@ -1,4 +1,4 @@
-import { Skill, SkillTag } from "data-of-loathing-schema";
+import { Skill, SkillTag } from "data-of-loathing";
 import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 

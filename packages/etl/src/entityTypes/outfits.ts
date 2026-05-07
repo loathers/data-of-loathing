@@ -1,4 +1,4 @@
-import { Outfit, OutfitTreat } from "data-of-loathing-schema";
+import { Outfit, OutfitTreat } from "data-of-loathing";
 import { populateEntity, populatePivot, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 
