@@ -11,7 +11,7 @@ await watch(15);
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ exposedHeaders: ["ETag"] }));
 
 // res.sendFile handles ETag, conditional GET (304), and Range requests automatically
 app.get("/dol.sqlite", (_req, res) => {

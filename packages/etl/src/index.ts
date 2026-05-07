@@ -1,4 +1,5 @@
 import type { Endpoints } from "@octokit/types";
+import { utimes } from "node:fs/promises";
 import { Cron } from "croner";
 import { populateClasses } from "./entityTypes/classes.js";
 import { checkEffectsVersion, populateEffects } from "./entityTypes/effects.js";
@@ -148,6 +149,7 @@ export async function watch(every: number) {
 
     await setLastRevision(await getKoLmafiaRevision());
     await setLastUpdate(lastGitHubUpdate);
+    await utimes(SQLITE_PATH, lastGitHubUpdate, lastGitHubUpdate);
     firstTime = false;
   });
 

@@ -449,7 +449,7 @@ export const ItemSchema = new EntitySchema<Item>({
   tableName: "items",
   properties: {
     id: { type: "integer", primary: true },
-    name: { type: "string" },
+    name: { type: "string", index: true },
     descid: { type: "integer", nullable: true, unique: true },
     image: { type: "string" },
     uses: { type: "json" },

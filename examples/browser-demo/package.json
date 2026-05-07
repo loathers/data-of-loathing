@@ -1,0 +1,20 @@
+{
+  "name": "browser-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "data-of-loathing": "file:../../packages/client",
+    "sqlocal": "^0.18.0"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.43.0",
+    "vite": "^6.0.0",
+    "vite-plugin-node-polyfills": "^0.23.0",
+    "vite-plugin-top-level-await": "^1.4.0"
+  }
+}
