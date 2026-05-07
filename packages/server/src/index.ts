@@ -66,6 +66,9 @@ app
       },
     }),
   )
+  .get("/dol.sqlite", (_req, res) => {
+    res.redirect(302, "https://v3.data.loathers.net/dol.sqlite");
+  })
   .get("/", (req, res) => {
     res.send("DATA OF LOATHING");
   });
