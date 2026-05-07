@@ -37,6 +37,7 @@ jobs:
         if: ${{ steps.check.outputs.status == '404' }}
         run: |
           yarn workspace data-of-loathing install
+          yarn workspace data-of-loathing-schema build
           yarn workspace data-of-loathing build
           cd packages/client && npm publish
         env:
