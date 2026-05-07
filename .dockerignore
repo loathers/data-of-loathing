@@ -1,0 +1,5 @@
+node_modules
+.git
+packages/*/node_modules
+packages/schema/dist
+packages/client/dist
