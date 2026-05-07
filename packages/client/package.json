@@ -1,6 +1,6 @@
 {
   "name": "data-of-loathing",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "type": "module",
   "packageManager": "yarn@4.6.0",
   "repository": {
@@ -25,7 +25,9 @@
   ],
   "typesVersions": {
     "*": {
-      "vite": ["./dist/vite.d.ts"]
+      "vite": [
+        "./dist/vite.d.ts"
+      ]
     }
   },
   "scripts": {
