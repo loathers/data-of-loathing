@@ -1,6 +1,6 @@
 {
   "name": "data-of-loathing",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "type": "module",
   "packageManager": "yarn@4.6.0",
   "repository": {
@@ -31,15 +31,17 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist && tsc"
+    "build": "rm -rf dist && tsup"
   },
   "dependencies": {
     "@mikro-orm/core": "^7.0.14",
     "@mikro-orm/sql": "^7.0.14",
-    "@sqlite.org/sqlite-wasm": "~3.51.2-build9"
+    "@sqlite.org/sqlite-wasm": "~3.51.2-build9",
+    "kysely": "^0.28.17"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vite": "^6.0.0",
     "vite-plugin-node-polyfills": "^0.26.0"
