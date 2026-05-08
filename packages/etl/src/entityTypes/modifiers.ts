@@ -104,10 +104,30 @@ const IGNORES = [
 ];
 
 const modifierTypes = [
-  { source: "Item", prop: "item", foreignTable: "items", Entity: ItemModifiers },
-  { source: "Effect", prop: "effect", foreignTable: "effects", Entity: EffectModifiers },
-  { source: "Skill", prop: "skill", foreignTable: "skills", Entity: SkillModifiers },
-  { source: "Familiar", prop: "familiar", foreignTable: "familiars", Entity: FamiliarModifiers },
+  {
+    source: "Item",
+    prop: "item",
+    foreignTable: "items",
+    Entity: ItemModifiers,
+  },
+  {
+    source: "Effect",
+    prop: "effect",
+    foreignTable: "effects",
+    Entity: EffectModifiers,
+  },
+  {
+    source: "Skill",
+    prop: "skill",
+    foreignTable: "skills",
+    Entity: SkillModifiers,
+  },
+  {
+    source: "Familiar",
+    prop: "familiar",
+    foreignTable: "familiars",
+    Entity: FamiliarModifiers,
+  },
 ] as const;
 
 export async function populateModifiers() {
@@ -118,26 +138,22 @@ export async function populateModifiers() {
       .filter(({ type }) => type === source)
       .map(({ thing, modifiers }) => ({ thing, modifiers }));
 
-    await populateEntity(
-      dataForType,
-      Entity,
-      async (datum) => {
-        const lookup = `${prop}:${datum.thing}`;
-        if (IGNORES.includes(lookup)) return null;
+    await populateEntity(dataForType, Entity, async (datum) => {
+      const lookup = `${prop}:${datum.thing}`;
+      if (IGNORES.includes(lookup)) return null;
 
-        const id = await (() => {
-          if (lookup === "item:Love Potion #0") return Promise.resolve(9745);
-          return resolveReference(
-            `${prop}Modifiers`,
-            foreignTable,
-            "name",
-            datum.thing,
-          );
-        })();
+      const id = await (() => {
+        if (lookup === "item:Love Potion #0") return Promise.resolve(9745);
+        return resolveReference(
+          `${prop}Modifiers`,
+          foreignTable,
+          "name",
+          datum.thing,
+        );
+      })();
 
-        if (!id) return null;
-        return { [prop]: id, modifiers: datum.modifiers };
-      },
-    );
+      if (!id) return null;
+      return { [prop]: id, modifiers: datum.modifiers };
+    });
   }
 }

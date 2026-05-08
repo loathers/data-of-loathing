@@ -31,12 +31,8 @@ export async function loadClasses() {
 }
 
 export async function populateClasses() {
-  return populateEntity(
-    loadClasses,
-    AscensionClass,
-    async (clazz) => ({
-      ...clazz,
-      path: await resolveReference("classes", "paths", "enum_name", clazz.path),
-    }),
-  );
+  return populateEntity(loadClasses, AscensionClass, async (clazz) => ({
+    ...clazz,
+    path: await resolveReference("classes", "paths", "enum_name", clazz.path),
+  }));
 }

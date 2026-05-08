@@ -122,19 +122,15 @@ export async function loadConsumables() {
 
 export async function populateConsumables() {
   const consumables = await loadConsumables();
-  await populateEntity(
-    consumables,
-    Consumable,
-    async (consumable) => {
-      const itemId = await resolveReference(
-        "consumables",
-        "items",
-        "name",
-        consumable.id,
-      );
-      if (!itemId) return null;
-      const { id: _, ...rest } = consumable;
-      return { ...rest, item: itemId };
-    },
-  );
+  await populateEntity(consumables, Consumable, async (consumable) => {
+    const itemId = await resolveReference(
+      "consumables",
+      "items",
+      "name",
+      consumable.id,
+    );
+    if (!itemId) return null;
+    const { id: _, ...rest } = consumable;
+    return { ...rest, item: itemId };
+  });
 }

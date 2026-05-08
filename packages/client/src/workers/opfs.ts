@@ -1,4 +1,9 @@
-import sqlite3InitModule, { BindingSpec, Database, Sqlite3Static, SqlValue } from "@sqlite.org/sqlite-wasm";
+import sqlite3InitModule, {
+  BindingSpec,
+  Database,
+  Sqlite3Static,
+  SqlValue,
+} from "@sqlite.org/sqlite-wasm";
 
 type WorkerMessage =
   | { type: "load"; id: string; filename: string }
@@ -20,7 +25,12 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
       }
       case "exec": {
         const rows: Record<string, SqlValue>[] = [];
-        db!.exec({ sql: event.data.sql, bind: event.data.bind, rowMode: "object", resultRows: rows });
+        db!.exec({
+          sql: event.data.sql,
+          bind: event.data.bind,
+          rowMode: "object",
+          resultRows: rows,
+        });
         self.postMessage({ id, type: "exec", rows });
         break;
       }

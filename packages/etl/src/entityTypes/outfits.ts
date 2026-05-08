@@ -77,7 +77,9 @@ export async function populateOutfits() {
 
   await populateEntity(
     outfits.flatMap((o) =>
-      o.treats.map((t) => ({ outfit: o.id, ...t })).filter((t) => t.item !== ""),
+      o.treats
+        .map((t) => ({ outfit: o.id, ...t }))
+        .filter((t) => t.item !== ""),
     ),
     OutfitTreat,
     async (treat) => ({

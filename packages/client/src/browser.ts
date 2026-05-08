@@ -26,7 +26,10 @@ async function setOpfsEtag(etag: string): Promise<void> {
   await writable.close();
 }
 
-async function writeToOpfs(filename: string, buffer: ArrayBuffer): Promise<void> {
+async function writeToOpfs(
+  filename: string,
+  buffer: ArrayBuffer,
+): Promise<void> {
   const root = await navigator.storage.getDirectory();
   const handle = await root.getFileHandle(filename, { create: true });
   const writable = await handle.createWritable();
@@ -59,17 +62,23 @@ export class Client extends BaseClient<Strategy> {
     switch (strategy.strategy) {
       case "ranged": {
         this.#dialect = new SqliteWorkerDialect(
-          new Worker(new URL("./workers/ranged.js", import.meta.url), { type: "module" }),
+          new Worker(new URL("./workers/ranged.js", import.meta.url), {
+            type: "module",
+          }),
         );
         await this.#dialect.loadRanged(url);
         break;
       }
       case "opfs": {
         this.#dialect = new SqliteWorkerDialect(
-          new Worker(new URL("./workers/opfs.js", import.meta.url), { type: "module" }),
+          new Worker(new URL("./workers/opfs.js", import.meta.url), {
+            type: "module",
+          }),
         );
         const { force = false } = strategy;
-        const remoteEtag = (await fetch(url, { method: "HEAD" })).headers.get("etag");
+        const remoteEtag = (await fetch(url, { method: "HEAD" })).headers.get(
+          "etag",
+        );
         const storedEtag = force ? null : await getOpfsEtag();
 
         if (force || storedEtag !== remoteEtag) {
@@ -84,13 +93,16 @@ export class Client extends BaseClient<Strategy> {
       case "memory":
       default: {
         this.#dialect = new SqliteWorkerDialect(
-          new Worker(new URL("./workers/memory.js", import.meta.url), { type: "module" }),
+          new Worker(new URL("./workers/memory.js", import.meta.url), {
+            type: "module",
+          }),
         );
         const { force = false } = strategy;
         const response = await fetch(url, {
           cache: force ? "reload" : "default",
         });
-        if (!response.ok) throw new Error(`Failed to fetch database: ${response.status}`);
+        if (!response.ok)
+          throw new Error(`Failed to fetch database: ${response.status}`);
         const buffer = await response.arrayBuffer();
         await this.#dialect.loadMemory(buffer);
       }

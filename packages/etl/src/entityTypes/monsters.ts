@@ -195,12 +195,8 @@ export async function populateMonsters() {
     m.drops.map((d) => ({ monster: m.id, ...d })),
   );
 
-  await populateEntity(
-    monsterDropRows,
-    MonsterDrop,
-    async (drop) => ({
-      ...drop,
-      item: await resolveReference("monster", "items", "name", drop.item, true),
-    }),
-  );
+  await populateEntity(monsterDropRows, MonsterDrop, async (drop) => ({
+    ...drop,
+    item: await resolveReference("monster", "items", "name", drop.item, true),
+  }));
 }

@@ -1,4 +1,12 @@
-import sqlite3InitModule, { BindingSpec, CAPI, Database, Sqlite3Result, SqlValue, type Sqlite3Static, type SQLiteStruct } from "@sqlite.org/sqlite-wasm";
+import sqlite3InitModule, {
+  BindingSpec,
+  CAPI,
+  Database,
+  Sqlite3Result,
+  SqlValue,
+  type Sqlite3Static,
+  type SQLiteStruct,
+} from "@sqlite.org/sqlite-wasm";
 
 type WorkerMessage =
   | { type: "load"; id: string; url: string }
@@ -12,7 +20,11 @@ const fileSizes = new Map<number, number>();
 const readCache = new Map<number, Map<string, Uint8Array>>();
 let vfsInstalled = false;
 
-function syncFetchRange(url: string, start: number, end: number): { data: Uint8Array; totalSize: number | null } | null {
+function syncFetchRange(
+  url: string,
+  start: number,
+  end: number,
+): { data: Uint8Array; totalSize: number | null } | null {
   try {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
@@ -98,9 +110,15 @@ function installRangedVfs(s3: Sqlite3Static): void {
           }
           return capi.SQLITE_OK;
         },
-        xWrite() { return capi.SQLITE_READONLY; },
-        xTruncate() { return capi.SQLITE_READONLY; },
-        xSync() { return capi.SQLITE_OK; },
+        xWrite() {
+          return capi.SQLITE_READONLY;
+        },
+        xTruncate() {
+          return capi.SQLITE_READONLY;
+        },
+        xSync() {
+          return capi.SQLITE_OK;
+        },
         xFileSize(pFile: number, pSize: number) {
           const url = fileUrls.get(pFile);
           if (!url) return capi.SQLITE_IOERR;
@@ -115,21 +133,37 @@ function installRangedVfs(s3: Sqlite3Static): void {
           wasm.poke(pSize + 4, Math.floor(size / 0x100000000), "i32");
           return capi.SQLITE_OK;
         },
-        xLock() { return capi.SQLITE_OK; },
-        xUnlock() { return capi.SQLITE_OK; },
+        xLock() {
+          return capi.SQLITE_OK;
+        },
+        xUnlock() {
+          return capi.SQLITE_OK;
+        },
         xCheckReservedLock(_pFile: number, pResOut: number) {
           wasm.poke(pResOut, 0, "i32");
           return capi.SQLITE_OK;
         },
-        xFileControl() { return capi.SQLITE_NOTFOUND; },
-        xSectorSize() { return 512 as Sqlite3Result; },
-        xDeviceCharacteristics() { return capi.SQLITE_IOCAP_IMMUTABLE as Sqlite3Result; },
+        xFileControl() {
+          return capi.SQLITE_NOTFOUND;
+        },
+        xSectorSize() {
+          return 512 as Sqlite3Result;
+        },
+        xDeviceCharacteristics() {
+          return capi.SQLITE_IOCAP_IMMUTABLE as Sqlite3Result;
+        },
       },
     },
     vfs: {
       struct: vfsStruct,
       methods: {
-        xOpen(_pVfs: number, zName: number, pFile: number, _flags: number, pOutFlags: number) {
+        xOpen(
+          _pVfs: number,
+          zName: number,
+          pFile: number,
+          _flags: number,
+          pOutFlags: number,
+        ) {
           const url = zName ? (wasm.cstrToJs(zName) ?? "") : "";
           const fileObj = new capi.sqlite3_file(pFile);
           fileObj.$pMethods = ioMethods.pointer;
@@ -140,26 +174,47 @@ function installRangedVfs(s3: Sqlite3Static): void {
           // Pre-fetch first 64KB to warm cache with header + early B-tree pages
           const prefetch = syncFetchRange(url, 0, 65535);
           if (prefetch) {
-            if (prefetch.totalSize != null) fileSizes.set(pFile, prefetch.totalSize);
+            if (prefetch.totalSize != null)
+              fileSizes.set(pFile, prefetch.totalSize);
             // Detect page size from SQLite header bytes 16-17 (big-endian); value of 1 means 65536
-            const rawPgSize = prefetch.data.length >= 18
-              ? ((prefetch.data[16] << 8) | prefetch.data[17])
-              : 0;
-            const pageSize = rawPgSize === 1 ? 65536 : (rawPgSize || 4096);
-            for (let offset = 0; offset + pageSize <= prefetch.data.length; offset += pageSize) {
-              cache.set(`${offset}:${pageSize}`, prefetch.data.slice(offset, offset + pageSize));
+            const rawPgSize =
+              prefetch.data.length >= 18
+                ? (prefetch.data[16] << 8) | prefetch.data[17]
+                : 0;
+            const pageSize = rawPgSize === 1 ? 65536 : rawPgSize || 4096;
+            for (
+              let offset = 0;
+              offset + pageSize <= prefetch.data.length;
+              offset += pageSize
+            ) {
+              cache.set(
+                `${offset}:${pageSize}`,
+                prefetch.data.slice(offset, offset + pageSize),
+              );
             }
           }
 
           if (pOutFlags) wasm.poke(pOutFlags, capi.SQLITE_OPEN_READONLY, "i32");
           return capi.SQLITE_OK;
         },
-        xDelete() { return capi.SQLITE_IOERR_DELETE; },
-        xAccess(_pVfs: number, _zName: number, _flags: number, pResOut: number) {
+        xDelete() {
+          return capi.SQLITE_IOERR_DELETE;
+        },
+        xAccess(
+          _pVfs: number,
+          _zName: number,
+          _flags: number,
+          pResOut: number,
+        ) {
           wasm.poke(pResOut, 1, "i32");
           return capi.SQLITE_OK;
         },
-        xFullPathname(_pVfs: number, zName: number, nOut: number, zOut: number) {
+        xFullPathname(
+          _pVfs: number,
+          zName: number,
+          nOut: number,
+          zOut: number,
+        ) {
           const name = wasm.cstrToJs(zName) ?? "";
           const bytes = new TextEncoder().encode(name + "\0");
           if (bytes.length > nOut) return capi.SQLITE_CANTOPEN;
@@ -172,7 +227,9 @@ function installRangedVfs(s3: Sqlite3Static): void {
           wasm.heap8u().set(buf, zOut);
           return nByte as Sqlite3Result;
         },
-        xSleep() { return capi.SQLITE_OK; },
+        xSleep() {
+          return capi.SQLITE_OK;
+        },
         xCurrentTime(_pVfs: number, pTimeOut: number) {
           wasm.poke(pTimeOut, Date.now() / 86400000 + 2440587.5, "f64");
           return capi.SQLITE_OK;
@@ -192,7 +249,11 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   const { type, id } = event.data;
   try {
     // @ts-expect-error - printErr is supported at runtime but not in the type definition
-    sqlite3 ??= await sqlite3InitModule({ printErr: (msg: string) => { if (!msg.includes("OPFS")) console.error(msg); } });
+    sqlite3 ??= await sqlite3InitModule({
+      printErr: (msg: string) => {
+        if (!msg.includes("OPFS")) console.error(msg);
+      },
+    });
 
     switch (type) {
       case "load": {
@@ -203,7 +264,12 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
       }
       case "exec": {
         const rows: Record<string, SqlValue>[] = [];
-        db!.exec({ sql: event.data.sql, bind: event.data.bind, rowMode: "object", resultRows: rows });
+        db!.exec({
+          sql: event.data.sql,
+          bind: event.data.bind,
+          rowMode: "object",
+          resultRows: rows,
+        });
         self.postMessage({ id, type: "exec", rows });
         break;
       }

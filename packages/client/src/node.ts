@@ -38,9 +38,14 @@ export class Client extends BaseClient<Strategy> {
         const etagPath = join(cacheDir, "etag");
         await mkdir(cacheDir, { recursive: true });
 
-        await this.syncIfNeeded(url, etagPath, async (data) => {
-          await writeFile(dbPath, Buffer.from(data));
-        }, force);
+        await this.syncIfNeeded(
+          url,
+          etagPath,
+          async (data) => {
+            await writeFile(dbPath, Buffer.from(data));
+          },
+          force,
+        );
 
         return dbPath;
       }

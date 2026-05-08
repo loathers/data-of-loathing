@@ -145,7 +145,6 @@ export async function markAmbiguous(tableName: string) {
   );
 }
 
-
 export async function prepareMeta() {
   await conn().execute(
     `INSERT OR IGNORE INTO "meta" ("id", "last_update", "last_revision") VALUES (1, 0, 0)`,

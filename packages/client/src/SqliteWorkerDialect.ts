@@ -21,7 +21,13 @@ type WorkerResponse =
 
 export class SqliteWorkerDialect implements Dialect {
   readonly #worker: Worker;
-  readonly #pending = new Map<string, { resolve: (value: Record<string, SqlValue>[] | undefined) => void; reject: (err: Error) => void }>();
+  readonly #pending = new Map<
+    string,
+    {
+      resolve: (value: Record<string, SqlValue>[] | undefined) => void;
+      reject: (err: Error) => void;
+    }
+  >();
   #nextId = 0;
 
   constructor(worker: Worker) {
@@ -66,7 +72,9 @@ export class SqliteWorkerDialect implements Dialect {
     const connection: DatabaseConnection = {
       executeQuery<O>(query: CompiledQuery): Promise<QueryResult<O>> {
         return dialect
-          .#send<O[]>({ type: "exec", sql: query.sql, bind: [...query.parameters] })
+          .#send<
+            O[]
+          >({ type: "exec", sql: query.sql, bind: [...query.parameters] })
           .then((rows) => ({ rows }));
       },
       async *streamQuery() {
@@ -75,12 +83,16 @@ export class SqliteWorkerDialect implements Dialect {
     };
     return {
       async init() {},
-      async acquireConnection() { return connection; },
+      async acquireConnection() {
+        return connection;
+      },
       async beginTransaction() {},
       async commitTransaction() {},
       async rollbackTransaction() {},
       async releaseConnection() {},
-      async destroy() { dialect.#worker.terminate(); },
+      async destroy() {
+        dialect.#worker.terminate();
+      },
     };
   }
 

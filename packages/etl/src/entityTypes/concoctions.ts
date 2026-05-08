@@ -90,21 +90,17 @@ export async function loadConcoctions() {
 export async function populateConcoctions() {
   const data = await loadConcoctions();
 
-  await populateEntity(
-    data,
-    Concoction,
-    async (concoction) => ({
-      id: concoction.id,
-      item: await resolveReference(
-        "concoction result",
-        "items",
-        "name",
-        concoction.item,
-      ),
-      methods: concoction.methods,
-      comment: concoction.comment,
-    }),
-  );
+  await populateEntity(data, Concoction, async (concoction) => ({
+    id: concoction.id,
+    item: await resolveReference(
+      "concoction result",
+      "items",
+      "name",
+      concoction.item,
+    ),
+    methods: concoction.methods,
+    comment: concoction.comment,
+  }));
 
   await populateEntity(
     data.flatMap(({ id, ingredients }) =>

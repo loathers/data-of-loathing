@@ -69,21 +69,17 @@ export async function loadEquipment() {
 
 export async function populateEquipment() {
   const equipment = await loadEquipment();
-  await populateEntity(
-    equipment,
-    Equipment,
-    async (equip) => {
-      const itemId = await resolveReference<{ id: number; uses: ItemUse[] }>(
-        "equipment",
-        "items",
-        "name",
-        equip.id,
-        false,
-        (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses?.includes(u)),
-      );
-      if (!itemId) return null;
-      const { id: _, ...rest } = equip;
-      return { ...rest, item: itemId };
-    },
-  );
+  await populateEntity(equipment, Equipment, async (equip) => {
+    const itemId = await resolveReference<{ id: number; uses: ItemUse[] }>(
+      "equipment",
+      "items",
+      "name",
+      equip.id,
+      false,
+      (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses?.includes(u)),
+    );
+    if (!itemId) return null;
+    const { id: _, ...rest } = equip;
+    return { ...rest, item: itemId };
+  });
 }

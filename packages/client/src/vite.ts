@@ -1,7 +1,9 @@
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import type { Plugin, PluginOption } from "vite";
 
-export default function dol({ coi = false }: { coi?: boolean } = {}): PluginOption[] {
+export default function dol({
+  coi = false,
+}: { coi?: boolean } = {}): PluginOption[] {
   const plugin: Plugin = {
     name: "data-of-loathing",
     config() {

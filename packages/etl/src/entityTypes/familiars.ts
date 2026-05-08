@@ -54,23 +54,19 @@ export async function loadFamiliars() {
 }
 
 export async function populateFamiliars() {
-  return populateEntity(
-    loadFamiliars,
-    Familiar,
-    async (familiar) => ({
-      ...familiar,
-      larva: await resolveReference(
-        "familiar larva",
-        "items",
-        "name",
-        familiar.larva,
-      ),
-      equipment: await resolveReference(
-        "familiar equipment",
-        "items",
-        "name",
-        familiar.equipment,
-      ),
-    }),
-  );
+  return populateEntity(loadFamiliars, Familiar, async (familiar) => ({
+    ...familiar,
+    larva: await resolveReference(
+      "familiar larva",
+      "items",
+      "name",
+      familiar.larva,
+    ),
+    equipment: await resolveReference(
+      "familiar equipment",
+      "items",
+      "name",
+      familiar.equipment,
+    ),
+  }));
 }

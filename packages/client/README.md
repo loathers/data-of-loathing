@@ -55,7 +55,10 @@ const client = createClient({ strategy: "ranged" });
 All three accept a `url` option if you are hosting the database yourself:
 
 ```ts
-const client = createClient({ strategy: "memory", url: "https://example.com/dol.sqlite" });
+const client = createClient({
+  strategy: "memory",
+  url: "https://example.com/dol.sqlite",
+});
 ```
 
 ### Vite setup
@@ -76,7 +79,7 @@ The plugin excludes the package and its SQLite WASM dependency from Vite's depen
 If your deployment needs [cross-origin isolation headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy) for other reasons, pass `{ coi: true }` to enable them on the dev server:
 
 ```ts
-plugins: [dol({ coi: true })]
+plugins: [dol({ coi: true })];
 ```
 
 ## Querying

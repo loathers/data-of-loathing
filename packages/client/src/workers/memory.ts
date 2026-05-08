@@ -1,4 +1,9 @@
-import sqlite3InitModule, { BindingSpec, Database, Sqlite3Static, SqlValue } from "@sqlite.org/sqlite-wasm";
+import sqlite3InitModule, {
+  BindingSpec,
+  Database,
+  Sqlite3Static,
+  SqlValue,
+} from "@sqlite.org/sqlite-wasm";
 
 type WorkerMessage =
   | { type: "load"; id: string; buffer: ArrayBuffer }
@@ -11,7 +16,11 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   const { type, id } = event.data;
   try {
     // @ts-expect-error - printErr is supported at runtime but not in the type definition
-    sqlite3 ??= await sqlite3InitModule({ printErr: (msg: string) => { if (!msg.includes("OPFS")) console.error(msg); } });
+    sqlite3 ??= await sqlite3InitModule({
+      printErr: (msg: string) => {
+        if (!msg.includes("OPFS")) console.error(msg);
+      },
+    });
 
     switch (type) {
       case "load": {
@@ -24,14 +33,20 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
           p,
           buffer.byteLength,
           buffer.byteLength,
-          sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE | sqlite3.capi.SQLITE_DESERIALIZE_READONLY,
+          sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE |
+            sqlite3.capi.SQLITE_DESERIALIZE_READONLY,
         );
         self.postMessage({ id, type: "loaded" });
         break;
       }
       case "exec": {
         const rows: Record<string, SqlValue>[] = [];
-        db.exec({ sql: event.data.sql, bind: event.data.bind, rowMode: "object", resultRows: rows });
+        db.exec({
+          sql: event.data.sql,
+          bind: event.data.bind,
+          rowMode: "object",
+          resultRows: rows,
+        });
         self.postMessage({ id, type: "exec", rows });
         break;
       }
