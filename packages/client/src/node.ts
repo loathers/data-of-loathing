@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
+import envPaths from "env-paths";
 import { SqlMikroORM, SqliteDriver, NodeSqliteDialect } from "@mikro-orm/sql";
 import { entities } from "./schema.js";
 import { BaseClient, DEFAULT_URL } from "./BaseClient.js";
@@ -33,7 +33,7 @@ export class Client extends BaseClient<Strategy> {
       case "url": {
         const { url = DEFAULT_URL, force = false } = strategy;
 
-        const cacheDir = join(homedir(), ".cache", "data-of-loathing");
+        const cacheDir = envPaths("data-of-loathing").cache;
         const dbPath = join(cacheDir, "dol.sqlite");
         const etagPath = join(cacheDir, "etag");
         await mkdir(cacheDir, { recursive: true });
