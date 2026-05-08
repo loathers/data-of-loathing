@@ -7,7 +7,7 @@ export default function dol({ coi = false }: { coi?: boolean } = {}): PluginOpti
     config() {
       return {
         optimizeDeps: {
-          exclude: ["@sqlite.org/sqlite-wasm"],
+          exclude: ["data-of-loathing", "@sqlite.org/sqlite-wasm"],
         },
       };
     },
