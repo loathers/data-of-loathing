@@ -191,7 +191,8 @@ function installRangedVfs(s3: Sqlite3Static): void {
 self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   const { type, id } = event.data;
   try {
-    sqlite3 ??= await sqlite3InitModule();
+    // @ts-expect-error - printErr is supported at runtime but not in the type definition
+    sqlite3 ??= await sqlite3InitModule({ printErr: (msg: string) => { if (!msg.includes("OPFS")) console.error(msg); } });
 
     switch (type) {
       case "load": {
