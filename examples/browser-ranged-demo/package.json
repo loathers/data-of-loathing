@@ -1,5 +1,5 @@
 {
-  "name": "opfs-demo",
+  "name": "browser-ranged-demo",
   "private": true,
   "type": "module",
   "scripts": {

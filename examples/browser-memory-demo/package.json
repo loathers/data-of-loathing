@@ -1,5 +1,5 @@
 {
-  "name": "browser-demo",
+  "name": "browser-memory-demo",
   "private": true,
   "type": "module",
   "scripts": {

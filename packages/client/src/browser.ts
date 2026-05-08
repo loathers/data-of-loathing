@@ -5,7 +5,8 @@ import { BaseClient, DEFAULT_URL, ETAG_KEY } from "./BaseClient.js";
 
 export type Strategy =
   | { strategy?: "memory"; url?: string; force?: boolean }
-  | { strategy: "opfs"; url?: string; force?: boolean };
+  | { strategy: "opfs"; url?: string; force?: boolean }
+  | { strategy: "ranged"; url?: string };
 
 async function getOpfsEtag(): Promise<string | null> {
   try {
@@ -52,32 +53,47 @@ export class Client extends BaseClient<Strategy> {
     await this._orm?.close();
     this.#dialect?.createDriver().destroy();
 
+    const strategy = this._strategy;
     const url = this._strategy.url ?? DEFAULT_URL;
-    const strategy = this._strategy.strategy ?? "memory";
-    const force = this._strategy.force ?? false;
 
-    this.#dialect = new SqliteWorkerDialect(
-      new Worker(new URL("./sqlite-worker.js", import.meta.url), { type: "module" }),
-    );
-
-    if (strategy === "opfs") {
-      const remoteEtag = (await fetch(url, { method: "HEAD" })).headers.get("etag");
-      const storedEtag = force ? null : await getOpfsEtag();
-
-      if (force || storedEtag !== remoteEtag) {
-        const buffer = await this.fetchDb(url);
-        await writeToOpfs("dol.sqlite", buffer);
-        if (remoteEtag) await setOpfsEtag(remoteEtag);
+    switch (strategy.strategy) {
+      case "ranged": {
+        this.#dialect = new SqliteWorkerDialect(
+          new Worker(new URL("./workers/ranged.js", import.meta.url), { type: "module" }),
+        );
+        await this.#dialect.loadRanged(url);
+        break;
       }
+      case "opfs": {
+        this.#dialect = new SqliteWorkerDialect(
+          new Worker(new URL("./workers/opfs.js", import.meta.url), { type: "module" }),
+        );
+        const { force = false } = strategy;
+        const remoteEtag = (await fetch(url, { method: "HEAD" })).headers.get("etag");
+        const storedEtag = force ? null : await getOpfsEtag();
 
-      await this.#dialect.loadOpfs("/dol.sqlite");
-    } else {
-      const response = await fetch(url, {
-        cache: force ? "reload" : "default",
-      });
-      if (!response.ok) throw new Error(`Failed to fetch database: ${response.status}`);
-      const buffer = await response.arrayBuffer();
-      await this.#dialect.loadMemory(buffer);
+        if (force || storedEtag !== remoteEtag) {
+          const buffer = await this.fetchDb(url);
+          await writeToOpfs("dol.sqlite", buffer);
+          if (remoteEtag) await setOpfsEtag(remoteEtag);
+        }
+
+        await this.#dialect.loadOpfs("/dol.sqlite");
+        break;
+      }
+      case "memory":
+      default: {
+        this.#dialect = new SqliteWorkerDialect(
+          new Worker(new URL("./workers/memory.js", import.meta.url), { type: "module" }),
+        );
+        const { force = false } = strategy;
+        const response = await fetch(url, {
+          cache: force ? "reload" : "default",
+        });
+        if (!response.ok) throw new Error(`Failed to fetch database: ${response.status}`);
+        const buffer = await response.arrayBuffer();
+        await this.#dialect.loadMemory(buffer);
+      }
     }
 
     this._orm = await SqlMikroORM.init({
