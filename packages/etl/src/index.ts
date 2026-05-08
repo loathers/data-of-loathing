@@ -123,34 +123,38 @@ export async function watch(every: number) {
   let firstTime = true;
 
   const job = new Cron(`*/${every} * * * *`, { protect: true }, async () => {
-    await prepareMeta();
+    try {
+      await prepareMeta();
 
-    const lastUpdate = await getLastUpdate();
-    const lastGitHubUpdate = await getLastGitHubUpdate();
+      const lastUpdate = await getLastUpdate();
+      const lastGitHubUpdate = await getLastGitHubUpdate();
 
-    if (!firstTime && lastGitHubUpdate <= lastUpdate) {
-      console.log(
-        "Not updating, last change:",
-        lastGitHubUpdate,
-        "vs our data:",
-        lastUpdate,
-      );
-      return;
+      if (!firstTime && lastGitHubUpdate <= lastUpdate) {
+        console.log(
+          "Not updating, last change:",
+          lastGitHubUpdate,
+          "vs our data:",
+          lastUpdate,
+        );
+        return;
+      }
+
+      const check = await checkVersions();
+
+      if (!check) {
+        console.log("Cannot update due to mismatched data file versions");
+        return;
+      }
+
+      await populateDatabase();
+
+      await setLastRevision(await getKoLmafiaRevision());
+      await setLastUpdate(lastGitHubUpdate);
+      await utimes(SQLITE_PATH, lastGitHubUpdate, lastGitHubUpdate);
+      firstTime = false;
+    } catch (error) {
+      console.error("ETL error, will retry next run:", error);
     }
-
-    const check = await checkVersions();
-
-    if (!check) {
-      console.log("Cannot update due to mismatched data file versions");
-      return;
-    }
-
-    await populateDatabase();
-
-    await setLastRevision(await getKoLmafiaRevision());
-    await setLastUpdate(lastGitHubUpdate);
-    await utimes(SQLITE_PATH, lastGitHubUpdate, lastGitHubUpdate);
-    firstTime = false;
   });
 
   await job.trigger();
