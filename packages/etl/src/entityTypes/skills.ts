@@ -21,13 +21,13 @@ export type SkillType = {
 };
 
 const parseAttributes = (id: number, attributesString = "") => {
-  const tokens = attributesString.split(",").reduce(
+  const tokens = attributesString.split(",").reduce<Record<string, string>>(
     (acc, attr) => {
       if (!attr.trim()) return acc;
       const [key, value] = attr.split(":");
       return { ...acc, [key.toLowerCase().trim()]: value.trim() };
     },
-    {} as Record<string, string>,
+    {},
   );
 
   return {

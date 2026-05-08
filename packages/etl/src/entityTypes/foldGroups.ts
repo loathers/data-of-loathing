@@ -45,6 +45,6 @@ export async function populateFoldGroups() {
   await populatePivot(
     "foldables",
     ["foldGroup", "item"],
-    pivotRows.filter((r) => r.item !== null) as Record<string, unknown>[],
+    pivotRows.filter((r) => r.item !== null),
   );
 }

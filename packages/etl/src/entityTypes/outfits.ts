@@ -72,10 +72,7 @@ export async function populateOutfits() {
   await populatePivot(
     "outfitEquipment",
     ["outfit", "equipment"],
-    equipmentRows.filter((r) => r.equipment !== null) as Record<
-      string,
-      unknown
-    >[],
+    equipmentRows.filter((r) => r.equipment !== null),
   );
 
   await populateEntity(

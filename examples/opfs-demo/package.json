@@ -1,5 +1,5 @@
 {
-  "name": "browser-demo",
+  "name": "opfs-demo",
   "private": true,
   "type": "module",
   "scripts": {

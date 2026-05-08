@@ -62,7 +62,7 @@ export async function populateEntity<T extends Record<string, unknown>>(
       )
     : data;
   if (transformed.length === 0) return;
-  await em().insertMany(Entity as any, transformed as any[]);
+  await em().insertMany(Entity, transformed);
 }
 
 // For pure M2M pivot tables that have no entity class.
@@ -109,7 +109,7 @@ export async function resolveReference<T extends { id: number }>(
     [name],
     "all",
   );
-  const results = raw.map(deserializeRow) as T[];
+  const results = raw.map(deserializeRow);
 
   if (results.length < 1) {
     console.log(

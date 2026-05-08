@@ -27,11 +27,11 @@ export class Client extends BaseClient<Strategy> {
     const strategy = this._strategy;
     switch (strategy.strategy) {
       case "local":
-        return (this._strategy as { path: string }).path;
+        return strategy.path;
 
       default:
       case "url": {
-        const { url = DEFAULT_URL, force = false } = this._strategy.strategy === "url" ? this._strategy : {};
+        const { url = DEFAULT_URL, force = false } = strategy;
 
         const cacheDir = join(homedir(), ".cache", "data-of-loathing");
         const dbPath = join(cacheDir, "dol.sqlite");

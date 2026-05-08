@@ -61,8 +61,8 @@ export class SqliteWorkerDialect implements Dialect {
     const connection: DatabaseConnection = {
       executeQuery<O>(query: CompiledQuery): Promise<QueryResult<O>> {
         return dialect
-          .#send<Record<string, unknown>[]>({ type: "exec", sql: query.sql, bind: [...query.parameters] })
-          .then((rows) => ({ rows: rows as O[] }));
+          .#send<O[]>({ type: "exec", sql: query.sql, bind: [...query.parameters] })
+          .then((rows) => ({ rows }));
       },
       async *streamQuery() {
         throw new Error("Streaming not supported");

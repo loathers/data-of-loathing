@@ -24,8 +24,19 @@ export default defineConfig({
 });
 ```
 
-The plugin does three things:
+The plugin does two things by default:
 
-- Configures Vite's dependency optimiser and worker format for SQLocal's WASM worker
+- Configures Vite's dependency optimiser to prevent pre-bundling of the SQLite WASM
 - Polyfills `Buffer` (required by the underlying SQLite driver)
-- Sets `Cross-Origin-Embedder-Policy: credentialless` and `Cross-Origin-Opener-Policy: same-origin` on the dev server so SharedArrayBuffer is available without blocking cross-origin images — for production you must set these headers at the hosting layer (e.g. Netlify `_headers`, Vercel `headers` config, nginx)
+
+#### OPFS strategy
+
+If you use the `"opfs"` strategy, SQLite requires `SharedArrayBuffer` and `Atomics`, which in turn require cross-origin isolation headers. Pass `{ coi: true }` to enable them on the dev server:
+
+```ts
+export default defineConfig({
+  plugins: [dol({ coi: true })],
+});
+```
+
+This sets `Cross-Origin-Embedder-Policy: credentialless` and `Cross-Origin-Opener-Policy: same-origin` on the dev server. For production you must set these headers at the hosting layer (e.g. Netlify `_headers`, Vercel `headers` config, nginx). The `credentialless` value is used rather than `require-corp` so cross-origin images are not blocked.

@@ -82,12 +82,12 @@ export function tokenizeAttributes(attributesString: string) {
     ...attributesString.matchAll(
       /([A-Za-z]+)(?:: (?:([^"[ ]+)|"([^"]+)"|(\[.*?])))?/g,
     ),
-  ].reduce(
+  ].reduce<Record<string, string | boolean>>(
     (acc, [, key, value, quotedValue, computedValue]) => ({
       ...acc,
       [key]: value ?? quotedValue ?? computedValue ?? true,
     }),
-    {} as Record<string, string | boolean>,
+    {},
   );
 }
 

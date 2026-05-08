@@ -6,7 +6,7 @@ const queryInput = document.getElementById("query");
 const resultEl = document.getElementById("result");
 const timingEl = document.getElementById("timing");
 
-const client = createClient({ strategy: "memory", url: "http://localhost:3000/dol.sqlite" });
+const client = createClient({ strategy: "opfs", url: "http://localhost:3000/dol.sqlite" });
 
 const t0 = performance.now();
 try {

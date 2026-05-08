@@ -47,6 +47,6 @@ export async function populateZapGroups() {
   await populatePivot(
     "zapGroupItems",
     ["zapGroup", "item"],
-    pivotRows.filter((r) => r.item !== null) as Record<string, unknown>[],
+    pivotRows.filter((r) => r.item !== null),
   );
 }

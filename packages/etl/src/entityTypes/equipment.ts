@@ -44,9 +44,8 @@ const parseRequirements = (reqString: string) => {
 
   const match = /(Mus|Mys|Mox): (\d+)/.exec(reqString);
   if (match) {
-    reqs[`${match[1].toLowerCase()}Requirement` as keyof typeof reqs] = Number(
-      match[2],
-    );
+    const stat = match[1].toLowerCase() as "mus" | "mys" | "mox";
+    reqs[`${stat}Requirement`] = Number(match[2]);
   }
 
   return reqs;
