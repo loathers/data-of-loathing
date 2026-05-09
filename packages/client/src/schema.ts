@@ -810,9 +810,7 @@ export const FoldGroupSchema = new EntitySchema<FoldGroup>({
     items: {
       kind: "m:n",
       entity: () => Item,
-      pivotTable: "foldables",
-      joinColumn: "foldGroup",
-      inverseJoinColumn: "item",
+      mappedBy: "foldGroups",
     },
   },
 });
@@ -825,9 +823,7 @@ export const ZapGroupSchema = new EntitySchema<ZapGroup>({
     items: {
       kind: "m:n",
       entity: () => Item,
-      pivotTable: "zapGroupItems",
-      joinColumn: "zapGroup",
-      inverseJoinColumn: "item",
+      mappedBy: "zapGroups",
     },
   },
 });
