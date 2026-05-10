@@ -1,6 +1,6 @@
 {
   "name": "data-of-loathing",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "type": "module",
   "packageManager": "yarn@4.6.0",
   "repository": {
@@ -32,7 +32,8 @@
   },
   "scripts": {
     "build": "rm -rf dist && tsup",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "@mikro-orm/core": "^7.0.14",
