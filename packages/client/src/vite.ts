@@ -25,5 +25,8 @@ export default function dol({
     };
   }
 
-  return [nodePolyfills({ include: ["buffer"] }), plugin];
+  return [
+    nodePolyfills({ include: ["buffer"], globals: { process: false } }),
+    plugin,
+  ];
 }
