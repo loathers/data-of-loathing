@@ -416,24 +416,55 @@ export class OutfitTreat {
 
 // Modifier entities (FK-as-PK)
 
+export type Modifier = { name: string; value: string };
+
+export function getModifier(
+  modifiers: Modifier[],
+  name: string,
+): string | undefined {
+  return modifiers.find((m) => m.name === name)?.value;
+}
+
+export function getModifiers(
+  modifiers: Modifier[],
+  name: string,
+): string[];
+export function getModifiers(
+  modifiers: Modifier[],
+  names: string[],
+): (string | undefined)[][];
+export function getModifiers(
+  modifiers: Modifier[],
+  nameOrNames: string | string[],
+): string[] | (string | undefined)[][] {
+  if (typeof nameOrNames === "string") {
+    return modifiers.filter((m) => m.name === nameOrNames).map((m) => m.value);
+  }
+  const columns = nameOrNames.map((name) =>
+    modifiers.filter((m) => m.name === name).map((m) => m.value),
+  );
+  const len = Math.max(0, ...columns.map((c) => c.length));
+  return Array.from({ length: len }, (_, i) => columns.map((c) => c[i]));
+}
+
 export class ItemModifiers {
   item!: Ref<Item>;
-  modifiers!: Record<string, string>;
+  modifiers!: Modifier[];
 }
 
 export class EffectModifiers {
   effect!: Ref<Effect>;
-  modifiers!: Record<string, string>;
+  modifiers!: Modifier[];
 }
 
 export class SkillModifiers {
   skill!: Ref<Skill>;
-  modifiers!: Record<string, string>;
+  modifiers!: Modifier[];
 }
 
 export class FamiliarModifiers {
   familiar!: Ref<Familiar>;
-  modifiers!: Record<string, string>;
+  modifiers!: Modifier[];
 }
 
 export class Meta {

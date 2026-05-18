@@ -10,8 +10,8 @@ import { checkVersion, loadMafiaData } from "../utils.js";
 const VERSION = 3;
 const FILENAME = "modifiers";
 
-function splitModifiers(modifiers: string): Record<string, string> {
-  const mods: Record<string, string> = {};
+function splitModifiers(modifiers: string): { name: string; value: string }[] {
+  const mods: { name: string; value: string }[] = [];
 
   while (modifiers) {
     let comma = modifiers.indexOf(",");
@@ -49,9 +49,12 @@ function splitModifiers(modifiers: string): Record<string, string> {
     const colon = modifier.indexOf(": ");
 
     if (colon === -1) {
-      mods[modifier] = "true";
+      mods.push({ name: modifier, value: "true" });
     } else {
-      mods[modifier.substring(0, colon)] = modifier.substring(colon + 2);
+      mods.push({
+        name: modifier.substring(0, colon),
+        value: modifier.substring(colon + 2),
+      });
     }
   }
 
@@ -61,7 +64,7 @@ function splitModifiers(modifiers: string): Record<string, string> {
 export type ModifierType = {
   type: string;
   thing: string;
-  modifiers: Record<string, string>;
+  modifiers: { name: string; value: string }[];
 };
 
 const parseModifier = (parts: string[]): ModifierType => ({
