@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+      - v3
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - { name: "client", workspace: "data-of-loathing" }
+          - { name: "etl", workspace: "data-of-loathing-etl" }
+    name: Test ${{ matrix.package.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+
+      - name: Install dependencies
+        run: yarn workspace ${{ matrix.package.workspace }} install
+
+      - name: Test
+        run: yarn workspace ${{ matrix.package.workspace }} test

@@ -33,7 +33,8 @@
   "scripts": {
     "build": "rm -rf dist && tsup",
     "format": "prettier --write .",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@mikro-orm/core": "^7.0.14",
@@ -48,7 +49,8 @@
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vite": "^6.0.0",
-    "vite-plugin-node-polyfills": "^0.26.0"
+    "vite-plugin-node-polyfills": "^0.26.0",
+    "vitest": "^4.1.6"
   },
   "peerDependencies": {
     "vite": ">=5.0.0",

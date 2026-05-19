@@ -418,30 +418,38 @@ export class OutfitTreat {
 
 export type Modifier = { name: string; value: string };
 
+type HasModifiers = Item | Effect | Skill | Familiar;
+
+function resolveModifiers(source: Modifier[] | HasModifiers): Modifier[] {
+  if (Array.isArray(source)) return source;
+  return source.modifiers?.modifiers ?? [];
+}
+
 export function getModifier(
-  modifiers: Modifier[],
+  modifiers: Modifier[] | HasModifiers,
   name: string,
 ): string | undefined {
-  return modifiers.find((m) => m.name === name)?.value;
+  return resolveModifiers(modifiers).find((m) => m.name === name)?.value;
 }
 
 export function getModifiers(
-  modifiers: Modifier[],
+  modifiers: Modifier[] | HasModifiers,
   name: string,
 ): string[];
 export function getModifiers(
-  modifiers: Modifier[],
+  modifiers: Modifier[] | HasModifiers,
   names: string[],
 ): (string | undefined)[][];
 export function getModifiers(
-  modifiers: Modifier[],
+  modifiers: Modifier[] | HasModifiers,
   nameOrNames: string | string[],
 ): string[] | (string | undefined)[][] {
+  const mods = resolveModifiers(modifiers);
   if (typeof nameOrNames === "string") {
-    return modifiers.filter((m) => m.name === nameOrNames).map((m) => m.value);
+    return mods.filter((m) => m.name === nameOrNames).map((m) => m.value);
   }
   const columns = nameOrNames.map((name) =>
-    modifiers.filter((m) => m.name === name).map((m) => m.value),
+    mods.filter((m) => m.name === name).map((m) => m.value),
   );
   const len = Math.max(0, ...columns.map((c) => c.length));
   return Array.from({ length: len }, (_, i) => columns.map((c) => c[i]));
