@@ -236,6 +236,35 @@
       .error { color: #f85149; }
       .muted { color: #8b949e; }
 
+      .fk-badge {
+        display: inline-block;
+        color: #3fb950;
+        cursor: pointer;
+        border-radius: 3px;
+        padding: 1px 4px;
+        background: #0d2b14;
+        border: 1px solid #196127;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .fk-badge:hover { background: #196127; border-color: #3fb950; }
+
+      #filter-indicator {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #8b949e;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 3px;
+        padding: 2px 8px;
+      }
+      #filter-indicator.visible { display: flex; }
+      #filter-indicator code { color: #e6edf3; }
+      #filter-clear { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 13px; padding: 0 2px; line-height: 1; }
+      #filter-clear:hover { color: #f85149; }
+
       .json-badge {
         display: inline-block;
         color: #79c0ff;
@@ -329,7 +358,10 @@
         <div class="table-view">
           <div class="table-title">
             <span id="table-name"></span>
-            <div id="pagination"></div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div id="filter-indicator"><span>WHERE <code id="filter-text"></code></span><button id="filter-clear" title="Clear filter">✕</button></div>
+              <div id="pagination"></div>
+            </div>
           </div>
           <div class="table-scroll">
             <table>

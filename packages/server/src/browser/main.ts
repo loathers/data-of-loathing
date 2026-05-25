@@ -7,6 +7,9 @@ const tableNameEl = document.getElementById("table-name")!;
 const tableHeaderEl = document.getElementById("table-header")!;
 const tableBodyEl = document.getElementById("table-body")!;
 const paginationEl = document.getElementById("pagination")!;
+const filterIndicatorEl = document.getElementById("filter-indicator")!;
+const filterTextEl = document.getElementById("filter-text")!;
+const filterClearEl = document.getElementById("filter-clear")!;
 const sqlInputEl = document.getElementById("sql-input") as HTMLTextAreaElement;
 const sqlRunEl = document.getElementById("sql-run")!;
 const sqlResultEl = document.getElementById("sql-result")!;
@@ -32,12 +35,10 @@ function tryParseJson(value: unknown): unknown | null {
 function jsonPreview(value: unknown): string {
   if (Array.isArray(value)) {
     if (value.length === 0) return "[]";
-    // Array of strings
     if (typeof value[0] === "string") {
       const joined = (value as string[]).join(", ");
       return joined.length > 55 ? joined.slice(0, 52) + "…" : joined;
     }
-    // Array of {name, value} pairs (modifiers pattern)
     if (
       value[0] !== null &&
       typeof value[0] === "object" &&
@@ -69,7 +70,15 @@ function highlightJson(json: string): string {
     .replace(
       /("(?:\\u[0-9a-fA-F]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false)\b|\bnull\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
       (m) => {
-        const cls = /^"/.test(m) ? (/:$/.test(m) ? "jk" : "js") : /true|false/.test(m) ? "jb" : /null/.test(m) ? "jx" : "jn";
+        const cls = /^"/.test(m)
+          ? /:$/.test(m)
+            ? "jk"
+            : "js"
+          : /true|false/.test(m)
+            ? "jb"
+            : /null/.test(m)
+              ? "jx"
+              : "jn";
         return `<span class="${cls}">${m}</span>`;
       },
     );
@@ -92,7 +101,6 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") hideJson();
 });
 
-// Event delegation for json badges in both the main table and SQL results
 document.addEventListener("click", (e) => {
   const badge = (e.target as Element).closest(".json-badge") as HTMLElement | null;
   if (!badge) return;
@@ -105,11 +113,15 @@ document.addEventListener("click", (e) => {
 
 // ---- Table rendering --------------------------------------------------------
 
+type FKInfo = { table: string; to: string };
+
 function buildRows(
   rows: Record<string, unknown>[],
   cols: string[],
   into: HTMLElement,
   keyPrefix: string,
+  fks: Map<string, FKInfo>,
+  onFkClick: (fk: FKInfo, value: unknown) => void,
 ) {
   into.innerHTML = "";
   rows.forEach((row, rowIdx) => {
@@ -117,20 +129,32 @@ function buildRows(
     cols.forEach((col) => {
       const td = document.createElement("td");
       const raw = row[col];
-      const parsed = tryParseJson(raw);
-      if (parsed !== null) {
-        const key = `${keyPrefix}-${rowIdx}-${col}`;
-        jsonStore.set(key, parsed);
+
+      if (raw != null && fks.has(col)) {
+        const fk = fks.get(col)!;
         const badge = document.createElement("span");
-        badge.className = "json-badge";
-        badge.dataset.jsonKey = key;
-        badge.textContent = jsonPreview(parsed);
+        badge.className = "fk-badge";
+        badge.textContent = String(raw);
+        badge.title = `→ ${fk.table}.${fk.to}`;
+        badge.addEventListener("click", () => onFkClick(fk, raw));
         td.appendChild(badge);
       } else {
-        const text = raw == null ? "" : String(raw);
-        td.textContent = text;
-        if (text.length > 60) td.title = text;
+        const parsed = tryParseJson(raw);
+        if (parsed !== null) {
+          const key = `${keyPrefix}-${rowIdx}-${col}`;
+          jsonStore.set(key, parsed);
+          const badge = document.createElement("span");
+          badge.className = "json-badge";
+          badge.dataset.jsonKey = key;
+          badge.textContent = jsonPreview(parsed);
+          td.appendChild(badge);
+        } else {
+          const text = raw == null ? "" : String(raw);
+          td.textContent = text;
+          if (text.length > 60) td.title = text;
+        }
       }
+
       tr.appendChild(td);
     });
     into.appendChild(tr);
@@ -142,6 +166,8 @@ function buildRows(
 const PAGE_SIZE = 50;
 let currentTable = "";
 let currentPage = 0;
+let currentFilter: { column: string; value: unknown } | null = null;
+let currentFKs = new Map<string, FKInfo>();
 
 const client = createClient({ strategy: "opfs", url: "/dol.sqlite" });
 
@@ -171,20 +197,57 @@ try {
     tableListEl.appendChild(btn);
   }
 
-  async function selectTable(name: string) {
+  async function selectTable(
+    name: string,
+    filter?: { column: string; value: unknown },
+  ) {
     currentTable = name;
     currentPage = 0;
+    currentFilter = filter ?? null;
+
     document.querySelectorAll(".table-btn").forEach((btn) => {
       btn.classList.toggle("active", btn.textContent === name);
     });
+
+    const fkRows = await query(`PRAGMA foreign_key_list("${name}")`);
+    currentFKs = new Map(
+      fkRows.map((r) => [
+        r.from as string,
+        { table: r.table as string, to: r.to as string },
+      ]),
+    );
+
     await renderTable();
   }
 
+  function updateFilterIndicator() {
+    if (currentFilter) {
+      filterTextEl.textContent = `${currentFilter.column} = ${currentFilter.value}`;
+      filterIndicatorEl.classList.add("visible");
+    } else {
+      filterIndicatorEl.classList.remove("visible");
+    }
+  }
+
+  filterClearEl.addEventListener("click", () => {
+    currentFilter = null;
+    currentPage = 0;
+    renderTable();
+  });
+
   async function renderTable() {
+    updateFilterIndicator();
+
+    const where = currentFilter ? `WHERE "${currentFilter.column}" = ?` : "";
+    const params = currentFilter ? [currentFilter.value] : [];
     const offset = currentPage * PAGE_SIZE;
+
     const [rows, [countRow]] = await Promise.all([
-      query(`SELECT * FROM "${currentTable}" LIMIT ${PAGE_SIZE} OFFSET ${offset}`),
-      query(`SELECT COUNT(*) AS total FROM "${currentTable}"`),
+      query(
+        `SELECT * FROM "${currentTable}" ${where} LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+        params,
+      ),
+      query(`SELECT COUNT(*) AS total FROM "${currentTable}" ${where}`, params),
     ]);
 
     const total = Number(countRow?.total ?? 0);
@@ -198,7 +261,9 @@ try {
     } else {
       const cols = Object.keys(rows[0]);
       tableHeaderEl.innerHTML = `<tr>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>`;
-      buildRows(rows, cols, tableBodyEl, `t-${currentPage}`);
+      buildRows(rows, cols, tableBodyEl, `t-${currentPage}`, currentFKs, (fk, value) => {
+        selectTable(fk.table, { column: fk.to, value });
+      });
     }
 
     paginationEl.innerHTML = `
@@ -206,8 +271,14 @@ try {
       <span>page ${currentPage + 1} / ${totalPages}</span>
       <button id="next-btn" ${currentPage >= totalPages - 1 ? "disabled" : ""}>next ▶</button>
     `;
-    document.getElementById("prev-btn")?.addEventListener("click", () => { currentPage--; renderTable(); });
-    document.getElementById("next-btn")?.addEventListener("click", () => { currentPage++; renderTable(); });
+    document.getElementById("prev-btn")?.addEventListener("click", () => {
+      currentPage--;
+      renderTable();
+    });
+    document.getElementById("next-btn")?.addEventListener("click", () => {
+      currentPage++;
+      renderTable();
+    });
   }
 
   if (tables.length > 0) await selectTable(tables[0].name as string);
@@ -228,7 +299,7 @@ try {
       const thead = cols.map((c) => `<th>${c}</th>`).join("");
       const table = document.createElement("table");
       table.innerHTML = `<thead><tr>${thead}</tr></thead><tbody></tbody>`;
-      buildRows(rows, cols, table.querySelector("tbody")!, "q");
+      buildRows(rows, cols, table.querySelector("tbody")!, "q", new Map(), () => {});
       sqlResultEl.innerHTML = "";
       sqlResultEl.appendChild(table);
     } catch (e) {
