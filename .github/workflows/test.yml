@@ -8,14 +8,9 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test-client:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package:
-          - { name: "client", workspace: "data-of-loathing" }
-          - { name: "etl", workspace: "data-of-loathing-etl" }
-    name: Test ${{ matrix.package.name }}
+    name: Test client
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +21,28 @@ jobs:
           node-version: "24.x"
 
       - name: Install dependencies
-        run: yarn workspace ${{ matrix.package.workspace }} install
+        run: yarn workspace data-of-loathing install
 
       - name: Test
-        run: yarn workspace ${{ matrix.package.workspace }} test
+        run: yarn workspace data-of-loathing test
+
+  test-etl:
+    runs-on: ubuntu-latest
+    name: Test etl
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+
+      - name: Install dependencies
+        run: yarn workspaces focus data-of-loathing data-of-loathing-etl
+
+      - name: Build client
+        run: yarn workspace data-of-loathing build
+
+      - name: Test
+        run: yarn workspace data-of-loathing-etl test
