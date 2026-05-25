@@ -14,14 +14,18 @@
     "prettier": "^3.8.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0"
+    "typescript-eslint": "^8.50.0",
+    "vite": "^6.0.0",
+    "vite-plugin-node-polyfills": "^0.26.0"
   },
   "scripts": {
-    "start": "node --env-file-if-exists ../../.env --import tsx src/index.ts",
+    "build": "vite build",
+    "start": "yarn build && node --env-file-if-exists ../../.env --import tsx src/index.ts",
     "format": "prettier --write ."
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "data-of-loathing": "workspace:*",
     "data-of-loathing-etl": "workspace:*",
     "express": "^5.2.1"
   }

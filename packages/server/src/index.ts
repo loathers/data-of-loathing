@@ -1,9 +1,11 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { watch } from "data-of-loathing-etl";
 import express from "express";
 import cors from "cors";
 
 const SQLITE_PATH = path.resolve(process.env.SQLITE_PATH ?? "./dol.sqlite");
+const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), "../dist/public");
 
 await watch(15);
 
@@ -26,9 +28,15 @@ app.get("/dol.sqlite", (_req, res) => {
   res.sendFile(SQLITE_PATH);
 });
 
-app.get("/", (_req, res) => {
-  res.send("DATA OF LOATHING");
+// OPFS requires cross-origin isolation headers on the page and its subresources.
+// Applied after /dol.sqlite so external consumers of the SQLite file are unaffected.
+app.use((_req, res, next) => {
+  res.set("Cross-Origin-Opener-Policy", "same-origin");
+  res.set("Cross-Origin-Embedder-Policy", "credentialless");
+  next();
 });
+
+app.use(express.static(PUBLIC));
 
 app.listen(process.env.PORT ?? 3000, () => {
   console.log("Server started");
