@@ -2,6 +2,7 @@ import {
   EffectModifiers,
   FamiliarModifiers,
   ItemModifiers,
+  OutfitModifiers,
   SkillModifiers,
 } from "data-of-loathing";
 import { populateEntity, resolveReference } from "../db.js";
@@ -130,6 +131,12 @@ const modifierTypes = [
     prop: "familiar",
     foreignTable: "familiars",
     Entity: FamiliarModifiers,
+  },
+  {
+    source: "Outfit",
+    prop: "outfit",
+    foreignTable: "outfits",
+    Entity: OutfitModifiers,
   },
 ] as const;
 

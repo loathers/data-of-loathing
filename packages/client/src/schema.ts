@@ -368,6 +368,7 @@ export class Outfit {
   image!: string;
   equipment = new Collection<Item>(this);
   treats = new Collection<OutfitTreat>(this);
+  modifiers?: OutfitModifiers;
 }
 
 export class FoldGroup {
@@ -418,7 +419,7 @@ export class OutfitTreat {
 
 export type Modifier = { name: string; value: string };
 
-type HasModifiers = Item | Effect | Skill | Familiar;
+type HasModifiers = Item | Effect | Skill | Familiar | Outfit;
 
 function resolveModifiers(source: Modifier[] | HasModifiers): Modifier[] {
   if (Array.isArray(source)) return source;
@@ -472,6 +473,11 @@ export class SkillModifiers {
 
 export class FamiliarModifiers {
   familiar!: Ref<Familiar>;
+  modifiers!: Modifier[];
+}
+
+export class OutfitModifiers {
+  outfit!: Ref<Outfit>;
   modifiers!: Modifier[];
 }
 
@@ -837,6 +843,7 @@ export const OutfitSchema = new EntitySchema<Outfit>({
       inverseJoinColumn: "equipment",
     },
     treats: { kind: "1:m", entity: () => OutfitTreat, mappedBy: "outfit" },
+    modifiers: { kind: "1:1", entity: () => OutfitModifiers, mappedBy: "outfit", nullable: true },
   },
 });
 
@@ -974,6 +981,21 @@ export const FamiliarModifiersSchema = new EntitySchema<FamiliarModifiers>({
   },
 });
 
+export const OutfitModifiersSchema = new EntitySchema<OutfitModifiers>({
+  class: OutfitModifiers,
+  tableName: "outfitModifiers",
+  properties: {
+    outfit: {
+      kind: "1:1",
+      entity: () => Outfit,
+      primary: true,
+      fieldName: "outfit",
+      inversedBy: "modifiers",
+    },
+    modifiers: { type: "json" },
+  },
+});
+
 export const MetaSchema = new EntitySchema<Meta>({
   class: Meta,
   tableName: "meta",
@@ -1008,5 +1030,6 @@ export const entities = [
   EffectModifiersSchema,
   SkillModifiersSchema,
   FamiliarModifiersSchema,
+  OutfitModifiersSchema,
   MetaSchema,
 ];
