@@ -10,6 +10,134 @@ const paginationEl = document.getElementById("pagination")!;
 const sqlInputEl = document.getElementById("sql-input") as HTMLTextAreaElement;
 const sqlRunEl = document.getElementById("sql-run")!;
 const sqlResultEl = document.getElementById("sql-result")!;
+const jsonOverlayEl = document.getElementById("json-overlay")!;
+const jsonContentEl = document.getElementById("json-content")!.querySelector("pre")!;
+const jsonCloseEl = document.getElementById("json-close")!;
+
+// ---- JSON helpers -----------------------------------------------------------
+
+const jsonStore = new Map<string, unknown>();
+
+function tryParseJson(value: unknown): unknown | null {
+  if (typeof value !== "string") return null;
+  const t = value.trim();
+  if (t[0] !== "{" && t[0] !== "[") return null;
+  try {
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
+}
+
+function jsonPreview(value: unknown): string {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    // Array of strings
+    if (typeof value[0] === "string") {
+      const joined = (value as string[]).join(", ");
+      return joined.length > 55 ? joined.slice(0, 52) + "…" : joined;
+    }
+    // Array of {name, value} pairs (modifiers pattern)
+    if (
+      value[0] !== null &&
+      typeof value[0] === "object" &&
+      "name" in value[0] &&
+      "value" in value[0]
+    ) {
+      const first = value[0] as { name: unknown; value: unknown };
+      const label = `${first.name}: ${first.value}`;
+      return value.length === 1 ? label : `${label}  +${value.length - 1} more`;
+    }
+    return `[${value.length} item${value.length !== 1 ? "s" : ""}]`;
+  }
+  if (typeof value === "object" && value !== null) {
+    const keys = Object.keys(value as object);
+    if (keys.length === 0) return "{}";
+    const pairs = keys
+      .slice(0, 2)
+      .map((k) => `${k}: ${(value as Record<string, unknown>)[k]}`);
+    return keys.length > 2 ? `{${pairs.join(", ")}, …}` : `{${pairs.join(", ")}}`;
+  }
+  return String(value);
+}
+
+function highlightJson(json: string): string {
+  return json
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(
+      /("(?:\\u[0-9a-fA-F]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false)\b|\bnull\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+      (m) => {
+        const cls = /^"/.test(m) ? (/:$/.test(m) ? "jk" : "js") : /true|false/.test(m) ? "jb" : /null/.test(m) ? "jx" : "jn";
+        return `<span class="${cls}">${m}</span>`;
+      },
+    );
+}
+
+function showJson(data: unknown) {
+  jsonContentEl.innerHTML = highlightJson(JSON.stringify(data, null, 2));
+  jsonOverlayEl.style.display = "flex";
+}
+
+function hideJson() {
+  jsonOverlayEl.style.display = "none";
+}
+
+jsonCloseEl.addEventListener("click", hideJson);
+jsonOverlayEl.addEventListener("click", (e) => {
+  if (e.target === jsonOverlayEl) hideJson();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") hideJson();
+});
+
+// Event delegation for json badges in both the main table and SQL results
+document.addEventListener("click", (e) => {
+  const badge = (e.target as Element).closest(".json-badge") as HTMLElement | null;
+  if (!badge) return;
+  const key = badge.dataset.jsonKey;
+  if (key) {
+    const data = jsonStore.get(key);
+    if (data !== undefined) showJson(data);
+  }
+});
+
+// ---- Table rendering --------------------------------------------------------
+
+function buildRows(
+  rows: Record<string, unknown>[],
+  cols: string[],
+  into: HTMLElement,
+  keyPrefix: string,
+) {
+  into.innerHTML = "";
+  rows.forEach((row, rowIdx) => {
+    const tr = document.createElement("tr");
+    cols.forEach((col) => {
+      const td = document.createElement("td");
+      const raw = row[col];
+      const parsed = tryParseJson(raw);
+      if (parsed !== null) {
+        const key = `${keyPrefix}-${rowIdx}-${col}`;
+        jsonStore.set(key, parsed);
+        const badge = document.createElement("span");
+        badge.className = "json-badge";
+        badge.dataset.jsonKey = key;
+        badge.textContent = jsonPreview(parsed);
+        td.appendChild(badge);
+      } else {
+        const text = raw == null ? "" : String(raw);
+        td.textContent = text;
+        if (text.length > 60) td.title = text;
+      }
+      tr.appendChild(td);
+    });
+    into.appendChild(tr);
+  });
+}
+
+// ---- App --------------------------------------------------------------------
 
 const PAGE_SIZE = 50;
 let currentTable = "";
@@ -20,20 +148,17 @@ const client = createClient({ strategy: "opfs", url: "/dol.sqlite" });
 try {
   await client.load();
   statusEl.textContent = "";
-  const em = client.query;
-  const conn = em.getConnection();
+  const conn = client.query.getConnection();
 
   async function query(sql: string, params: unknown[] = []): Promise<Record<string, unknown>[]> {
     return conn.execute(sql, params as never[], "all");
   }
 
-  // Show last update time from meta table
-  const [meta] = await query("SELECT lastUpdate FROM meta WHERE id = 1");
-  if (meta?.lastUpdate) {
-    lastUpdatedEl.textContent = `updated ${new Date(meta.lastUpdate as string).toLocaleString()}`;
+  const [meta] = await query("SELECT last_update FROM meta WHERE id = 1");
+  if (meta?.last_update) {
+    lastUpdatedEl.textContent = `updated ${new Date(meta.last_update as string).toLocaleString()}`;
   }
 
-  // Populate table list
   const tables = await query(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
   );
@@ -73,12 +198,7 @@ try {
     } else {
       const cols = Object.keys(rows[0]);
       tableHeaderEl.innerHTML = `<tr>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>`;
-      tableBodyEl.innerHTML = rows
-        .map(
-          (row) =>
-            `<tr>${cols.map((c) => `<td title="${escape(String(row[c] ?? ""))}">${row[c] ?? ""}</td>`).join("")}</tr>`,
-        )
-        .join("");
+      buildRows(rows, cols, tableBodyEl, `t-${currentPage}`);
     }
 
     paginationEl.innerHTML = `
@@ -86,19 +206,11 @@ try {
       <span>page ${currentPage + 1} / ${totalPages}</span>
       <button id="next-btn" ${currentPage >= totalPages - 1 ? "disabled" : ""}>next ▶</button>
     `;
-    document.getElementById("prev-btn")?.addEventListener("click", () => {
-      currentPage--;
-      renderTable();
-    });
-    document.getElementById("next-btn")?.addEventListener("click", () => {
-      currentPage++;
-      renderTable();
-    });
+    document.getElementById("prev-btn")?.addEventListener("click", () => { currentPage--; renderTable(); });
+    document.getElementById("next-btn")?.addEventListener("click", () => { currentPage++; renderTable(); });
   }
 
-  if (tables.length > 0) {
-    await selectTable(tables[0].name as string);
-  }
+  if (tables.length > 0) await selectTable(tables[0].name as string);
 
   sqlRunEl.addEventListener("click", async () => {
     const sql = sqlInputEl.value.trim();
@@ -113,27 +225,21 @@ try {
         return;
       }
       const cols = Object.keys(rows[0]);
-      sqlResultEl.innerHTML = `
-        <table>
-          <thead><tr>${cols.map((c) => `<th>${c}</th>`).join("")}</tr></thead>
-          <tbody>${rows.map((row) => `<tr>${cols.map((c) => `<td>${row[c] ?? ""}</td>`).join("")}</tr>`).join("")}</tbody>
-        </table>
-      `;
+      const thead = cols.map((c) => `<th>${c}</th>`).join("");
+      const table = document.createElement("table");
+      table.innerHTML = `<thead><tr>${thead}</tr></thead><tbody></tbody>`;
+      buildRows(rows, cols, table.querySelector("tbody")!, "q");
+      sqlResultEl.innerHTML = "";
+      sqlResultEl.appendChild(table);
     } catch (e) {
       sqlResultEl.innerHTML = `<p class="error">${e}</p>`;
     }
   });
 
   sqlInputEl.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      sqlRunEl.click();
-    }
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sqlRunEl.click();
   });
 } catch (e) {
   statusEl.textContent = `Error: ${e}`;
   statusEl.style.color = "#f85149";
-}
-
-function escape(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }

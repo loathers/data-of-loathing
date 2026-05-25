@@ -235,6 +235,83 @@
 
       .error { color: #f85149; }
       .muted { color: #8b949e; }
+
+      .json-badge {
+        display: inline-block;
+        color: #79c0ff;
+        cursor: pointer;
+        border-radius: 3px;
+        padding: 1px 4px;
+        background: #1c2d3f;
+        border: 1px solid #1f3a5f;
+        font-size: 11px;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+      }
+      .json-badge:hover { background: #1f3a5f; border-color: #388bfd; }
+
+      #json-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+      }
+
+      #json-panel {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        max-width: 720px;
+        max-height: 80vh;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      #json-panel header {
+        background: #21262d;
+        border-bottom: 1px solid #30363d;
+        padding: 8px 14px;
+        font-size: 11px;
+        color: #8b949e;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      #json-close {
+        background: none;
+        border: none;
+        color: #8b949e;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0 2px;
+      }
+      #json-close:hover { color: #e6edf3; }
+
+      #json-content {
+        overflow: auto;
+        padding: 14px 16px;
+        flex: 1;
+      }
+
+      #json-content pre { white-space: pre-wrap; word-break: break-all; line-height: 1.6; font-size: 12px; }
+
+      .jk { color: #79c0ff; }
+      .js { color: #a5d6ff; }
+      .jn { color: #f2cc60; }
+      .jb { color: #ff7b72; }
+      .jx { color: #8b949e; }
     </style>
   </head>
   <body>
@@ -270,6 +347,15 @@
           <div id="sql-result"></div>
         </div>
       </main>
+    </div>
+    <div id="json-overlay">
+      <div id="json-panel">
+        <header>
+          <span>JSON</span>
+          <button id="json-close">✕</button>
+        </header>
+        <div id="json-content"><pre></pre></div>
+      </div>
     </div>
     <script type="module" src="/src/browser/main.ts"></script>
   </body>
