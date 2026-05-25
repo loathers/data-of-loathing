@@ -12,6 +12,7 @@ RUN corepack enable && yarn install --frozen-lockfile
 COPY . .
 
 RUN yarn workspace data-of-loathing run build
+RUN yarn workspace data-of-loathing-server run build
 
 ENV PORT=3000
 ENV SQLITE_PATH=/dol.sqlite
