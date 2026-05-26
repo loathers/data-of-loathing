@@ -174,6 +174,8 @@ export class Item {
   equipment?: Equipment;
   consumable?: Consumable;
   modifiers?: ItemModifiers;
+  eternityCodpieceModifiers?: EternityCodpieceModifiers;
+  configurations = new Collection<ItemConfiguration>(this);
   monsterDrops = new Collection<MonsterDrop>(this);
   outfitEquipment = new Collection<Outfit>(this);
   outfitTreats = new Collection<OutfitTreat>(this);
@@ -224,6 +226,7 @@ export class Familiar {
   hideAndSeek!: number;
   attributes!: string[];
   modifiers?: FamiliarModifiers;
+  throneModifiers?: ThroneModifiers;
 }
 
 export class Monster {
@@ -279,10 +282,25 @@ export class Monster {
   nativeLocations = new Collection<NativeMonster>(this);
 }
 
+export class Zone {
+  zone!: string;
+  parent?: Zone;
+  description!: string;
+  accessItem?: string;
+  children = new Collection<Zone>(this);
+  locations = new Collection<Location>(this);
+  zoneModifiers?: ZoneModifiers;
+}
+
+export class ZoneModifiers {
+  zone!: Ref<Zone>;
+  modifiers!: Modifier[];
+}
+
 export class Location {
   name!: string;
   id?: number;
-  zone!: string;
+  zone!: Zone;
   url!: string;
   difficulty!: LocationDifficulty;
   environment!: LocationEnvironment;
@@ -293,6 +311,7 @@ export class Location {
   combatRate!: number;
   // relations
   nativeMonsters = new Collection<NativeMonster>(this);
+  locationModifiers?: LocationModifiers;
 }
 
 export class Path {
@@ -309,6 +328,7 @@ export class Path {
   liverCapacity!: number;
   spleenCapacity!: number;
   classes = new Collection<AscensionClass>(this);
+  pathModifiers?: PathModifiers;
 }
 
 export class AscensionClass {
@@ -476,8 +496,34 @@ export class FamiliarModifiers {
   modifiers!: Modifier[];
 }
 
+export class ThroneModifiers {
+  familiar!: Ref<Familiar>;
+  modifiers!: Modifier[];
+}
+
 export class OutfitModifiers {
   outfit!: Ref<Outfit>;
+  modifiers!: Modifier[];
+}
+
+export class EternityCodpieceModifiers {
+  item!: Ref<Item>;
+  modifiers!: Modifier[];
+}
+
+export class ItemConfiguration {
+  item!: Ref<Item>;
+  config!: string;
+  modifiers!: Modifier[];
+}
+
+export class PathModifiers {
+  path!: Ref<Path>;
+  modifiers!: Modifier[];
+}
+
+export class LocationModifiers {
+  location!: Ref<Location>;
   modifiers!: Modifier[];
 }
 
@@ -522,6 +568,17 @@ export const ItemSchema = new EntitySchema<Item>({
       entity: () => ItemModifiers,
       mappedBy: "item",
       nullable: true,
+    },
+    eternityCodpieceModifiers: {
+      kind: "1:1",
+      entity: () => EternityCodpieceModifiers,
+      mappedBy: "item",
+      nullable: true,
+    },
+    configurations: {
+      kind: "1:m",
+      entity: () => ItemConfiguration,
+      mappedBy: "item",
     },
     monsterDrops: { kind: "1:m", entity: () => MonsterDrop, mappedBy: "item" },
     outfitEquipment: {
@@ -636,6 +693,12 @@ export const FamiliarSchema = new EntitySchema<Familiar>({
       mappedBy: "familiar",
       nullable: true,
     },
+    throneModifiers: {
+      kind: "1:1",
+      entity: () => ThroneModifiers,
+      mappedBy: "familiar",
+      nullable: true,
+    },
   },
 });
 
@@ -699,13 +762,56 @@ export const MonsterSchema = new EntitySchema<Monster>({
   },
 });
 
+export const ZoneSchema = new EntitySchema<Zone>({
+  class: Zone,
+  tableName: "zones",
+  properties: {
+    zone: { type: "string", primary: true },
+    parent: {
+      kind: "m:1",
+      entity: () => Zone,
+      fieldName: "parent",
+      nullable: true,
+    },
+    description: { type: "string" },
+    accessItem: { type: "string", nullable: true },
+    children: { kind: "1:m", entity: () => Zone, mappedBy: "parent" },
+    locations: { kind: "1:m", entity: () => Location, mappedBy: "zone" },
+    zoneModifiers: {
+      kind: "1:1",
+      entity: () => ZoneModifiers,
+      mappedBy: "zone",
+      nullable: true,
+    },
+  },
+});
+
+export const ZoneModifiersSchema = new EntitySchema<ZoneModifiers>({
+  class: ZoneModifiers,
+  tableName: "zoneModifiers",
+  properties: {
+    zone: {
+      kind: "1:1",
+      entity: () => Zone,
+      primary: true,
+      fieldName: "zone",
+      inversedBy: "zoneModifiers",
+    },
+    modifiers: { type: "json" },
+  },
+});
+
 export const LocationSchema = new EntitySchema<Location>({
   class: Location,
   tableName: "locations",
   properties: {
     name: { type: "string", primary: true },
     id: { type: "integer", nullable: true },
-    zone: { type: "string" },
+    zone: {
+      kind: "m:1",
+      entity: () => Zone,
+      fieldName: "zone",
+    },
     url: { type: "string" },
     difficulty: { type: "string" },
     environment: { type: "string" },
@@ -718,6 +824,12 @@ export const LocationSchema = new EntitySchema<Location>({
       kind: "1:m",
       entity: () => NativeMonster,
       mappedBy: "location",
+    },
+    locationModifiers: {
+      kind: "1:1",
+      entity: () => LocationModifiers,
+      mappedBy: "location",
+      nullable: true,
     },
   },
 });
@@ -739,6 +851,12 @@ export const PathSchema = new EntitySchema<Path>({
     liverCapacity: { type: "integer" },
     spleenCapacity: { type: "integer" },
     classes: { kind: "1:m", entity: () => AscensionClass, mappedBy: "path" },
+    pathModifiers: {
+      kind: "1:1",
+      entity: () => PathModifiers,
+      mappedBy: "path",
+      nullable: true,
+    },
   },
 });
 
@@ -996,6 +1114,81 @@ export const OutfitModifiersSchema = new EntitySchema<OutfitModifiers>({
   },
 });
 
+export const ThroneModifiersSchema = new EntitySchema<ThroneModifiers>({
+  class: ThroneModifiers,
+  tableName: "throneModifiers",
+  properties: {
+    familiar: {
+      kind: "1:1",
+      entity: () => Familiar,
+      primary: true,
+      fieldName: "familiar",
+      inversedBy: "throneModifiers",
+    },
+    modifiers: { type: "json" },
+  },
+});
+
+export const PathModifiersSchema = new EntitySchema<PathModifiers>({
+  class: PathModifiers,
+  tableName: "pathModifiers",
+  properties: {
+    path: {
+      kind: "1:1",
+      entity: () => Path,
+      primary: true,
+      fieldName: "path",
+      inversedBy: "pathModifiers",
+    },
+    modifiers: { type: "json" },
+  },
+});
+
+export const LocationModifiersSchema = new EntitySchema<LocationModifiers>({
+  class: LocationModifiers,
+  tableName: "locationModifiers",
+  properties: {
+    location: {
+      kind: "1:1",
+      entity: () => Location,
+      primary: true,
+      fieldName: "location",
+      inversedBy: "locationModifiers",
+    },
+    modifiers: { type: "json" },
+  },
+});
+
+export const EternityCodpieceModifiersSchema = new EntitySchema<EternityCodpieceModifiers>({
+  class: EternityCodpieceModifiers,
+  tableName: "eternityCodpieceModifiers",
+  properties: {
+    item: {
+      kind: "1:1",
+      entity: () => Item,
+      primary: true,
+      fieldName: "item",
+      inversedBy: "eternityCodpieceModifiers",
+    },
+    modifiers: { type: "json" },
+  },
+});
+
+export const ItemConfigurationSchema = new EntitySchema<ItemConfiguration>({
+  class: ItemConfiguration,
+  tableName: "itemConfigurations",
+  properties: {
+    item: {
+      kind: "m:1",
+      entity: () => Item,
+      primary: true,
+      fieldName: "item",
+    },
+    config: { type: "string", primary: true },
+    modifiers: { type: "json" },
+  },
+});
+
 export const MetaSchema = new EntitySchema<Meta>({
   class: Meta,
   tableName: "meta",
@@ -1013,6 +1206,7 @@ export const entities = [
   SkillSchema,
   FamiliarSchema,
   MonsterSchema,
+  ZoneSchema,
   LocationSchema,
   PathSchema,
   AscensionClassSchema,
@@ -1031,5 +1225,11 @@ export const entities = [
   SkillModifiersSchema,
   FamiliarModifiersSchema,
   OutfitModifiersSchema,
+  ThroneModifiersSchema,
+  PathModifiersSchema,
+  LocationModifiersSchema,
+  EternityCodpieceModifiersSchema,
+  ItemConfigurationSchema,
+  ZoneModifiersSchema,
   MetaSchema,
 ];

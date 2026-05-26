@@ -1,11 +1,17 @@
 import {
   EffectModifiers,
+  EternityCodpieceModifiers,
   FamiliarModifiers,
+  ItemConfiguration,
   ItemModifiers,
+  LocationModifiers,
   OutfitModifiers,
+  PathModifiers,
   SkillModifiers,
+  ThroneModifiers,
+  ZoneModifiers,
 } from "data-of-loathing";
-import { populateEntity, resolveReference } from "../db.js";
+import { checkExists, populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 
 const VERSION = 3;
@@ -107,43 +113,44 @@ const IGNORES = [
   "item:El Vibrato punchcard (MODIFY)",
 ];
 
-const modifierTypes = [
+type ModifierTypeConfig = {
+  source: string;
+  prop: string;
+  Entity: new (...args: any[]) => any;
+} & (
+  | { foreignTable: string; resolve?: undefined }
+  | { foreignTable?: undefined; resolve: (thing: string) => Promise<number | string | null> }
+);
+
+const modifierTypes: ModifierTypeConfig[] = [
+  { source: "Item", prop: "item", foreignTable: "items", Entity: ItemModifiers },
+  { source: "Effect", prop: "effect", foreignTable: "effects", Entity: EffectModifiers },
+  { source: "Skill", prop: "skill", foreignTable: "skills", Entity: SkillModifiers },
+  { source: "Familiar", prop: "familiar", foreignTable: "familiars", Entity: FamiliarModifiers },
+  { source: "Outfit", prop: "outfit", foreignTable: "outfits", Entity: OutfitModifiers },
+  { source: "Throne", prop: "familiar", foreignTable: "familiars", Entity: ThroneModifiers },
+  { source: "Path", prop: "path", foreignTable: "paths", Entity: PathModifiers },
+  { source: "EternityCodpiece", prop: "item", foreignTable: "items", Entity: EternityCodpieceModifiers },
   {
-    source: "Item",
-    prop: "item",
-    foreignTable: "items",
-    Entity: ItemModifiers,
+    source: "Loc",
+    prop: "location",
+    Entity: LocationModifiers,
+    resolve: async (thing) =>
+      (await checkExists("locations", "name", thing)) ? thing : null,
   },
   {
-    source: "Effect",
-    prop: "effect",
-    foreignTable: "effects",
-    Entity: EffectModifiers,
+    source: "Zone",
+    prop: "zone",
+    Entity: ZoneModifiers,
+    resolve: async (thing) =>
+      (await checkExists("zones", "zone", thing)) ? thing : null,
   },
-  {
-    source: "Skill",
-    prop: "skill",
-    foreignTable: "skills",
-    Entity: SkillModifiers,
-  },
-  {
-    source: "Familiar",
-    prop: "familiar",
-    foreignTable: "familiars",
-    Entity: FamiliarModifiers,
-  },
-  {
-    source: "Outfit",
-    prop: "outfit",
-    foreignTable: "outfits",
-    Entity: OutfitModifiers,
-  },
-] as const;
+];
 
 export async function populateModifiers() {
   const data = await loadModifiers();
 
-  for (const { source, prop, foreignTable, Entity } of modifierTypes) {
+  for (const { source, prop, foreignTable, resolve, Entity } of modifierTypes) {
     const dataForType = data
       .filter(({ type }) => type === source)
       .map(({ thing, modifiers }) => ({ thing, modifiers }));
@@ -152,18 +159,40 @@ export async function populateModifiers() {
       const lookup = `${prop}:${datum.thing}`;
       if (IGNORES.includes(lookup)) return null;
 
-      const id = await (() => {
+      const key = await (() => {
         if (lookup === "item:Love Potion #0") return Promise.resolve(9745);
-        return resolveReference(
-          `${prop}Modifiers`,
-          foreignTable,
-          "name",
-          datum.thing,
-        );
+        if (resolve) return resolve(datum.thing);
+        return resolveReference(`${prop}Modifiers`, foreignTable, "name", datum.thing);
       })();
 
-      if (!id) return null;
-      return { [prop]: id, modifiers: datum.modifiers };
+      if (!key) return null;
+      return { [prop]: key, modifiers: datum.modifiers };
     });
+  }
+
+  const ITEM_CONFIG_TYPES: { source: string; itemName: string }[] = [
+    { source: "RetroCape", itemName: "unwrapped knock-off retro superhero cape" },
+    { source: "JurassicParka", itemName: "Jurassic Parka" },
+    { source: "BoomBox", itemName: "SongBoom&trade; BoomBox" },
+    { source: "UnbreakableUmbrella", itemName: "unbreakable umbrella" },
+    { source: "LedCandle", itemName: "LED candle" },
+    { source: "BackupCamera", itemName: "backup camera" },
+    { source: "Snowsuit", itemName: "Snow Suit" },
+    { source: "Edpiece", itemName: "The Crown of Ed the Undying" },
+  ];
+
+  for (const { source, itemName } of ITEM_CONFIG_TYPES) {
+    const itemId = await resolveReference("itemConfigurations", "items", "name", itemName);
+    if (!itemId) continue;
+
+    const dataForType = data
+      .filter(({ type }) => type === source)
+      .map(({ thing, modifiers }) => ({ thing, modifiers }));
+
+    await populateEntity(dataForType, ItemConfiguration, async (datum) => ({
+      item: itemId,
+      config: datum.thing,
+      modifiers: datum.modifiers,
+    }));
   }
 }

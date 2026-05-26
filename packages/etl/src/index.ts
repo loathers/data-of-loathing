@@ -12,6 +12,7 @@ import {
   populateFoldGroups,
 } from "./entityTypes/foldGroups.js";
 import { checkItemsVersion, populateItems } from "./entityTypes/items.js";
+import { checkZonesVersion, populateZones } from "./entityTypes/zones.js";
 import {
   checkLocationsVersion,
   populateLocations,
@@ -52,6 +53,7 @@ export async function checkVersions() {
     checkFoldGroupsVersion(),
     checkZapGroupsVersion(),
     checkItemsVersion(),
+    checkZonesVersion(),
     checkLocationsVersion(),
     checkMonstersVersion(),
     checkOutfitsVersion(),
@@ -76,6 +78,7 @@ export async function populateDatabase() {
   await populateFamiliars();
   await populateMonsters();
 
+  await populateZones();
   await populateLocations();
   await populateOutfits();
   await populateFoldGroups();

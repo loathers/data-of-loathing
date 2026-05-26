@@ -50,6 +50,19 @@ function deserializeRow(row: Record<string, unknown>): Record<string, unknown> {
   );
 }
 
+export async function checkExists(
+  tableName: string,
+  columnName: string,
+  value: string,
+): Promise<boolean> {
+  const rows = await conn().execute<unknown[]>(
+    `SELECT 1 FROM "${tableName}" WHERE "${columnName}" = ? LIMIT 1`,
+    [value],
+    "all",
+  );
+  return rows.length > 0;
+}
+
 export async function populateEntity<T extends Record<string, unknown>>(
   loader: (() => Promise<T[]>) | T[],
   Entity: new (...args: any[]) => any,
