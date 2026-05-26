@@ -114,6 +114,7 @@ document.addEventListener("click", (e) => {
 // ---- Table rendering --------------------------------------------------------
 
 type FKInfo = { table: string; to: string };
+type InverseRelation = { table: string; fkCol: string; pkCol: string };
 
 function buildRows(
   rows: Record<string, unknown>[],
@@ -122,6 +123,8 @@ function buildRows(
   keyPrefix: string,
   fks: Map<string, FKInfo>,
   onFkClick: (fk: FKInfo, value: unknown) => void,
+  inverseRelations: InverseRelation[] = [],
+  inverseMatches: Map<string, Set<unknown>> = new Map(),
 ) {
   into.innerHTML = "";
   rows.forEach((row, rowIdx) => {
@@ -157,6 +160,25 @@ function buildRows(
 
       tr.appendChild(td);
     });
+
+    if (inverseRelations.length > 0) {
+      const td = document.createElement("td");
+      for (const rel of inverseRelations) {
+        const pkValue = row[rel.pkCol];
+        if (pkValue != null && inverseMatches.get(rel.table)?.has(pkValue)) {
+          const badge = document.createElement("span");
+          badge.className = "inv-badge";
+          badge.textContent = rel.table;
+          badge.title = `← ${rel.table}.${rel.fkCol}`;
+          badge.addEventListener("click", () =>
+            onFkClick({ table: rel.table, to: rel.fkCol }, pkValue),
+          );
+          td.appendChild(badge);
+        }
+      }
+      tr.appendChild(td);
+    }
+
     into.appendChild(tr);
   });
 }
@@ -168,6 +190,7 @@ let currentTable = "";
 let currentPage = 0;
 let currentFilter: { column: string; value: unknown } | null = null;
 let currentFKs = new Map<string, FKInfo>();
+let currentInverseRelations: InverseRelation[] = [];
 
 const client = createClient({ strategy: "opfs", url: "/dol.sqlite" });
 
@@ -209,13 +232,26 @@ try {
       btn.classList.toggle("active", btn.textContent === name);
     });
 
-    const fkRows = await query(`PRAGMA foreign_key_list("${name}")`);
+    const [fkRows, invRows] = await Promise.all([
+      query(`PRAGMA foreign_key_list("${name}")`),
+      query(
+        `SELECT m.name AS tbl, p."from" AS fk_col, p."to" AS pk_col
+         FROM sqlite_master m, pragma_foreign_key_list(m.name) p
+         WHERE p."table" = ? ORDER BY m.name`,
+        [name],
+      ),
+    ]);
     currentFKs = new Map(
       fkRows.map((r) => [
         r.from as string,
         { table: r.table as string, to: r.to as string },
       ]),
     );
+    currentInverseRelations = invRows.map((r) => ({
+      table: r.tbl as string,
+      fkCol: r.fk_col as string,
+      pkCol: r.pk_col as string,
+    }));
 
     await renderTable();
   }
@@ -260,10 +296,29 @@ try {
       tableBodyEl.innerHTML = '<tr><td class="muted" style="padding:12px">No rows</td></tr>';
     } else {
       const cols = Object.keys(rows[0]);
-      tableHeaderEl.innerHTML = `<tr>${cols.map((c) => `<th>${c}</th>`).join("")}</tr>`;
+
+      const inverseMatches = new Map<string, Set<unknown>>();
+      if (currentInverseRelations.length > 0) {
+        await Promise.all(
+          currentInverseRelations.map(async (rel) => {
+            const pkValues = rows.map((r) => r[rel.pkCol]).filter((v) => v != null);
+            if (pkValues.length === 0) return;
+            const placeholders = pkValues.map(() => "?").join(",");
+            const matches = await query(
+              `SELECT DISTINCT "${rel.fkCol}" FROM "${rel.table}" WHERE "${rel.fkCol}" IN (${placeholders})`,
+              pkValues,
+            );
+            inverseMatches.set(rel.table, new Set(matches.map((r) => r[rel.fkCol])));
+          }),
+        );
+      }
+
+      const hasInverse = currentInverseRelations.length > 0;
+      const headerCols = hasInverse ? [...cols, "→"] : cols;
+      tableHeaderEl.innerHTML = `<tr>${headerCols.map((c) => `<th>${c}</th>`).join("")}</tr>`;
       buildRows(rows, cols, tableBodyEl, `t-${currentPage}`, currentFKs, (fk, value) => {
         selectTable(fk.table, { column: fk.to, value });
-      });
+      }, currentInverseRelations, inverseMatches);
     }
 
     paginationEl.innerHTML = `
