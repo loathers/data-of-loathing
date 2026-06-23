@@ -38,14 +38,23 @@ export class Client extends BaseClient<Strategy> {
         const etagPath = join(cacheDir, "etag");
         await mkdir(cacheDir, { recursive: true });
 
-        await this.syncIfNeeded(
-          url,
-          etagPath,
-          async (data) => {
-            await writeFile(dbPath, Buffer.from(data));
-          },
-          force,
-        );
+        try {
+          await this.syncIfNeeded(
+            url,
+            etagPath,
+            async (data) => {
+              await writeFile(dbPath, Buffer.from(data));
+            },
+            force,
+          );
+        } catch (e) {
+          if (!existsSync(dbPath))
+            throw new Error(`Failed to fetch database and no cached version exists. ${e}`);
+          console.warn(
+            "data-of-loathing: could not contact server to check for updates. Serving cached database which may be outdated.",
+            e,
+          );
+        }
 
         return dbPath;
       }

@@ -76,15 +76,24 @@ export class Client extends BaseClient<Strategy> {
           }),
         );
         const { force = false } = strategy;
-        const remoteEtag = (await fetch(url, { method: "HEAD" })).headers.get(
-          "etag",
-        );
-        const storedEtag = force ? null : await getOpfsEtag();
+        const storedEtag = await getOpfsEtag();
 
-        if (force || storedEtag !== remoteEtag) {
-          const buffer = await this.fetchDb(url);
-          await writeToOpfs("dol.sqlite", buffer);
-          if (remoteEtag) await setOpfsEtag(remoteEtag);
+        try {
+          const remoteEtag = (await fetch(url, { method: "HEAD" })).headers.get("etag");
+          const effectiveStored = force ? null : storedEtag;
+
+          if (force || effectiveStored !== remoteEtag) {
+            const buffer = await this.fetchDb(url);
+            await writeToOpfs("dol.sqlite", buffer);
+            if (remoteEtag) await setOpfsEtag(remoteEtag);
+          }
+        } catch (e) {
+          if (!storedEtag)
+            throw new Error(`Failed to fetch database and no cached version exists. ${e}`);
+          console.warn(
+            "data-of-loathing: could not contact server to check for updates. Serving cached database which may be outdated.",
+            e,
+          );
         }
 
         await this.#dialect.loadOpfs("/dol.sqlite");
