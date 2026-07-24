@@ -16,54 +16,60 @@ export class Client extends BaseClient<Strategy> {
   }
 
   protected async getStoredEtag(key: string): Promise<string | null> {
-    return existsSync(key) ? readFile(key, "utf-8") : null;
+    try {
+      return await readFile(key, "utf-8");
+    } catch {
+      return null;
+    }
   }
 
   protected async storeEtag(key: string, etag: string): Promise<void> {
     await writeFile(key, etag, "utf-8");
   }
 
-  private async resolveDbPath(): Promise<string> {
+  protected async hasCachedDb(): Promise<boolean> {
+    return existsSync(join(this.#cacheDir(), "dol.sqlite"));
+  }
+
+  #cacheDirValue?: string;
+  #cacheDir(): string {
+    return (this.#cacheDirValue ??= envPaths("data-of-loathing").cache);
+  }
+
+  private async resolveDbPath(): Promise<{ path: string; updated: boolean }> {
     const strategy = this._strategy;
     switch (strategy.strategy) {
       case "local":
-        return strategy.path;
+        return { path: strategy.path, updated: false };
 
       default:
       case "url": {
         const { url = DEFAULT_URL, force = false } = strategy;
 
-        const cacheDir = envPaths("data-of-loathing").cache;
+        const cacheDir = this.#cacheDir();
         const dbPath = join(cacheDir, "dol.sqlite");
         const etagPath = join(cacheDir, "etag");
-        await mkdir(cacheDir, { recursive: true });
 
-        try {
-          await this.syncIfNeeded(
-            url,
-            etagPath,
-            async (data) => {
-              await writeFile(dbPath, Buffer.from(data));
-            },
-            force,
-          );
-        } catch (e) {
-          if (!existsSync(dbPath))
-            throw new Error(`Failed to fetch database and no cached version exists. ${e}`);
-          console.warn(
-            "data-of-loathing: could not contact server to check for updates. Serving cached database which may be outdated.",
-            e,
-          );
-        }
+        const updated = await this.syncIfNeeded(
+          url,
+          etagPath,
+          async (data) => {
+            await mkdir(cacheDir, { recursive: true });
+            await writeFile(dbPath, Buffer.from(data));
+          },
+          force,
+        );
 
-        return dbPath;
+        return { path: dbPath, updated };
       }
     }
   }
 
   async load(): Promise<void> {
+    const { path, updated } = await this.resolveDbPath();
+    if (this._orm && !updated) return;
+
     await this._orm?.close();
-    const path = await this.resolveDbPath();
     this._orm = await SqlMikroORM.init({
       driver: SqliteDriver,
       driverOptions: new NodeSqliteDialect(path),

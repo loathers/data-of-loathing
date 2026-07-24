@@ -8,27 +8,29 @@ export type Strategy =
   | { strategy: "opfs"; url?: string; force?: boolean }
   | { strategy: "ranged"; url?: string };
 
-async function getOpfsEtag(): Promise<string | null> {
+async function readFromOpfs(filename: string): Promise<string | null> {
   try {
     const root = await navigator.storage.getDirectory();
-    const handle = await root.getFileHandle(".dol-etag");
+    const handle = await root.getFileHandle(filename);
     return (await handle.getFile()).text();
   } catch {
     return null;
   }
 }
 
-async function setOpfsEtag(etag: string): Promise<void> {
-  const root = await navigator.storage.getDirectory();
-  const handle = await root.getFileHandle(".dol-etag", { create: true });
-  const writable = await handle.createWritable();
-  await writable.write(etag);
-  await writable.close();
+async function existsInOpfs(filename: string): Promise<boolean> {
+  try {
+    const root = await navigator.storage.getDirectory();
+    await root.getFileHandle(filename);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function writeToOpfs(
   filename: string,
-  buffer: ArrayBuffer,
+  buffer: ArrayBuffer | string,
 ): Promise<void> {
   const root = await navigator.storage.getDirectory();
   const handle = await root.getFileHandle(filename, { create: true });
@@ -44,23 +46,32 @@ export class Client extends BaseClient<Strategy> {
     super(strategy);
   }
 
-  protected async getStoredEtag(_key: string): Promise<string | null> {
-    return localStorage.getItem(ETAG_KEY);
+  protected async getStoredEtag(key: string): Promise<string | null> {
+    return readFromOpfs(`.${key}`);
   }
 
-  protected async storeEtag(_key: string, etag: string): Promise<void> {
-    localStorage.setItem(ETAG_KEY, etag);
+  protected async storeEtag(key: string, etag: string): Promise<void> {
+    await writeToOpfs(`.${key}`, etag);
+  }
+
+  protected async hasCachedDb(): Promise<boolean> {
+    return existsInOpfs("dol.sqlite");
+  }
+
+  async #teardown(): Promise<void> {
+    await this._orm?.close();
+    this._orm = undefined;
+    this.#dialect?.createDriver().destroy();
+    this.#dialect = undefined;
   }
 
   async load(): Promise<void> {
-    await this._orm?.close();
-    this.#dialect?.createDriver().destroy();
-
     const strategy = this._strategy;
     const url = this._strategy.url ?? DEFAULT_URL;
 
     switch (strategy.strategy) {
       case "ranged": {
+        await this.#teardown();
         this.#dialect = new SqliteWorkerDialect(
           new Worker(new URL("./workers/ranged.js", import.meta.url), {
             type: "module",
@@ -70,37 +81,34 @@ export class Client extends BaseClient<Strategy> {
         break;
       }
       case "opfs": {
+        const { force = false } = strategy;
+
+        const updated = await this.syncIfNeeded(
+          url,
+          ETAG_KEY,
+          async (data) => {
+            // the live worker holds an exclusive lock on the OPFS database
+            // file, so it must be torn down before the file can be replaced
+            await this.#teardown();
+            await writeToOpfs("dol.sqlite", data);
+          },
+          force,
+        );
+
+        if (this._orm && !updated) return;
+
+        await this.#teardown();
         this.#dialect = new SqliteWorkerDialect(
           new Worker(new URL("./workers/opfs.js", import.meta.url), {
             type: "module",
           }),
         );
-        const { force = false } = strategy;
-        const storedEtag = await getOpfsEtag();
-
-        try {
-          const remoteEtag = (await fetch(url, { method: "HEAD" })).headers.get("etag");
-          const effectiveStored = force ? null : storedEtag;
-
-          if (force || effectiveStored !== remoteEtag) {
-            const buffer = await this.fetchDb(url);
-            await writeToOpfs("dol.sqlite", buffer);
-            if (remoteEtag) await setOpfsEtag(remoteEtag);
-          }
-        } catch (e) {
-          if (!storedEtag)
-            throw new Error(`Failed to fetch database and no cached version exists. ${e}`);
-          console.warn(
-            "data-of-loathing: could not contact server to check for updates. Serving cached database which may be outdated.",
-            e,
-          );
-        }
-
         await this.#dialect.loadOpfs("/dol.sqlite");
         break;
       }
       case "memory":
       default: {
+        await this.#teardown();
         this.#dialect = new SqliteWorkerDialect(
           new Worker(new URL("./workers/memory.js", import.meta.url), {
             type: "module",
