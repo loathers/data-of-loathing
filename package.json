@@ -9,6 +9,7 @@
   "scripts": {
     "format": "yarn workspaces foreach --all run format",
     "start": "yarn workspace data-of-loathing-server run start",
+    "mcp": "yarn workspace data-of-loathing-mcp run start",
     "etl": "node --env-file-if-exists .env --import tsx packages/etl/src/populate.ts"
   },
   "private": true,
