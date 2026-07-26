@@ -44,12 +44,20 @@ test("splitWhere pulls JSON-array columns out for post-filtering", () => {
   expect(jsonWhere).toEqual({ uses: ["smith"] });
 });
 
+test("splitWhere turns whitespace into wildcards to tolerate punctuation", () => {
+  const { dbWhere } = splitWhere(fields, noRelations, {
+    name: "fleetwood mac n cheese",
+  });
+  // Matches "fleetwood mac 'n' cheese" despite the apostrophes.
+  expect(dbWhere).toEqual({ name: { $like: "%fleetwood%mac%n%cheese%" } });
+});
+
 test("splitWhere applies partial matching inside nested relation filters", () => {
   const { dbWhere } = splitWhere(fields, new Set(["item"]), {
-    item: { name: "fleetwood", autosell: 0 },
+    item: { name: "fleetwood mac", autosell: 0 },
   });
   expect(dbWhere).toEqual({
-    item: { name: { $like: "%fleetwood%" }, autosell: 0 },
+    item: { name: { $like: "%fleetwood%mac%" }, autosell: 0 },
   });
 });
 
@@ -147,8 +155,9 @@ describe.skipIf(!hasDb)("with the cached database", () => {
   });
 
   test("find_consumable filters by the related item's name and returns it", async () => {
+    // Punctuation-free query still matches "fleetwood mac 'n' cheese".
     const rows = await call("find_consumable", {
-      where: { item: { name: "fleetwood mac 'n' cheese" } },
+      where: { item: { name: "fleetwood mac n cheese" } },
     });
     expect(rows).toHaveLength(1);
     expect(rows[0].stomach).toBe(6);
@@ -158,10 +167,10 @@ describe.skipIf(!hasDb)("with the cached database", () => {
 
   test("find_item includes its 1:1 consumable record automatically", async () => {
     const rows = await call("find_item", {
-      where: { name: "fleetwood mac 'n' cheese" },
+      where: { name: "fleetwood mac n cheese" },
     });
-    const item = rows.find(
-      (r: { name: string }) => r.name === "fleetwood mac 'n' cheese",
+    const item = rows.find((r: { name: string }) =>
+      r.name.includes("fleetwood mac"),
     );
     expect(item?.consumable?.stomach).toBe(6);
   });

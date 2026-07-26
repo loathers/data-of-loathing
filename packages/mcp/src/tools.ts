@@ -117,6 +117,15 @@ function fieldSchema(field: ScalarField): z.ZodTypeAny {
   }
 }
 
+/**
+ * Build a case-insensitive LIKE pattern. Whitespace becomes a wildcard so word
+ * order is kept but punctuation between words is tolerated — "fleetwood mac n
+ * cheese" matches "fleetwood mac 'n' cheese".
+ */
+function likePattern(value: string): string {
+  return `%${value.trim().replace(/\s+/g, "%")}%`;
+}
+
 function whereSchema(
   fields: ScalarField[],
   toOneRelations: Relation[],
@@ -139,11 +148,15 @@ function whereSchema(
     }
     shape[relation.name] = z
       .object(nested)
+      .strict()
       .optional()
       .describe(`Filter by the related ${relation.target} (e.g. { name }).`);
   }
+  // Strict so a misplaced filter (e.g. a top-level `name` on an entity whose name
+  // lives on a related record) errors loudly instead of being silently ignored.
   return z
     .object(shape)
+    .strict()
     .optional()
     .describe("Filters to apply (AND-combined).");
 }
@@ -164,7 +177,7 @@ function mapNestedStrings(
   const out: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(value)) {
     if (val === undefined) continue;
-    out[key] = typeof val === "string" ? { $like: `%${val}%` } : val;
+    out[key] = typeof val === "string" ? { $like: likePattern(val) } : val;
   }
   return out;
 }
@@ -192,7 +205,7 @@ export function splitWhere(
     } else if (jsonFieldNames.has(key)) {
       jsonWhere[key] = value as string[];
     } else if (typeof value === "string") {
-      dbWhere[key] = { $like: `%${value}%` };
+      dbWhere[key] = { $like: likePattern(value) };
     } else {
       dbWhere[key] = value;
     }
@@ -271,6 +284,17 @@ function registerFindTool(
       ? ` Request related collections (${collectionNames.join(", ")}) with populate.`
       : "";
 
+  // Entities like Consumable/Equipment have no name of their own — steer callers
+  // to filter by the related record that does (usually the item).
+  const hasOwnName = scalarNames.includes("name");
+  const namedRelation = toOneRelations.find((r) =>
+    r.targetFields.some((f) => f.name === "name"),
+  );
+  const nameHint =
+    !hasOwnName && namedRelation
+      ? ` This record has no name of its own — look it up via its ${namedRelation.name}, e.g. where: { ${namedRelation.name}: { name: "..." } }.`
+      : "";
+
   const inputSchema: z.ZodRawShape = {
     where: whereSchema(fields, toOneRelations),
     orderBy: z
@@ -301,8 +325,9 @@ function registerFindTool(
     {
       description:
         `${CORE_ENTITIES[entityName]} Put filters in a \`where\` object keyed by field ` +
-        `(${scalarNames.join(", ")}); filter related records with nested filters, ` +
-        `e.g. where: { item: { name: "seal tooth" } }.${includedNote}${populateNote}`,
+        `(${scalarNames.join(", ")}); unknown keys are rejected. Filter related records ` +
+        `with nested filters, e.g. where: { item: { name: "seal tooth" } }.` +
+        `${nameHint}${includedNote}${populateNote}`,
       inputSchema,
     },
     async (rawArgs) => {
