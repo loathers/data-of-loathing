@@ -7,7 +7,7 @@ database from [data.loathers.net](https://data.loathers.net) automatically — n
 setup or API key required.
 
 Once connected you can ask things like _"what's the autosell value of a seal
-tooth?"_, _"list combat familiars"_, or _"what modifiers does a Mayonnaise Clinic
+tooth?"_, _"list combat familiars"_, or _"what modifiers does a Mr. Accessory
 grant?"_ and the agent will query the data directly.
 
 ## Add it to Claude
@@ -61,15 +61,17 @@ first, or use `src/index.ts` via `tsx` for live development):
 - `find_<entity>` — one per core entity (`find_item`, `find_familiar`,
   `find_monster`, `find_skill`, …). Each accepts a typed `where` filter over that
   entity's scalar fields, plus `orderBy`, `orderDirection`, `limit`, and `offset`.
-  String filters are case-insensitive partial matches; JSON-array fields (e.g.
-  `Item.uses`, `Familiar.categories`) match rows whose array includes any of the
-  given values.
-  - **Related records travel together.** One-to-one/parent records are always
-    included and filterable via nested filters. A 1:1 table like `Consumable` is
-    just optional extra fields on an item, so `find_item` returns the item's
-    `consumable` inline, and `find_consumable` can filter by
-    `where: { item: { name: "fleetwood mac 'n' cheese" } }` and returns the item
-    alongside. Larger collections (e.g. an item's `monsterDrops`) are opt-in via a
+  String filters are case-insensitive partial matches (whitespace is treated as a
+  wildcard, so `"fleetwood mac n cheese"` matches `"fleetwood mac 'n' cheese"`);
+  JSON-array fields (e.g. `Item.uses`, `Familiar.categories`) match rows whose
+  array includes any of the given values. Unknown `where` keys are rejected rather
+  than silently ignored.
+  - **Related records travel together.** Closely related data comes back inline and
+    is filterable with nested filters. For example `find_item` returns an item's
+    equipment and food/booze stats alongside it, so
+    `find_item { where: { name: "fleetwood mac n cheese" } }` gives you its fullness,
+    and `find_item { where: { consumable: { quality: "awesome" } } }` finds items by
+    a food stat. Larger collections (e.g. an item's `monsterDrops`) are opt-in via a
     `populate` argument.
 - `get_modifiers` — the game modifiers (Muscle, Meat Drop, …) attached to an Item,
   Effect, Skill, Familiar, or Outfit, looked up by name or id.

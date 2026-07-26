@@ -16,9 +16,15 @@ import {
  * entities, `ItemConfiguration`, and `Meta` are deliberately excluded because an
  * agent rarely wants to query them directly. Modifiers are reachable through the
  * dedicated `get_modifiers` tool instead.
+ *
+ * The 1:1 "extension" tables (`Equipment`, `Consumable`) are excluded on purpose:
+ * they are just optional extra fields on an item, so they travel inline on
+ * `find_item` — populated in the output and nested-filterable, e.g.
+ * `where: { consumable: { quality: "awesome" } }`. A separate tool for them would
+ * only be a worse, anonymous path to the same data.
  */
 export const CORE_ENTITIES: Record<string, string> = {
-  Item: "Every item in the game, with autosell, tradeability, and use types.",
+  Item: "Every item in the game: autosell, tradeability, and use types, plus — inline for items that have them — equipment stats and consumable (food/booze/spleen) stats such as fullness.",
   Effect: "Status effects, their quality, and whether they can be removed.",
   Skill: "Skills, their MP cost, duration, and tags.",
   Familiar: "Familiars and their category tags.",
@@ -28,9 +34,6 @@ export const CORE_ENTITIES: Record<string, string> = {
     "Individual adventuring locations, their difficulty and environment.",
   Path: "Ascension paths.",
   AscensionClass: "Character classes.",
-  Equipment: "Equipment stats for equippable items.",
-  Consumable:
-    "Food/booze/spleen consumables, their quality and adventure yield.",
   Concoction: "Crafting recipes.",
   Outfit: "Outfits and their treats.",
   FoldGroup: "Groups of items that fold into one another.",

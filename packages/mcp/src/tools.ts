@@ -126,6 +126,40 @@ function likePattern(value: string): string {
   return `%${value.trim().replace(/\s+/g, "%")}%`;
 }
 
+/** Strip punctuation/whitespace so "fleetwood mac 'n' cheese" == "fleetwood mac n cheese". */
+function normalizeName(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Relevance tier for a name against a search term: 0 exact, 1 prefix, 2 substring,
+ * 3 non-contiguous (the wildcard LIKE matched but the words aren't adjacent).
+ * Lower is better.
+ */
+export function relevance(candidate: string, query: string): number {
+  const c = normalizeName(candidate);
+  const q = normalizeName(query);
+  if (c === q) return 0;
+  if (c.startsWith(q)) return 1;
+  if (c.includes(q)) return 2;
+  return 3;
+}
+
+/** Sort matched rows by relevance to the search term, then shorter, then alphabetical. */
+function rankByName(
+  rows: Record<string, unknown>[],
+  query: string,
+): Record<string, unknown>[] {
+  return [...rows].sort((a, b) => {
+    const na = String(a.name);
+    const nb = String(b.name);
+    const byRelevance = relevance(na, query) - relevance(nb, query);
+    if (byRelevance !== 0) return byRelevance;
+    if (na.length !== nb.length) return na.length - nb.length;
+    return na.localeCompare(nb);
+  });
+}
+
 function whereSchema(
   fields: ScalarField[],
   toOneRelations: Relation[],
@@ -351,8 +385,15 @@ function registerFindTool(
         : undefined;
       const jsonKeys = Object.keys(jsonWhere);
 
+      // When searching by name without an explicit sort, order the matches by
+      // relevance (exact > prefix > substring) so the intended item comes first.
+      const nameQuery =
+        !args.orderBy && typeof args.where?.name === "string"
+          ? args.where.name
+          : undefined;
+
       let rows: Record<string, unknown>[];
-      if (jsonKeys.length === 0) {
+      if (jsonKeys.length === 0 && nameQuery === undefined) {
         rows = (await em.find(entityName as never, dbWhere, {
           populate: populate as never,
           orderBy,
@@ -360,21 +401,26 @@ function registerFindTool(
           offset,
         })) as Record<string, unknown>[];
       } else {
-        // Pull a bounded set matching the scalar filters, then filter the JSON
-        // arrays in JS (SQLite JSON membership queries are unreliable), then page.
-        const candidates = (await em.find(entityName as never, dbWhere, {
+        // Pull a bounded set matching the scalar filters, then apply JS-side JSON
+        // filtering and/or relevance ranking (neither is expressible in SQL here),
+        // then page.
+        let candidates = (await em.find(entityName as never, dbWhere, {
           populate: populate as never,
           orderBy,
           limit: JSON_SCAN_CAP,
         })) as Record<string, unknown>[];
-        const matched = candidates.filter((row) =>
-          jsonKeys.every((key) => {
-            const arr = row[key];
-            if (!Array.isArray(arr)) return false;
-            return jsonWhere[key].some((wanted) => arr.includes(wanted));
-          }),
-        );
-        rows = matched.slice(offset, offset + limit);
+        if (jsonKeys.length > 0) {
+          candidates = candidates.filter((row) =>
+            jsonKeys.every((key) => {
+              const arr = row[key];
+              if (!Array.isArray(arr)) return false;
+              return jsonWhere[key].some((wanted) => arr.includes(wanted));
+            }),
+          );
+        }
+        if (nameQuery !== undefined)
+          candidates = rankByName(candidates, nameQuery);
+        rows = candidates.slice(offset, offset + limit);
       }
 
       return textResult(

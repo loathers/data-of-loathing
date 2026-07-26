@@ -6,11 +6,22 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createClient, type Client } from "data-of-loathing";
 import {
   registerTools,
+  relevance,
   scalarFields,
   splitWhere,
   type ScalarField,
 } from "./tools.js";
 import { CORE_ENTITIES } from "./entities.js";
+
+// --- relevance (pure, no database) ----------------------------------------
+
+test("relevance ranks exact over prefix over substring, ignoring punctuation", () => {
+  expect(relevance("fleetwood mac 'n' cheese", "fleetwood mac n cheese")).toBe(
+    0,
+  );
+  expect(relevance("cheese wheel", "cheese")).toBe(1);
+  expect(relevance("stinky cheese", "cheese")).toBe(2);
+});
 
 // --- splitWhere (pure, no database) ---------------------------------------
 
@@ -105,6 +116,9 @@ describe.skipIf(!hasDb)("with the cached database", () => {
     // Internal modifier/pivot entities are not exposed.
     expect(tools["find_itemmodifiers"]).toBeUndefined();
     expect(tools["find_meta"]).toBeUndefined();
+    // 1:1 extension tables are folded into find_item, not their own tools.
+    expect(tools["find_consumable"]).toBeUndefined();
+    expect(tools["find_equipment"]).toBeUndefined();
   });
 
   test("scalarFields includes scalar columns and excludes relations", () => {
@@ -126,6 +140,18 @@ describe.skipIf(!hasDb)("with the cached database", () => {
     const rows = await call("find_item", { where: { name: "seal tooth" } });
     const seal = rows.find((r: { name: string }) => r.name === "seal tooth");
     expect(seal?.autosell).toBe(1);
+  });
+
+  test("find_item orders name matches by relevance", async () => {
+    const rows = await call("find_item", {
+      where: { name: "cheese" },
+      limit: 50,
+    });
+    const scores = rows.map((r: { name: string }) =>
+      relevance(r.name, "cheese"),
+    );
+    // Non-decreasing: exact/prefix matches come before looser substring matches.
+    expect(scores).toEqual([...scores].sort((a, b) => a - b));
   });
 
   test("find_familiar filters on a JSON-array category", async () => {
@@ -154,15 +180,18 @@ describe.skipIf(!hasDb)("with the cached database", () => {
     expect(result.name).toBe("seal tooth");
   });
 
-  test("find_consumable filters by the related item's name and returns it", async () => {
-    // Punctuation-free query still matches "fleetwood mac 'n' cheese".
-    const rows = await call("find_consumable", {
-      where: { item: { name: "fleetwood mac n cheese" } },
+  test("find_item filters by a nested consumable field", async () => {
+    const rows = await call("find_item", {
+      where: { consumable: { quality: "awesome" } },
+      limit: 5,
     });
-    expect(rows).toHaveLength(1);
-    expect(rows[0].stomach).toBe(6);
-    // The related item travels alongside, so results are no longer anonymous.
-    expect(rows[0].item.name).toBe("fleetwood mac 'n' cheese");
+    expect(rows.length).toBeGreaterThan(0);
+    expect(
+      rows.every(
+        (r: { consumable: { quality: string } }) =>
+          r.consumable?.quality === "awesome",
+      ),
+    ).toBe(true);
   });
 
   test("find_item includes its 1:1 consumable record automatically", async () => {
