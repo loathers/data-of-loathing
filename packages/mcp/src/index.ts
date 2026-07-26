@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createClient } from "data-of-loathing";
 import { registerTools } from "./tools.js";
+import pkg from "../package.json" with { type: "json" };
 
 async function main() {
   // DOL_SQLITE_PATH points at a local database file (useful offline / in dev).
@@ -15,7 +16,7 @@ async function main() {
 
   const server = new McpServer({
     name: "data-of-loathing",
-    version: "0.0.1",
+    version: pkg.version,
   });
 
   registerTools(server, client);
