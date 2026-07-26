@@ -64,6 +64,13 @@ first, or use `src/index.ts` via `tsx` for live development):
   String filters are case-insensitive partial matches; JSON-array fields (e.g.
   `Item.uses`, `Familiar.categories`) match rows whose array includes any of the
   given values.
+  - **Related records travel together.** One-to-one/parent records are always
+    included and filterable via nested filters. A 1:1 table like `Consumable` is
+    just optional extra fields on an item, so `find_item` returns the item's
+    `consumable` inline, and `find_consumable` can filter by
+    `where: { item: { name: "fleetwood mac 'n' cheese" } }` and returns the item
+    alongside. Larger collections (e.g. an item's `monsterDrops`) are opt-in via a
+    `populate` argument.
 - `get_modifiers` — the game modifiers (Muscle, Meat Drop, …) attached to an Item,
   Effect, Skill, Familiar, or Outfit, looked up by name or id.
 

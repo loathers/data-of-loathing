@@ -20,19 +20,23 @@ const fields: ScalarField[] = [
   { name: "tradeable", kind: "boolean" },
   { name: "uses", kind: "json" },
 ];
+const noRelations = new Set<string>();
 
 test("splitWhere turns string filters into case-insensitive partial matches", () => {
-  const { dbWhere } = splitWhere(fields, { name: "seal" });
+  const { dbWhere } = splitWhere(fields, noRelations, { name: "seal" });
   expect(dbWhere).toEqual({ name: { $like: "%seal%" } });
 });
 
 test("splitWhere passes numbers and booleans through as equality", () => {
-  const { dbWhere } = splitWhere(fields, { autosell: 1, tradeable: true });
+  const { dbWhere } = splitWhere(fields, noRelations, {
+    autosell: 1,
+    tradeable: true,
+  });
   expect(dbWhere).toEqual({ autosell: 1, tradeable: true });
 });
 
 test("splitWhere pulls JSON-array columns out for post-filtering", () => {
-  const { dbWhere, jsonWhere } = splitWhere(fields, {
+  const { dbWhere, jsonWhere } = splitWhere(fields, noRelations, {
     name: "tooth",
     uses: ["smith"],
   });
@@ -40,8 +44,19 @@ test("splitWhere pulls JSON-array columns out for post-filtering", () => {
   expect(jsonWhere).toEqual({ uses: ["smith"] });
 });
 
+test("splitWhere applies partial matching inside nested relation filters", () => {
+  const { dbWhere } = splitWhere(fields, new Set(["item"]), {
+    item: { name: "fleetwood", autosell: 0 },
+  });
+  expect(dbWhere).toEqual({
+    item: { name: { $like: "%fleetwood%" }, autosell: 0 },
+  });
+});
+
 test("splitWhere ignores undefined values", () => {
-  const { dbWhere, jsonWhere } = splitWhere(fields, { name: undefined });
+  const { dbWhere, jsonWhere } = splitWhere(fields, noRelations, {
+    name: undefined,
+  });
   expect(dbWhere).toEqual({});
   expect(jsonWhere).toEqual({});
 });
@@ -129,5 +144,35 @@ describe.skipIf(!hasDb)("with the cached database", () => {
     });
     expect(Array.isArray(result.modifiers)).toBe(true);
     expect(result.name).toBe("seal tooth");
+  });
+
+  test("find_consumable filters by the related item's name and returns it", async () => {
+    const rows = await call("find_consumable", {
+      where: { item: { name: "fleetwood mac 'n' cheese" } },
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].stomach).toBe(6);
+    // The related item travels alongside, so results are no longer anonymous.
+    expect(rows[0].item.name).toBe("fleetwood mac 'n' cheese");
+  });
+
+  test("find_item includes its 1:1 consumable record automatically", async () => {
+    const rows = await call("find_item", {
+      where: { name: "fleetwood mac 'n' cheese" },
+    });
+    const item = rows.find(
+      (r: { name: string }) => r.name === "fleetwood mac 'n' cheese",
+    );
+    expect(item?.consumable?.stomach).toBe(6);
+  });
+
+  test("collections are excluded unless requested via populate", async () => {
+    const [plain] = await call("find_item", { where: { name: "seal tooth" } });
+    expect(plain.monsterDrops).toBeUndefined();
+    const [withDrops] = await call("find_item", {
+      where: { name: "seal tooth" },
+      populate: ["monsterDrops"],
+    });
+    expect(Array.isArray(withDrops.monsterDrops)).toBe(true);
   });
 });

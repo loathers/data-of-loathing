@@ -27,6 +27,16 @@ export type ScalarField = {
   enumValues?: string[];
 };
 
+type Relation = {
+  name: string;
+  /** The related entity's class name. */
+  target: string;
+  /** True for 1:1 / m:1 (a single related record), false for 1:m / m:n. */
+  toOne: boolean;
+  /** Scalar fields of the target, used to serialize and to build nested filters. */
+  targetFields: ScalarField[];
+};
+
 function classifyType(
   columnType: string | undefined,
   runtimeType: string,
@@ -36,34 +46,6 @@ function classifyType(
   if (runtimeType === "boolean") return "boolean";
   if (runtimeType === "number") return "number";
   return "string";
-}
-
-/**
- * Split a user-supplied filter into a database WHERE clause and JSON-array
- * filters that we apply in JS afterwards. String columns become case-insensitive
- * partial matches; JSON-array columns (uses/tags/categories) are pulled out
- * because SQLite JSON membership queries are unreliable.
- */
-export function splitWhere(
-  fields: ScalarField[],
-  where: Record<string, unknown>,
-): { dbWhere: Record<string, unknown>; jsonWhere: Record<string, string[]> } {
-  const jsonFieldNames = new Set(
-    fields.filter((f) => f.kind === "json").map((f) => f.name),
-  );
-  const dbWhere: Record<string, unknown> = {};
-  const jsonWhere: Record<string, string[]> = {};
-  for (const [key, value] of Object.entries(where)) {
-    if (value === undefined) continue;
-    if (jsonFieldNames.has(key)) {
-      jsonWhere[key] = value as string[];
-    } else if (typeof value === "string") {
-      dbWhere[key] = { $like: `%${value}%` };
-    } else {
-      dbWhere[key] = value;
-    }
-  }
-  return { dbWhere, jsonWhere };
 }
 
 /** Read the scalar (non-relation) fields of an entity from MikroORM metadata. */
@@ -82,6 +64,32 @@ export function scalarFields(
     }));
 }
 
+/**
+ * Read an entity's relations. To-one relations (1:1 and m:1) are treated as
+ * "structured extra fields": a Consumable is really just optional columns on an
+ * Item, so we always pull the related record alongside — in both directions.
+ * Collections (1:m / m:n) are larger and only included on request.
+ */
+export function relationsOf(client: Client, entityName: string): Relation[] {
+  const meta = client.query.getMetadata().get(entityName as never);
+  return (
+    meta.props
+      .filter((prop) => String(prop.kind) !== "scalar")
+      // Skip MikroORM's auto-generated inverse pivot properties (e.g. `X__inverse`).
+      .filter((prop) => !prop.name.includes("__"))
+      .map((prop) => {
+        const kind = String(prop.kind);
+        const target = String(prop.type);
+        return {
+          name: prop.name,
+          target,
+          toOne: kind === "1:1" || kind === "m:1",
+          targetFields: scalarFields(client, target),
+        };
+      })
+  );
+}
+
 function describeField(field: ScalarField): string {
   if (field.enumValues) {
     const values = field.enumValues.map((v) => `"${v}"`).join(", ");
@@ -96,24 +104,43 @@ function describeField(field: ScalarField): string {
   return "Exact match.";
 }
 
-function whereSchema(fields: ScalarField[]): z.ZodTypeAny {
+function fieldSchema(field: ScalarField): z.ZodTypeAny {
+  switch (field.kind) {
+    case "boolean":
+      return z.boolean();
+    case "number":
+      return z.number();
+    case "json":
+      return z.array(z.string());
+    default:
+      return z.string();
+  }
+}
+
+function whereSchema(
+  fields: ScalarField[],
+  toOneRelations: Relation[],
+): z.ZodTypeAny {
   const shape: z.ZodRawShape = {};
   for (const field of fields) {
-    let schema: z.ZodTypeAny;
-    switch (field.kind) {
-      case "boolean":
-        schema = z.boolean();
-        break;
-      case "number":
-        schema = z.number();
-        break;
-      case "json":
-        schema = z.array(z.string());
-        break;
-      default:
-        schema = z.string();
+    shape[field.name] = fieldSchema(field)
+      .optional()
+      .describe(describeField(field));
+  }
+  // Nested filters on to-one relations, e.g. `{ item: { name: "seal tooth" } }`.
+  // Only non-JSON target fields are exposed (JSON membership can't be joined on).
+  for (const relation of toOneRelations) {
+    const nested: z.ZodRawShape = {};
+    for (const field of relation.targetFields) {
+      if (field.kind === "json") continue;
+      nested[field.name] = fieldSchema(field)
+        .optional()
+        .describe(describeField(field));
     }
-    shape[field.name] = schema.optional().describe(describeField(field));
+    shape[relation.name] = z
+      .object(nested)
+      .optional()
+      .describe(`Filter by the related ${relation.target} (e.g. { name }).`);
   }
   return z
     .object(shape)
@@ -127,12 +154,88 @@ type FindArgs = {
   orderDirection?: "asc" | "desc";
   limit?: number;
   offset?: number;
+  populate?: string[];
 };
+
+/** Apply the case-insensitive partial-match transform to nested string filters. */
+function mapNestedStrings(
+  value: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(value)) {
+    if (val === undefined) continue;
+    out[key] = typeof val === "string" ? { $like: `%${val}%` } : val;
+  }
+  return out;
+}
+
+/**
+ * Split a user-supplied filter into a database WHERE clause and JSON-array
+ * filters that we apply in JS afterwards. String columns become case-insensitive
+ * partial matches; nested to-one relation filters get the same treatment; JSON-array
+ * columns are pulled out because SQLite JSON membership queries are unreliable.
+ */
+export function splitWhere(
+  fields: ScalarField[],
+  relationNames: Set<string>,
+  where: Record<string, unknown>,
+): { dbWhere: Record<string, unknown>; jsonWhere: Record<string, string[]> } {
+  const jsonFieldNames = new Set(
+    fields.filter((f) => f.kind === "json").map((f) => f.name),
+  );
+  const dbWhere: Record<string, unknown> = {};
+  const jsonWhere: Record<string, string[]> = {};
+  for (const [key, value] of Object.entries(where)) {
+    if (value === undefined) continue;
+    if (relationNames.has(key) && value && typeof value === "object") {
+      dbWhere[key] = mapNestedStrings(value as Record<string, unknown>);
+    } else if (jsonFieldNames.has(key)) {
+      jsonWhere[key] = value as string[];
+    } else if (typeof value === "string") {
+      dbWhere[key] = { $like: `%${value}%` };
+    } else {
+      dbWhere[key] = value;
+    }
+  }
+  return { dbWhere, jsonWhere };
+}
 
 /** Serialize an entity to a plain object of just its scalar fields. */
 function toPlain(fields: ScalarField[], entity: Record<string, unknown>) {
   const out: Record<string, unknown> = {};
   for (const field of fields) out[field.name] = entity[field.name];
+  return out;
+}
+
+/**
+ * Serialize a row: its own scalar fields, every to-one relation (always), and any
+ * requested collections. Populated relations are one level deep — the related
+ * record's own scalar fields only, no further nesting.
+ */
+function serializeRow(
+  fields: ScalarField[],
+  toOneRelations: Relation[],
+  collections: Relation[],
+  requestedCollections: Set<string>,
+  row: Record<string, unknown>,
+) {
+  const out = toPlain(fields, row);
+  for (const relation of toOneRelations) {
+    const related = row[relation.name] as Record<string, unknown> | null;
+    out[relation.name] = related
+      ? toPlain(relation.targetFields, related)
+      : null;
+  }
+  for (const relation of collections) {
+    if (!requestedCollections.has(relation.name)) continue;
+    const collection = row[relation.name] as {
+      getItems?: () => Record<string, unknown>[];
+    } | null;
+    out[relation.name] =
+      collection
+        ?.getItems?.()
+        .map((item) => toPlain(relation.targetFields, item)) ?? [];
+  }
   return out;
 }
 
@@ -151,34 +254,70 @@ function registerFindTool(
 ) {
   const fields = scalarFields(client, entityName);
   const scalarNames = fields.map((f) => f.name);
+  const relations = relationsOf(client, entityName);
+  const toOneRelations = relations.filter((r) => r.toOne);
+  const collections = relations.filter((r) => !r.toOne);
+  const toOneNames = toOneRelations.map((r) => r.name);
+  const collectionNames = collections.map((r) => r.name);
+  // Relations that can appear in `where` (to-one only) for nested filtering.
+  const relationFilterNames = new Set(toOneNames);
+
+  const includedNote =
+    toOneNames.length > 0
+      ? ` Always includes the related ${toOneNames.join(", ")}.`
+      : "";
+  const populateNote =
+    collectionNames.length > 0
+      ? ` Request related collections (${collectionNames.join(", ")}) with populate.`
+      : "";
+
+  const inputSchema: z.ZodRawShape = {
+    where: whereSchema(fields, toOneRelations),
+    orderBy: z
+      .enum(scalarNames as [string, ...string[]])
+      .optional()
+      .describe("Field to sort by."),
+    orderDirection: z.enum(["asc", "desc"]).optional(),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(MAX_LIMIT)
+      .optional()
+      .describe(
+        `Max rows to return (default ${DEFAULT_LIMIT}, max ${MAX_LIMIT}).`,
+      ),
+    offset: z.number().int().min(0).optional(),
+  };
+  if (collectionNames.length > 0) {
+    inputSchema.populate = z
+      .array(z.enum(collectionNames as [string, ...string[]]))
+      .optional()
+      .describe("Related collections to include in the output.");
+  }
 
   server.registerTool(
     `find_${entityName.toLowerCase()}`,
     {
-      description: `${CORE_ENTITIES[entityName]} Filterable fields: ${scalarNames.join(", ")}.`,
-      inputSchema: {
-        where: whereSchema(fields),
-        orderBy: z
-          .enum(scalarNames as [string, ...string[]])
-          .optional()
-          .describe("Field to sort by."),
-        orderDirection: z.enum(["asc", "desc"]).optional(),
-        limit: z
-          .number()
-          .int()
-          .min(1)
-          .max(MAX_LIMIT)
-          .optional()
-          .describe(
-            `Max rows to return (default ${DEFAULT_LIMIT}, max ${MAX_LIMIT}).`,
-          ),
-        offset: z.number().int().min(0).optional(),
-      },
+      description:
+        `${CORE_ENTITIES[entityName]} Put filters in a \`where\` object keyed by field ` +
+        `(${scalarNames.join(", ")}); filter related records with nested filters, ` +
+        `e.g. where: { item: { name: "seal tooth" } }.${includedNote}${populateNote}`,
+      inputSchema,
     },
     async (rawArgs) => {
       const args = rawArgs as FindArgs;
       const em = client.query.fork();
-      const { dbWhere, jsonWhere } = splitWhere(fields, args.where ?? {});
+      const { dbWhere, jsonWhere } = splitWhere(
+        fields,
+        relationFilterNames,
+        args.where ?? {},
+      );
+
+      const requestedCollections = new Set(
+        (args.populate ?? []).filter((name) => collectionNames.includes(name)),
+      );
+      const populate = [...toOneNames, ...requestedCollections];
 
       const limit = args.limit ?? DEFAULT_LIMIT;
       const offset = args.offset ?? 0;
@@ -190,6 +329,7 @@ function registerFindTool(
       let rows: Record<string, unknown>[];
       if (jsonKeys.length === 0) {
         rows = (await em.find(entityName as never, dbWhere, {
+          populate: populate as never,
           orderBy,
           limit,
           offset,
@@ -198,6 +338,7 @@ function registerFindTool(
         // Pull a bounded set matching the scalar filters, then filter the JSON
         // arrays in JS (SQLite JSON membership queries are unreliable), then page.
         const candidates = (await em.find(entityName as never, dbWhere, {
+          populate: populate as never,
           orderBy,
           limit: JSON_SCAN_CAP,
         })) as Record<string, unknown>[];
@@ -211,7 +352,17 @@ function registerFindTool(
         rows = matched.slice(offset, offset + limit);
       }
 
-      return textResult(rows.map((row) => toPlain(fields, row)));
+      return textResult(
+        rows.map((row) =>
+          serializeRow(
+            fields,
+            toOneRelations,
+            collections,
+            requestedCollections,
+            row,
+          ),
+        ),
+      );
     },
   );
 }
