@@ -119,7 +119,6 @@ const SQLITE_PATH = process.env.SQLITE_PATH ?? "./dol.sqlite";
 
 export async function watch(every: number) {
   await openDatabase(SQLITE_PATH);
-  await initialiseDatabase();
 
   // When we run watch for the first time, update the database even if the upstream data has not changed. This is because
   // the server may have restarted with code for new data transforms.
@@ -148,6 +147,8 @@ export async function watch(every: number) {
         console.log("Cannot update due to mismatched data file versions");
         return;
       }
+
+      await initialiseDatabase();
 
       await populateDatabase();
 
