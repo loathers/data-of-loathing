@@ -27,6 +27,12 @@ export async function initialiseDatabase() {
   await orm.schema.create();
 }
 
+// Flush any WAL contents into the main database file so it can be copied as a
+// self-contained snapshot. A no-op when the connection is not in WAL mode.
+export async function checkpointDatabase() {
+  await conn().execute(`PRAGMA wal_checkpoint(TRUNCATE)`, [], "run");
+}
+
 function serializeValue(value: unknown): unknown {
   if (value === null || value === undefined) return null;
   if (typeof value === "boolean") return value ? 1 : 0;

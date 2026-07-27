@@ -1,5 +1,5 @@
 import type { Endpoints } from "@octokit/types";
-import { utimes } from "node:fs/promises";
+import { copyFile, rename, utimes } from "node:fs/promises";
 import { Cron } from "croner";
 import { populateClasses } from "./entityTypes/classes.js";
 import { checkEffectsVersion, populateEffects } from "./entityTypes/effects.js";
@@ -25,6 +25,7 @@ import { checkOutfitsVersion, populateOutfits } from "./entityTypes/outfits.js";
 import { populatePaths } from "./entityTypes/paths.js";
 import { checkSkillsVersion, populateSkills } from "./entityTypes/skills.js";
 import {
+  checkpointDatabase,
   getLastUpdate,
   initialiseDatabase,
   openDatabase,
@@ -115,10 +116,25 @@ async function getLastGitHubUpdate() {
   return new Date(Math.max(...lastGitHubUpdates));
 }
 
+// The path the server serves to clients. Clients read this file in place (the
+// ranged strategy fetches individual pages over HTTP), so it must never be
+// mutated in place — only replaced atomically with a fully built database.
 const SQLITE_PATH = process.env.SQLITE_PATH ?? "./dol.sqlite";
+// The ETL builds into its own working file and publishes to SQLITE_PATH.
+const WORK_PATH = `${SQLITE_PATH}.work`;
+
+// Atomically replace the served database with a freshly built snapshot so
+// in-flight client reads never observe a half-populated file.
+async function publishDatabase(from: string, to: string, mtime: Date) {
+  await checkpointDatabase();
+  const tmp = `${to}.tmp`;
+  await copyFile(from, tmp);
+  await utimes(tmp, mtime, mtime);
+  await rename(tmp, to);
+}
 
 export async function watch(every: number) {
-  await openDatabase(SQLITE_PATH);
+  await openDatabase(WORK_PATH);
   await initialiseDatabase();
 
   // When we run watch for the first time, update the database even if the upstream data has not changed. This is because
@@ -158,7 +174,7 @@ export async function watch(every: number) {
 
       await setLastRevision(await getKoLmafiaRevision());
       await setLastUpdate(lastGitHubUpdate);
-      await utimes(SQLITE_PATH, lastGitHubUpdate, lastGitHubUpdate);
+      await publishDatabase(WORK_PATH, SQLITE_PATH, lastGitHubUpdate);
       firstTime = false;
     } catch (error) {
       console.error("ETL error, will retry next run:", error);
