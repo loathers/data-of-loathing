@@ -192,10 +192,24 @@ let currentFilter: { column: string; value: unknown } | null = null;
 let currentFKs = new Map<string, FKInfo>();
 let currentInverseRelations: InverseRelation[] = [];
 
-const client = createClient({ strategy: "opfs", url: "/dol.sqlite" });
+const STRATEGIES = ["opfs", "memory", "ranged"] as const;
+
+async function loadClient() {
+  for (const strategy of STRATEGIES) {
+    try {
+      const client = createClient({ strategy, url: "/dol.sqlite" });
+      await client.load();
+      return client;
+    } catch (e) {
+      console.warn(`data-of-loathing: "${strategy}" strategy failed`, e);
+    }
+  }
+  return null;
+}
 
 try {
-  await client.load();
+  const client = await loadClient();
+  if (!client) throw new Error("Could not load the database with any strategy");
   statusEl.textContent = "";
   const conn = client.query.getConnection();
 
