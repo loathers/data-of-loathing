@@ -6,6 +6,7 @@ COPY package.json yarn.lock .yarnrc.yml ./
 COPY packages/etl/package.json packages/etl/
 COPY packages/server/package.json packages/server/
 COPY packages/client/package.json packages/client/
+COPY packages/mcp/package.json packages/mcp/
 
 RUN corepack enable && yarn install --frozen-lockfile
 
