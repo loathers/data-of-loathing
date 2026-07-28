@@ -30,6 +30,7 @@ import {
   initialiseDatabase,
   openDatabase,
   prepareMeta,
+  resetReferenceCache,
   setLastRevision,
   setLastUpdate,
 } from "./db.js";
@@ -68,6 +69,8 @@ export async function checkVersions() {
 }
 
 export async function populateDatabase() {
+  resetReferenceCache();
+
   await populateEffects();
   await populateItems();
   await populateEquipment();

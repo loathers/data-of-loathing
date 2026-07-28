@@ -69,6 +69,69 @@ export async function checkExists(
   return rows.length > 0;
 }
 
+// Drop (and warn on) any row SQLite would reject: a null in a NOT NULL column,
+// or a non-null foreign key pointing at a parent row that doesn't exist. Both
+// are enforced by node:sqlite (foreign keys are on by default), so without this
+// one bad row — typically an unresolved reference — aborts the whole populate.
+// The foreign-key check assumes parents are populated before their children,
+// which populateDatabase guarantees.
+async function dropRowsFailingConstraints(
+  Entity: new (...args: any[]) => any,
+  rows: Record<string, unknown>[],
+): Promise<Record<string, unknown>[]> {
+  const meta = orm.getMetadata().find(Entity);
+  if (!meta) return rows;
+
+  const drop = (row: Record<string, unknown>, reason: string) => {
+    const id = "id" in row ? ` (id=${row.id})` : "";
+    console.warn(`Dropping ${Entity.name} row${id}: ${reason}`);
+  };
+
+  const required = meta.props.filter((p) => !p.primary && !p.nullable);
+  let kept = rows.filter((row) => {
+    for (const prop of required) {
+      if (prop.name in row && row[prop.name] == null) {
+        drop(row, `required field "${prop.name}" is null`);
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const foreignKeys = meta.props.filter(
+    (p) => p.kind === "m:1" && !p.nullable && p.targetMeta,
+  );
+  for (const prop of foreignKeys) {
+    const referenced = kept
+      .map((row) => row[prop.name])
+      .filter((v) => v != null);
+    if (referenced.length === 0) continue;
+
+    const pkColumn = prop.targetMeta!.getPrimaryProps()[0].fieldNames[0];
+    const table = prop.targetMeta!.tableName;
+    const existing = new Set(
+      (
+        await conn().execute<Record<string, unknown>[]>(
+          `SELECT "${pkColumn}" FROM "${table}"`,
+          [],
+          "all",
+        )
+      ).map((r: Record<string, unknown>) => r[pkColumn]),
+    );
+
+    kept = kept.filter((row) => {
+      const ref = row[prop.name];
+      if (ref != null && !existing.has(ref)) {
+        drop(row, `foreign key "${prop.name}" -> ${table}(${ref}) not found`);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  return kept;
+}
+
 export async function populateEntity<T extends Record<string, unknown>>(
   loader: (() => Promise<T[]>) | T[],
   Entity: new (...args: any[]) => any,
@@ -80,8 +143,12 @@ export async function populateEntity<T extends Record<string, unknown>>(
         (d) => d !== null,
       )
     : data;
-  if (transformed.length === 0) return;
-  await em().insertMany(Entity, transformed);
+  const cleaned = await dropRowsFailingConstraints(
+    Entity,
+    transformed as Record<string, unknown>[],
+  );
+  if (cleaned.length === 0) return;
+  await em().insertMany(Entity, cleaned);
 }
 
 // For pure M2M pivot tables that have no entity class.
@@ -106,6 +173,12 @@ export async function populatePivot(
 }
 
 const referenceCache = new Map<string, number | null>();
+
+// Clear cached misses each run so a fresh populate re-queries the rebuilt
+// tables rather than reusing a stale null for the life of the process.
+export function resetReferenceCache() {
+  referenceCache.clear();
+}
 
 export async function resolveReference<T extends { id: number }>(
   source: string,
