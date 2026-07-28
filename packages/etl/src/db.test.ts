@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from "vitest";
 import { Concoction, Ingredient, Item } from "data-of-loathing";
 import {
   checkExists,
@@ -19,8 +19,11 @@ const seedItem = (id: number) => ({
   autosell: 0,
 });
 
-beforeEach(async () => {
+beforeAll(async () => {
   await openDatabase(":memory:");
+});
+
+beforeEach(async () => {
   await initialiseDatabase();
   await populateEntity([seedItem(10)], Item);
 });
