@@ -1,4 +1,4 @@
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { Concoction, Ingredient, Item } from "data-of-loathing";
 import {
   checkExists,
@@ -6,10 +6,6 @@ import {
   openDatabase,
   populateEntity,
 } from "./db.js";
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
 
 const seedItem = (id: number) => ({
   id,
@@ -23,11 +19,17 @@ const seedItem = (id: number) => ({
   autosell: 0,
 });
 
-test("populateEntity drops rows with a null in a NOT NULL column and warns", async () => {
+beforeEach(async () => {
   await openDatabase(":memory:");
   await initialiseDatabase();
   await populateEntity([seedItem(10)], Item);
+});
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+test("populateEntity drops rows with a null in a NOT NULL column and warns", async () => {
   const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
   // `item` is a NOT NULL foreign key; the second row has none and must be
@@ -48,10 +50,7 @@ test("populateEntity drops rows with a null in a NOT NULL column and warns", asy
 });
 
 test("populateEntity drops rows whose foreign key references a missing parent", async () => {
-  await openDatabase(":memory:");
-  await initialiseDatabase();
-  await populateEntity([seedItem(10)], Item);
-  // Concoction 1 exists; concoction 2 was dropped (never inserted).
+  // Concoction 1 exists; concoction 2 is never inserted.
   await populateEntity(
     [{ id: 1, item: 10, methods: ["COMBINE"], comment: null }],
     Concoction,

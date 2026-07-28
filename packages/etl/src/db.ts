@@ -25,6 +25,7 @@ export async function openDatabase(path: string) {
 export async function initialiseDatabase() {
   await orm.schema.drop();
   await orm.schema.create();
+  referenceCache.clear();
 }
 
 // Flush any WAL contents into the main database file so it can be copied as a
@@ -102,10 +103,7 @@ async function dropRowsFailingConstraints(
     (p) => p.kind === "m:1" && !p.nullable && p.targetMeta,
   );
   for (const prop of foreignKeys) {
-    const referenced = kept
-      .map((row) => row[prop.name])
-      .filter((v) => v != null);
-    if (referenced.length === 0) continue;
+    if (!kept.some((row) => row[prop.name] != null)) continue;
 
     const pkColumn = prop.targetMeta!.getPrimaryProps()[0].fieldNames[0];
     const table = prop.targetMeta!.tableName;
@@ -118,6 +116,12 @@ async function dropRowsFailingConstraints(
         )
       ).map((r: Record<string, unknown>) => r[pkColumn]),
     );
+
+    if (existing.size === 0) {
+      console.warn(
+        `${Entity.name}: parent table "${table}" is empty; is it populated before this entity?`,
+      );
+    }
 
     kept = kept.filter((row) => {
       const ref = row[prop.name];
@@ -173,12 +177,6 @@ export async function populatePivot(
 }
 
 const referenceCache = new Map<string, number | null>();
-
-// Clear cached misses each run so a fresh populate re-queries the rebuilt
-// tables rather than reusing a stale null for the life of the process.
-export function resetReferenceCache() {
-  referenceCache.clear();
-}
 
 export async function resolveReference<T extends { id: number }>(
   source: string,
