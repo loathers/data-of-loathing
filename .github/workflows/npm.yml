@@ -38,7 +38,7 @@ jobs:
         if: ${{ steps.check.outputs.status == '404' }}
         run: |
           yarn workspace data-of-loathing install
-          cd packages/client && npm publish --provenance --tag next
+          cd packages/client && npm publish --provenance
         env:
           STATUS: ${{ steps.check.outputs.status }}
 
@@ -67,6 +67,6 @@ jobs:
           yarn workspaces focus data-of-loathing data-of-loathing-mcp
           yarn workspace data-of-loathing-mcp build
           yarn workspace data-of-loathing-mcp pack --out /tmp/mcp.tgz
-          npm publish /tmp/mcp.tgz --provenance --tag next
+          npm publish /tmp/mcp.tgz --provenance
         env:
           STATUS: ${{ steps.check.outputs.status }}
