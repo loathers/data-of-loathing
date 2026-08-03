@@ -1,6 +1,6 @@
+import { Equipment, ItemUse } from "data-of-loathing";
 import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
-import { ItemUse } from "./items.js";
 
 const VERSION = 2;
 const FILENAME = "equipment";
@@ -44,9 +44,8 @@ const parseRequirements = (reqString: string) => {
 
   const match = /(Mus|Mys|Mox): (\d+)/.exec(reqString);
   if (match) {
-    reqs[`${match[1].toLowerCase()}Requirement` as keyof typeof reqs] = Number(
-      match[2],
-    );
+    const stat = match[1].toLowerCase() as "mus" | "mys" | "mox";
+    reqs[`${stat}Requirement`] = Number(match[2]);
   }
 
   return reqs;
@@ -70,31 +69,17 @@ export async function loadEquipment() {
 
 export async function populateEquipment() {
   const equipment = await loadEquipment();
-  await populateEntity(
-    equipment,
-    "equipment",
-    [
-      ["id", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],
-      ["power", "INTEGER NOT NULL"],
-      ["musRequirement", "INTEGER NOT NULL"],
-      ["mysRequirement", "INTEGER NOT NULL"],
-      ["moxRequirement", "INTEGER NOT NULL"],
-      ["type", "TEXT"],
-      ["hands", "INTEGER"],
-    ],
-    async (equipment) => {
-      const id = await resolveReference<{ id: number; uses: ItemUse[] }>(
-        "equipment",
-        "items",
-        "name",
-        equipment.id,
-        false,
-        (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses?.includes(u)),
-      );
-      return {
-        ...equipment,
-        id,
-      };
-    },
-  );
+  await populateEntity(equipment, Equipment, async (equip) => {
+    const itemId = await resolveReference<{ id: number; uses: ItemUse[] }>(
+      "equipment",
+      "items",
+      "name",
+      equip.id,
+      false,
+      (item) => EQUIPMENT_ITEM_USES.some((u) => item.uses?.includes(u)),
+    );
+    if (!itemId) return null;
+    const { id: _, ...rest } = equip;
+    return { ...rest, item: itemId };
+  });
 }

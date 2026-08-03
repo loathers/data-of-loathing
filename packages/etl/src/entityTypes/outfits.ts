@@ -1,4 +1,5 @@
-import { populateEntity, resolveReference } from "../db.js";
+import { Outfit, OutfitTreat } from "data-of-loathing";
+import { populateEntity, populatePivot, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 
 const VERSION = 3;
@@ -6,12 +7,12 @@ const FILENAME = "outfits";
 
 const parseEquipment = (equipmentList = "") => equipmentList.trim().split(", ");
 
-export type OutfitTreat = {
+export type OutfitTreatType = {
   item: string;
   chance: number;
 };
 
-const parseTreats = (treatList = ""): OutfitTreat[] =>
+const parseTreats = (treatList = ""): OutfitTreatType[] =>
   treatList
     .trim()
     .split(", ")
@@ -27,7 +28,7 @@ export type OutfitType = {
   name: string;
   image: string;
   equipment: string[];
-  treats: OutfitTreat[];
+  treats: OutfitTreatType[];
 };
 
 const parseOutfit = (parts: string[]): OutfitType => ({
@@ -50,49 +51,41 @@ export async function loadOutfits() {
 export async function populateOutfits() {
   const outfits = await loadOutfits();
 
-  await populateEntity(outfits, "outfits", [
-    ["id", "INTEGER PRIMARY KEY"],
-    ["name", "TEXT NOT NULL"],
-    ["image", "TEXT NOT NULL"],
-  ]);
-
-  const outfitEquipment = outfits.flatMap((o) =>
-    o.equipment.map((e) => ({ outfit: o.id, equipment: e })),
-  );
-
-  const outfitTreats = outfits.flatMap((o) =>
-    o.treats.map((t) => ({ outfit: o.id, ...t })).filter((t) => t.item !== ""),
-  );
-
   await populateEntity(
-    outfitEquipment,
-    "outfitEquipment",
-    [
-      ["outfit", "INTEGER NOT NULL REFERENCES outfits(id)"],
-      ["equipment", "INTEGER NOT NULL REFERENCES items(id)"],
-    ],
-    async (equip) => ({
-      ...equip,
-      equipment: await resolveReference(
+    outfits.map(({ equipment: _, treats: __, ...o }) => o),
+    Outfit,
+  );
+
+  const equipmentRows: { outfit: number; equipment: number | null }[] = [];
+  for (const o of outfits) {
+    for (const name of o.equipment) {
+      const itemId = await resolveReference(
         "outfitEquipment",
         "items",
         "name",
-        equip.equipment,
-      ),
-    }),
+        name,
+      );
+      equipmentRows.push({ outfit: o.id, equipment: itemId });
+    }
+  }
+
+  await populatePivot(
+    "outfitEquipment",
+    ["outfit", "equipment"],
+    equipmentRows.filter((r) => r.equipment !== null),
   );
 
   await populateEntity(
-    outfitTreats,
-    "outfitTreats",
-    [
-      ["outfit", "INTEGER REFERENCES outfits(id)"],
-      ["item", "INTEGER REFERENCES items(id)"],
-      ["chance", "REAL NOT NULL"],
-    ],
+    outfits.flatMap((o) =>
+      o.treats
+        .map((t) => ({ outfit: o.id, ...t }))
+        .filter((t) => t.item !== ""),
+    ),
+    OutfitTreat,
     async (treat) => ({
-      ...treat,
+      outfit: treat.outfit,
       item: await resolveReference("outfitTreats", "items", "name", treat.item),
+      chance: treat.chance,
     }),
   );
 }

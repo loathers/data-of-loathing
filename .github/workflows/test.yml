@@ -1,0 +1,69 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+      - v3
+  pull_request:
+
+jobs:
+  test-client:
+    runs-on: ubuntu-latest
+    name: Test client
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+
+      - name: Install dependencies
+        run: yarn workspace data-of-loathing install
+
+      - name: Test
+        run: yarn workspace data-of-loathing test
+
+  test-etl:
+    runs-on: ubuntu-latest
+    name: Test etl
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+
+      - name: Install dependencies
+        run: yarn workspaces focus data-of-loathing data-of-loathing-etl
+
+      - name: Build client
+        run: yarn workspace data-of-loathing build
+
+      - name: Test
+        run: yarn workspace data-of-loathing-etl test
+
+  test-mcp:
+    runs-on: ubuntu-latest
+    name: Test mcp
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+
+      - name: Install dependencies
+        run: yarn workspaces focus data-of-loathing data-of-loathing-mcp
+
+      - name: Build client
+        run: yarn workspace data-of-loathing build
+
+      - name: Test
+        run: yarn workspace data-of-loathing-mcp test

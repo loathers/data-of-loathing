@@ -1,3 +1,4 @@
+import { Path } from "data-of-loathing";
 import { populateEntity } from "../db.js";
 import { loadMafiaEnum } from "../utils.js";
 
@@ -38,18 +39,5 @@ export async function loadPaths() {
 }
 
 export async function populatePaths() {
-  return populateEntity(loadPaths, "paths", [
-    ["id", "INTEGER PRIMARY KEY"],
-    ["name", "TEXT NOT NULL"],
-    ["enumName", "TEXT NOT NULL"],
-    ["image", "TEXT UNIQUE"],
-    ["isAvatar", "BOOLEAN NOT NULL"],
-    ["article", "TEXT"],
-    ["pointsPreference", "TEXT"],
-    ["maximumPoints", "INTEGER NOT NULL"],
-    ["bucket", "BOOLEAN NOT NULL"],
-    ["stomachCapacity", "INTEGER NOT NULL"],
-    ["liverCapacity", "INTEGER NOT NULL"],
-    ["spleenCapacity", "INTEGER NOT NULL"],
-  ]);
+  return populateEntity(loadPaths, Path);
 }

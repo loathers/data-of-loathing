@@ -1,22 +1,9 @@
-import { defineEnum, markAmbiguous, populateEntity } from "../db.js";
+import { Skill, SkillTag } from "data-of-loathing";
+import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
 const VERSION = 6;
 const FILENAME = "classskills";
-
-export enum SkillTag {
-  Passive = "passive",
-  Combat = "combat",
-  NonCombat = "nc",
-  Heal = "heal",
-  ItemSummon = "item",
-  Effect = "effect",
-  Self = "self",
-  Other = "other",
-  Song = "song",
-  Expression = "expression",
-  Walk = "walk",
-}
 
 const isValidTag = isMemberOfEnum(SkillTag);
 
@@ -34,14 +21,13 @@ export type SkillType = {
 };
 
 const parseAttributes = (id: number, attributesString = "") => {
-  const tokens = attributesString.split(",").reduce(
-    (acc, attr) => {
+  const tokens = attributesString
+    .split(",")
+    .reduce<Record<string, string>>((acc, attr) => {
       if (!attr.trim()) return acc;
       const [key, value] = attr.split(":");
       return { ...acc, [key.toLowerCase().trim()]: value.trim() };
-    },
-    {} as Record<string, string>,
-  );
+    }, {});
 
   return {
     guildLevel: tokens["level"] ? Number(tokens["level"]) : null,
@@ -74,18 +60,6 @@ export async function loadSkills() {
 }
 
 export async function populateSkills() {
-  const tag = await defineEnum("SkillTag", SkillTag);
-  await populateEntity(loadSkills, "skills", [
-    ["id", "INTEGER PRIMARY KEY"],
-    ["name", "TEXT NOT NULL"],
-    ["image", "TEXT NOT NULL"],
-    ["tags", `${tag}[] NOT NULL`],
-    ["mpCost", "INTEGER NOT NULL"],
-    ["duration", "INTEGER NOT NULL"],
-    ["guildLevel", "INTEGER"],
-    ["maxLevel", "INTEGER"],
-    ["permable", "BOOLEAN NOT NULL"],
-    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
-  ]);
+  await populateEntity(loadSkills, Skill);
   await markAmbiguous("skills");
 }

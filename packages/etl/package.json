@@ -5,25 +5,25 @@
   "exports": "./src/index.ts",
   "author": "Sam Gaus <sam@gaus.co.uk>",
   "license": "MIT",
-  "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.0.2",
-    "eslint": "^9.39.2",
-    "prettier": "^3.7.4",
-    "ts-dedent": "^2.2.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0",
-    "vitest": "^4.0.15"
-  },
   "scripts": {
     "format": "prettier --write .",
     "test": "vitest run"
   },
   "dependencies": {
+    "@mikro-orm/core": "^7.0.14",
+    "@mikro-orm/sql": "^7.0.14",
     "croner": "^9.1.0",
-    "csv-stringify": "^6.6.0",
-    "java-parser": "^3.0.1",
-    "postgres": "^3.4.7"
+    "data-of-loathing": "workspace:*",
+    "java-parser": "^3.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^25.0.2",
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.3",
+    "ts-dedent": "^2.2.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.50.0",
+    "vitest": "^4.0.15"
   }
 }

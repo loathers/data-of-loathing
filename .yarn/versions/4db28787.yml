@@ -1,0 +1,7 @@
+releases:
+  data-of-loathing: patch
+
+undecided:
+  - data-of-loathing-project
+  - data-of-loathing-etl
+  - data-of-loathing-server

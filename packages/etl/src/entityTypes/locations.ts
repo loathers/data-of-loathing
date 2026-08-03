@@ -1,4 +1,10 @@
-import { defineEnum, populateEntity, resolveReference } from "../db.js";
+import {
+  Location,
+  NativeMonster,
+  LocationDifficulty,
+  LocationEnvironment,
+} from "data-of-loathing";
+import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
   loadMafiaData,
@@ -11,27 +17,10 @@ const LOCATIONS_FILENAME = "adventures";
 const NATIVES_VERSION = 1;
 const NATIVES_FILENAME = "combats";
 
-export enum LocationDifficulty {
-  None = "none",
-  Unknown = "unknown",
-  Low = "low",
-  Medium = "medium",
-  High = "high",
-}
-
 const validDifficulty = memberOfEnumElse(
   LocationDifficulty,
   LocationDifficulty.Unknown,
 );
-
-export enum LocationEnvironment {
-  None = "none",
-  Indoor = "indoor",
-  Outdoor = "outdoor",
-  Underground = "underground",
-  Underwater = "underwater",
-}
-
 const validEnvironment = memberOfEnumElse(
   LocationEnvironment,
   LocationEnvironment.None,
@@ -45,15 +34,12 @@ export type LocationType = {
   difficulty: LocationDifficulty;
   environment: LocationEnvironment;
   statRequirement: number;
-  /** Water level, for Heavy Rains locations without an environment  */
   waterLevel: number | null;
-  /** Location in which one cannot adventure while overdrunk */
   overdrunk: boolean;
-  /** Location in which wandering monsters cannot appear */
   nowander: boolean;
 };
 
-export type NativeMonster = {
+export type NativeMonsterType = {
   monster: string;
   weight: number;
   rejection: number;
@@ -63,7 +49,7 @@ export type NativeMonster = {
 export type NativesType = {
   location: string;
   combatRate: number;
-  monsters: NativeMonster[];
+  monsters: NativeMonsterType[];
 };
 
 const parseSnarfblat = (url: string) =>
@@ -90,7 +76,7 @@ const parseLocation = (parts: string[]): LocationType => ({
   ...parseAttributes(parts[2]),
 });
 
-const parseNativeMonster = (part: string): NativeMonster => {
+const parseNativeMonster = (part: string): NativeMonsterType => {
   const match = part.match(/(.*?): (-?\d+)(?:([a-z]+)(\d+)?)?/);
   if (!match) return { monster: part, weight: 1, rejection: 0, parity: null };
   const [, name, weight, flag, rejection] = match;
@@ -128,11 +114,6 @@ export async function loadNatives() {
 }
 
 export async function populateLocations() {
-  const [environment, difficulty] = await Promise.all([
-    defineEnum("LocationEnvironment", LocationEnvironment),
-    defineEnum("LocationDifficulty", LocationDifficulty),
-  ]);
-
   const locations = await loadLocations();
   const natives = await loadNatives();
 
@@ -141,49 +122,28 @@ export async function populateLocations() {
     {},
   );
 
-  const locationsWithCombatRate = locations.map((l) => ({
-    ...l,
-    combatRate: combatRateByLocation[l.name] ?? -1,
-  }));
-
-  await populateEntity(locationsWithCombatRate, "locations", [
-    ["id", "INTEGER"],
-    ["name", "TEXT PRIMARY KEY"],
-    ["zone", "TEXT NOT NULL"],
-    ["url", "TEXT NOT NULL"],
-    ["difficulty", `${difficulty} NOT NULL`],
-    ["environment", `${environment} NOT NULL`],
-    ["statRequirement", "INTEGER NOT NULL"],
-    ["waterLevel", "INTEGER"],
-    ["overdrunk", "BOOLEAN NOT NULL"],
-    ["nowander", "BOOLEAN NOT NULL"],
-    ["combatRate", "INTEGER NOT NULL"],
-  ]);
+  await populateEntity(
+    locations.map((l) => ({
+      ...l,
+      combatRate: combatRateByLocation[l.name] ?? -1,
+    })),
+    Location,
+  );
 
   await populateEntity(
     natives.flatMap((n) =>
       n.monsters.map((m) => ({ ...m, location: n.location })),
     ),
-    "nativeMonsters",
-    [
-      ["location", "TEXT NOT NULL REFERENCES locations(name)"],
-      ["monster", "INTEGER NOT NULL REFERENCES monsters(id)"],
-      ["weight", "REAL NOT NULL"],
-      ["rejection", "REAL NOT NULL"],
-      ["parity", "INTEGER"],
-    ],
-    async (nativeMonster) => {
+    NativeMonster,
+    async (nm) => {
       const monster = await resolveReference(
         "nativeMonsters",
         "monsters",
         "name",
-        nativeMonster.monster,
+        nm.monster,
       );
       if (!monster) return null;
-      return {
-        ...nativeMonster,
-        monster,
-      };
+      return { ...nm, monster };
     },
   );
 }

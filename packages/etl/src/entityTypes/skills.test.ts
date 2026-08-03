@@ -2,7 +2,8 @@ import { expect, test, vi } from "vitest";
 import { dedent } from "ts-dedent";
 
 import { createFetchResponse, expectNotNull } from "../testUtils.js";
-import { SkillTag, loadSkills } from "./skills.js";
+import { SkillTag } from "data-of-loathing";
+import { loadSkills } from "./skills.js";
 
 global.fetch = vi.fn();
 

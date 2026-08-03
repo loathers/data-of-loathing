@@ -1,26 +1,11 @@
-import { defineEnum, populateEntity, resolveReference } from "../db.js";
+import { Consumable, ConsumableQuality } from "data-of-loathing";
+import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
   getAverage,
   loadMafiaData,
   memberOfEnumElse,
 } from "../utils.js";
-
-export enum ConsumableQuality {
-  None = "none",
-  Crappy = "crappy",
-  Decent = "decent",
-  Good = "good",
-  Awesome = "awesome",
-  EPIC = "EPIC",
-  SuperEPIC = "super_EPIC",
-  SuperUltraEPIC = "super_ultra_EPIC",
-  SuperUltraMegaEPIC = "super_ultra_mega_EPIC",
-  SuperUltraMegaTurboEPIC = "super_ultra_mega_turbo_EPIC",
-  Quest = "quest",
-  Changing = "changing",
-  Drippy = "drippy",
-}
 
 const validQuality = memberOfEnumElse(
   ConsumableQuality,
@@ -32,7 +17,7 @@ const transformedQuality = (quality: string) => {
   return validQuality(quality.replaceAll(" ", "_"));
 };
 
-export type Consumable = {
+export type ConsumableRow = {
   id: string;
   stomach: number;
   liver: number;
@@ -50,7 +35,10 @@ export type Consumable = {
   notes: string;
 };
 
-const parseConsumable = (type: string, parts: string[]): Consumable | null => {
+const parseConsumable = (
+  type: string,
+  parts: string[],
+): ConsumableRow | null => {
   if (parts[3] === "pseudoitem") return null;
 
   return {
@@ -118,7 +106,7 @@ export async function loadConsumables() {
           .filter((d) => d !== null) ?? [],
     );
 
-  const combined = data.reduce<Record<string, Consumable>>((acc, c) => {
+  const combined = data.reduce<Record<string, ConsumableRow>>((acc, c) => {
     if (acc[c.id]) {
       acc[c.id].stomach += c.stomach;
       acc[c.id].liver += c.liver;
@@ -134,39 +122,15 @@ export async function loadConsumables() {
 
 export async function populateConsumables() {
   const consumables = await loadConsumables();
-  const quality = await defineEnum("ConsumableQuality", ConsumableQuality);
-  await populateEntity(
-    consumables,
-    "consumables",
-    [
-      ["id", "INTEGER NOT NULL PRIMARY KEY REFERENCES items(id)"],
-      ["stomach", "INTEGER NOT NULL"],
-      ["liver", "INTEGER NOT NULL"],
-      ["spleen", "INTEGER NOT NULL"],
-      ["levelRequirement", "INTEGER NOT NULL"],
-      ["quality", `${quality}`],
-      ["adventureRange", "TEXT NOT NULL"],
-      ["adventures", "REAL NOT NULL"],
-      ["muscle", "REAL NOT NULL"],
-      ["muscleRange", "TEXT NOT NULL"],
-      ["mysticality", "REAL NOT NULL"],
-      ["mysticalityRange", "TEXT NOT NULL"],
-      ["moxie", "REAL NOT NULL"],
-      ["moxieRange", "TEXT NOT NULL"],
-      ["notes", "TEXT"],
-    ],
-    async (consumable) => {
-      const id = await resolveReference(
-        "consumables",
-        "items",
-        "name",
-        consumable.id,
-      );
-      if (!id) return null;
-      return {
-        ...consumable,
-        id,
-      };
-    },
-  );
+  await populateEntity(consumables, Consumable, async (consumable) => {
+    const itemId = await resolveReference(
+      "consumables",
+      "items",
+      "name",
+      consumable.id,
+    );
+    if (!itemId) return null;
+    const { id: _, ...rest } = consumable;
+    return { ...rest, item: itemId };
+  });
 }

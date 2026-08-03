@@ -1,60 +1,9 @@
-import { defineEnum, markAmbiguous, populateEntity } from "../db.js";
+import { Item, ItemUse } from "data-of-loathing";
+import { markAmbiguous, populateEntity } from "../db.js";
 import { checkVersion, isMemberOfEnum, loadMafiaData } from "../utils.js";
 
 const VERSION = 1;
 const FILENAME = "items";
-
-export enum ItemUse {
-  // Primary
-  Food = "food",
-  Drink = "drink",
-  Spleen = "spleen",
-  Potion = "potion",
-  Avatar = "avatar",
-  Usable = "usable",
-  Multiple = "multiple",
-  Reusable = "reusable",
-  Message = "message",
-  Grow = "grow",
-  PokePill = "pokepill",
-  Hat = "hat",
-  Weapon = "weapon",
-  Sixgun = "sixgun",
-  Offhand = "offhand",
-  Container = "container",
-  Shirt = "shirt",
-  Pants = "pants",
-  Accessory = "accessory",
-  Familiar = "familiar",
-  Sticker = "sticker",
-  Card = "card",
-  Folder = "folder",
-  Bootspur = "bootspur",
-  Bootskin = "bootskin",
-  FoodHelper = "food helper",
-  DrinkHelper = "drink helper",
-  Zap = "zap",
-  Sphere = "sphere",
-  Guardian = "guardian",
-  // Secondary
-  Combat = "combat",
-  CombatReusable = "combat reusable",
-  Single = "single",
-  Solo = "solo",
-  Curse = "curse",
-  Bounty = "bounty",
-  Package = "package",
-  Candy = "candy",
-  Candy1 = "candy1",
-  Candy2 = "candy2",
-  Chocolate = "chocolate",
-  Fancy = "fancy",
-  Paste = "paste",
-  Smith = "smith",
-  Cook = "cook",
-  Mix = "mix",
-  Matchable = "matchable",
-}
 
 const isValidItemUse = isMemberOfEnum(ItemUse);
 
@@ -105,20 +54,6 @@ export async function loadItems() {
 }
 
 export async function populateItems() {
-  const use = await defineEnum("ItemUse", ItemUse);
-  await populateEntity(loadItems, "items", [
-    ["id", "INTEGER NOT NULL PRIMARY KEY"],
-    ["name", "TEXT NOT NULL"],
-    ["descid", "INTEGER UNIQUE"],
-    ["image", "TEXT NOT NULL"],
-    ["uses", `${use}[] NOT NULL`],
-    ["quest", "BOOLEAN NOT NULL"],
-    ["gift", "BOOLEAN NOT NULL"],
-    ["tradeable", "BOOLEAN NOT NULL"],
-    ["discardable", "BOOLEAN NOT NULL"],
-    ["autosell", "INTEGER NOT NULL"],
-    ["plural", "TEXT"],
-    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
-  ]);
+  await populateEntity(loadItems, Item);
   await markAmbiguous("items");
 }

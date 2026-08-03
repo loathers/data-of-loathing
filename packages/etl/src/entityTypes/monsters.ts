@@ -1,4 +1,10 @@
-import { defineEnum, populateEntity, resolveReference } from "../db.js";
+import {
+  Monster,
+  MonsterDrop,
+  MonsterElement,
+  MonsterDropCategory,
+} from "data-of-loathing";
+import { populateEntity, resolveReference } from "../db.js";
 import {
   checkVersion,
   getAverage,
@@ -11,34 +17,10 @@ import {
 const VERSION = 8;
 const FILENAME = "monsters";
 
-export enum MonsterElement {
-  BadSpelling = "bad spelling",
-  Cold = "cold",
-  Cute = "cute",
-  Hot = "hot",
-  Shadow = "shadow",
-  Spooky = "spooky",
-  Sleaze = "sleaze",
-  Slime = "slime",
-  Supercold = "supercold",
-  Stench = "stench",
-}
-
-// Might as well have some default, cold works.
 const validElement = memberOfEnumElse(MonsterElement, null);
-
-export enum MonsterDropCategory {
-  PickpocketOnly = "p",
-  NoPickpocket = "n",
-  Conditional = "c",
-  Fixed = "f",
-  Accordion = "a",
-  Multi = "m",
-}
-
 const validDropCategory = memberOfEnumElse(MonsterDropCategory, null);
 
-export type MonsterDrop = {
+export type MonsterDropType = {
   item: string;
   rate: number;
   category: MonsterDropCategory | null;
@@ -51,7 +33,7 @@ export type MonsterType = {
   boss: boolean;
   defence: number | string;
   drippy: boolean;
-  drops: MonsterDrop[];
+  drops: MonsterDropType[];
   element: MonsterElement | null;
   elementalAttack: MonsterElement | null;
   elementalDefence: MonsterElement | null;
@@ -95,7 +77,7 @@ export type MonsterType = {
   zombie: boolean;
 };
 
-const parseDrops = (drops: string[]): MonsterDrop[] => {
+const parseDrops = (drops: string[]): MonsterDropType[] => {
   return drops
     .map((d) => {
       const match = d.match(/^(.*?) \(([pncfa]?)(\d+(?:\.\d+)?)\)$/);
@@ -195,7 +177,6 @@ export async function checkMonstersVersion() {
 
 export async function loadMonsters() {
   const raw = await loadMafiaData(FILENAME);
-  // Only return unique monsters, skipping utility monsters mafia includes with id 0
   return raw
     .filter((p) => p.length > 2)
     .map(parseMonster)
@@ -205,79 +186,17 @@ export async function loadMonsters() {
 export async function populateMonsters() {
   const monsters = await loadMonsters();
 
-  const element = await defineEnum("monsterElement", MonsterElement);
+  await populateEntity(
+    monsters.map(({ drops: _, ...m }) => m),
+    Monster,
+  );
 
-  await populateEntity(monsters, "monsters", [
-    ["ambiguous", "BOOLEAN NOT NULL DEFAULT FALSE"],
-    ["article", "TEXT NOT NULL"],
-    ["attack", "TEXT NOT NULL"],
-    ["boss", "BOOLEAN NOT NULL"],
-    ["defence", "TEXT NOT NULL"],
-    ["drippy", "BOOLEAN NOT NULL"],
-    ["element", `${element}`],
-    ["elementalAttack", `${element}`],
-    ["elementalDefence", `${element}`],
-    ["elementalResistance", "TEXT NOT NULL"],
-    ["experience", "TEXT"],
-    ["free", "BOOLEAN NOT NULL"],
-    ["ghost", "BOOLEAN NOT NULL"],
-    ["groupSize", "INTEGER NOT NULL"],
-    ["hp", "TEXT NOT NULL"],
-    ["id", "INTEGER PRIMARY KEY"],
-    ["image", "TEXT[] NOT NULL"],
-    ["initiative", "TEXT NOT NULL"],
-    ["itemBlockChance", "REAL NOT NULL"],
-    ["lucky", "BOOLEAN NOT NULL"],
-    ["manuel", "TEXT"],
-    ["meat", "REAL"],
-    ["meatExpression", "TEXT"],
-    ["monsterLevelMultiplier", "TEXT NOT NULL"],
-    ["name", "TEXT NOT NULL"],
-    ["nobanish", "BOOLEAN NOT NULL"],
-    ["nocopy", "BOOLEAN NOT NULL"],
-    ["nomanuel", "BOOLEAN NOT NULL"],
-    ["nowander", "BOOLEAN NOT NULL"],
-    ["nowish", "BOOLEAN NOT NULL"],
-    ["phylum", "TEXT NOT NULL"],
-    ["physicalResistance", "TEXT NOT NULL"],
-    ["poison", "TEXT"],
-    ["scaling", "TEXT NOT NULL"],
-    ["scalingCap", "TEXT NOT NULL"],
-    ["scalingFloor", "TEXT NOT NULL"],
-    ["skeleton", "BOOLEAN NOT NULL"],
-    ["skillBlockChance", "REAL NOT NULL"],
-    ["snake", "BOOLEAN NOT NULL"],
-    ["spellBlockChance", "REAL NOT NULL"],
-    ["sprinkles", "TEXT[] NOT NULL"],
-    ["superlikely", "BOOLEAN NOT NULL"],
-    ["ultrarare", "BOOLEAN NOT NULL"],
-    ["wanderer", "BOOLEAN NOT NULL"],
-    ["wiki", "TEXT"],
-    ["wish", "BOOLEAN NOT NULL"],
-    ["zombie", "BOOLEAN NOT NULL"],
-  ]);
-
-  const monsterDrops = monsters.flatMap((m) =>
+  const monsterDropRows = monsters.flatMap((m) =>
     m.drops.map((d) => ({ monster: m.id, ...d })),
   );
 
-  const dropCategory = await defineEnum(
-    "MonsterDropCategory",
-    MonsterDropCategory,
-  );
-
-  await populateEntity(
-    monsterDrops,
-    "monsterDrops",
-    [
-      ["monster", "INTEGER NOT NULL REFERENCES monsters(id)"],
-      ["item", "INTEGER NOT NULL REFERENCES items(id)"],
-      ["rate", "REAL NOT NULL"],
-      ["category", `${dropCategory}`],
-    ],
-    async (drop) => ({
-      ...drop,
-      item: await resolveReference("monster", "items", "name", drop.item, true),
-    }),
-  );
+  await populateEntity(monsterDropRows, MonsterDrop, async (drop) => ({
+    ...drop,
+    item: await resolveReference("monster", "items", "name", drop.item, true),
+  }));
 }

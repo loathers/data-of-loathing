@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data of Loathing</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+        font-size: 13px;
+        background: #0d1117;
+        color: #e6edf3;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: #161b22;
+        border-bottom: 1px solid #30363d;
+        flex-shrink: 0;
+      }
+
+      header h1 { font-size: 14px; letter-spacing: 0.1em; color: #58a6ff; }
+      header .meta { color: #8b949e; font-size: 12px; }
+      #status { color: #f0883e; font-size: 12px; }
+
+      .layout {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      aside {
+        width: 200px;
+        flex-shrink: 0;
+        background: #161b22;
+        border-right: 1px solid #30363d;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      aside h2 {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #8b949e;
+        padding: 10px 12px 6px;
+        border-bottom: 1px solid #21262d;
+      }
+
+      #table-list {
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .table-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        color: #e6edf3;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .table-btn:hover { background: #21262d; }
+      .table-btn.active { background: #1f3a5f; color: #58a6ff; }
+
+      main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .table-view {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-bottom: 1px solid #30363d;
+      }
+
+      .table-title {
+        padding: 8px 14px;
+        font-size: 12px;
+        color: #8b949e;
+        border-bottom: 1px solid #21262d;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      #table-name { color: #e6edf3; }
+
+      #pagination {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: #8b949e;
+      }
+
+      #pagination button {
+        background: #21262d;
+        border: 1px solid #30363d;
+        color: #e6edf3;
+        padding: 2px 8px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 11px;
+        border-radius: 3px;
+      }
+
+      #pagination button:hover:not(:disabled) { background: #30363d; }
+      #pagination button:disabled { opacity: 0.4; cursor: default; }
+
+      .table-scroll {
+        overflow: auto;
+        flex: 1;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: max-content;
+        min-width: 100%;
+      }
+
+      th {
+        background: #161b22;
+        color: #8b949e;
+        font-weight: 600;
+        padding: 6px 12px;
+        text-align: left;
+        border-bottom: 1px solid #30363d;
+        border-right: 1px solid #21262d;
+        position: sticky;
+        top: 0;
+        white-space: nowrap;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      td {
+        padding: 4px 12px;
+        border-bottom: 1px solid #21262d;
+        border-right: 1px solid #161b22;
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: top;
+      }
+
+      tr:hover td { background: #161b22; }
+
+      .query-view {
+        flex-shrink: 0;
+        padding: 10px 14px;
+        background: #0d1117;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 280px;
+      }
+
+      .query-view h3 {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #8b949e;
+      }
+
+      .query-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
+
+      #sql-input {
+        flex: 1;
+        background: #161b22;
+        border: 1px solid #30363d;
+        color: #e6edf3;
+        font-family: inherit;
+        font-size: 12px;
+        padding: 6px 10px;
+        resize: vertical;
+        min-height: 52px;
+        border-radius: 4px;
+        outline: none;
+      }
+
+      #sql-input:focus { border-color: #58a6ff; }
+
+      #sql-run {
+        background: #238636;
+        border: 1px solid #2ea043;
+        color: #fff;
+        font-family: inherit;
+        font-size: 12px;
+        padding: 6px 14px;
+        cursor: pointer;
+        border-radius: 4px;
+        white-space: nowrap;
+        align-self: flex-start;
+      }
+
+      #sql-run:hover { background: #2ea043; }
+
+      #sql-result {
+        overflow: auto;
+        max-height: 120px;
+        font-size: 12px;
+      }
+
+      #sql-result table { min-width: unset; }
+      #sql-result th, #sql-result td { font-size: 11px; padding: 3px 8px; }
+
+      .error { color: #f85149; }
+      .muted { color: #8b949e; }
+
+      .fk-badge {
+        display: inline-block;
+        color: #3fb950;
+        cursor: pointer;
+        border-radius: 3px;
+        padding: 1px 4px;
+        background: #0d2b14;
+        border: 1px solid #196127;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .fk-badge:hover { background: #196127; border-color: #3fb950; }
+
+      #filter-indicator {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #8b949e;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 3px;
+        padding: 2px 8px;
+      }
+      #filter-indicator.visible { display: flex; }
+      #filter-indicator code { color: #e6edf3; }
+      #filter-clear { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 13px; padding: 0 2px; line-height: 1; }
+      #filter-clear:hover { color: #f85149; }
+
+      .inv-badge {
+        display: inline-block;
+        color: #d2a8ff;
+        cursor: pointer;
+        border-radius: 3px;
+        padding: 1px 4px;
+        background: #1e1433;
+        border: 1px solid #3d2a6b;
+        font-size: 11px;
+        white-space: nowrap;
+        margin-right: 3px;
+      }
+      .inv-badge:hover { background: #3d2a6b; border-color: #d2a8ff; }
+
+      .json-badge {
+        display: inline-block;
+        color: #79c0ff;
+        cursor: pointer;
+        border-radius: 3px;
+        padding: 1px 4px;
+        background: #1c2d3f;
+        border: 1px solid #1f3a5f;
+        font-size: 11px;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+      }
+      .json-badge:hover { background: #1f3a5f; border-color: #388bfd; }
+
+      #json-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+      }
+
+      #json-panel {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        max-width: 720px;
+        max-height: 80vh;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      #json-panel header {
+        background: #21262d;
+        border-bottom: 1px solid #30363d;
+        padding: 8px 14px;
+        font-size: 11px;
+        color: #8b949e;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      #json-close {
+        background: none;
+        border: none;
+        color: #8b949e;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0 2px;
+      }
+      #json-close:hover { color: #e6edf3; }
+
+      #json-content {
+        overflow: auto;
+        padding: 14px 16px;
+        flex: 1;
+      }
+
+      #json-content pre { white-space: pre-wrap; word-break: break-all; line-height: 1.6; font-size: 12px; }
+
+      .jk { color: #79c0ff; }
+      .js { color: #a5d6ff; }
+      .jn { color: #f2cc60; }
+      .jb { color: #ff7b72; }
+      .jx { color: #8b949e; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>DATA OF LOATHING</h1>
+      <span class="meta" id="last-updated"></span>
+      <span id="status">Loading…</span>
+    </header>
+    <div class="layout">
+      <aside>
+        <h2>Tables</h2>
+        <div id="table-list"></div>
+      </aside>
+      <main>
+        <div class="table-view">
+          <div class="table-title">
+            <span id="table-name"></span>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div id="filter-indicator"><span>WHERE <code id="filter-text"></code></span><button id="filter-clear" title="Clear filter">✕</button></div>
+              <div id="pagination"></div>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead id="table-header"></thead>
+              <tbody id="table-body"><tr><td class="muted" style="padding:20px">Select a table</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="query-view">
+          <h3>SQL Query</h3>
+          <div class="query-row">
+            <textarea id="sql-input" placeholder="SELECT …"></textarea>
+            <button id="sql-run">Run</button>
+          </div>
+          <div id="sql-result"></div>
+        </div>
+      </main>
+    </div>
+    <div id="json-overlay">
+      <div id="json-panel">
+        <header>
+          <span>JSON</span>
+          <button id="json-close">✕</button>
+        </header>
+        <div id="json-content"><pre></pre></div>
+      </div>
+    </div>
+    <script type="module" src="/src/browser/main.ts"></script>
+  </body>
+</html>

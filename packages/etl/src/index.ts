@@ -1,4 +1,5 @@
 import type { Endpoints } from "@octokit/types";
+import { copyFile, rename, utimes } from "node:fs/promises";
 import { Cron } from "croner";
 import { populateClasses } from "./entityTypes/classes.js";
 import { checkEffectsVersion, populateEffects } from "./entityTypes/effects.js";
@@ -11,6 +12,7 @@ import {
   populateFoldGroups,
 } from "./entityTypes/foldGroups.js";
 import { checkItemsVersion, populateItems } from "./entityTypes/items.js";
+import { checkZonesVersion, populateZones } from "./entityTypes/zones.js";
 import {
   checkLocationsVersion,
   populateLocations,
@@ -22,7 +24,15 @@ import {
 import { checkOutfitsVersion, populateOutfits } from "./entityTypes/outfits.js";
 import { populatePaths } from "./entityTypes/paths.js";
 import { checkSkillsVersion, populateSkills } from "./entityTypes/skills.js";
-import { sql } from "./db.js";
+import {
+  checkpointDatabase,
+  getLastUpdate,
+  initialiseDatabase,
+  openDatabase,
+  prepareMeta,
+  setLastRevision,
+  setLastUpdate,
+} from "./db.js";
 import { populateEquipment } from "./entityTypes/equipment.js";
 import {
   checkModifiersVersion,
@@ -38,28 +48,13 @@ import {
   populateZapGroups,
 } from "./entityTypes/zapGroups.js";
 
-async function prepareMeta() {
-  // If we have a new database, ensure a population by pretending we last checked a long time ago
-  await sql`
-    CREATE TABLE IF NOT EXISTS "meta" (
-      id int PRIMARY KEY DEFAULT 1,
-      "lastUpdate" timestamp NOT NULL DEFAULT TIMESTAMP '1970-01-01 00:00:00',
-      "lastRevision" int NOT NULL DEFAULT 0
-    );
-  `;
-  await sql`
-    INSERT INTO "meta" (id)
-    VALUES (1)
-    ON CONFLICT (id) DO NOTHING;
-  `;
-}
-
 export async function checkVersions() {
   const checks = await Promise.all([
     checkEffectsVersion(),
     checkFoldGroupsVersion(),
     checkZapGroupsVersion(),
     checkItemsVersion(),
+    checkZonesVersion(),
     checkLocationsVersion(),
     checkMonstersVersion(),
     checkOutfitsVersion(),
@@ -84,6 +79,7 @@ export async function populateDatabase() {
   await populateFamiliars();
   await populateMonsters();
 
+  await populateZones();
   await populateLocations();
   await populateOutfits();
   await populateFoldGroups();
@@ -120,43 +116,69 @@ async function getLastGitHubUpdate() {
   return new Date(Math.max(...lastGitHubUpdates));
 }
 
+// The path the server serves to clients. Clients read this file in place (the
+// ranged strategy fetches individual pages over HTTP), so it must never be
+// mutated in place — only replaced atomically with a fully built database.
+const SQLITE_PATH = process.env.SQLITE_PATH ?? "./dol.sqlite";
+// The ETL builds into its own working file and publishes to SQLITE_PATH.
+const WORK_PATH = `${SQLITE_PATH}.work`;
+
+// Atomically replace the served database with a freshly built snapshot so
+// in-flight client reads never observe a half-populated file.
+async function publishDatabase(from: string, to: string, mtime: Date) {
+  await checkpointDatabase();
+  const tmp = `${to}.tmp`;
+  await copyFile(from, tmp);
+  await utimes(tmp, mtime, mtime);
+  await rename(tmp, to);
+}
+
 export async function watch(every: number) {
+  await openDatabase(WORK_PATH);
+  await initialiseDatabase();
+
   // When we run watch for the first time, update the database even if the upstream data has not changed. This is because
   // the server may have restarted with code for new data transforms.
   let firstTime = true;
 
   const job = new Cron(`*/${every} * * * *`, { protect: true }, async () => {
-    await prepareMeta();
+    try {
+      await prepareMeta();
 
-    const { lastUpdate } = (
-      await sql<
-        { lastUpdate: Date }[]
-      >`SELECT "lastUpdate" FROM "meta" WHERE "id" = 1;`
-    )[0];
-    const lastGitHubUpdate = await getLastGitHubUpdate();
+      const lastUpdate = await getLastUpdate();
+      const lastGitHubUpdate = await getLastGitHubUpdate();
 
-    if (!firstTime && lastGitHubUpdate <= lastUpdate) {
-      console.log(
-        "Not updating, last change:",
-        lastGitHubUpdate,
-        "vs our data:",
-        lastUpdate,
-      );
-      return;
+      if (!firstTime && lastGitHubUpdate <= lastUpdate) {
+        console.log(
+          "Not updating, last change:",
+          lastGitHubUpdate,
+          "vs our data:",
+          lastUpdate,
+        );
+        return;
+      }
+
+      const check = await checkVersions();
+
+      if (!check) {
+        console.log("Cannot update due to mismatched data file versions");
+        return;
+      }
+
+      // Reset the schema before each populate so re-runs don't collide with
+      // rows from a previous run, then re-seed meta so the timestamp persists.
+      await initialiseDatabase();
+      await prepareMeta();
+
+      await populateDatabase();
+
+      await setLastRevision(await getKoLmafiaRevision());
+      await setLastUpdate(lastGitHubUpdate);
+      await publishDatabase(WORK_PATH, SQLITE_PATH, lastGitHubUpdate);
+      firstTime = false;
+    } catch (error) {
+      console.error("ETL error, will retry next run:", error);
     }
-
-    const check = await checkVersions();
-
-    if (!check) {
-      console.log("Cannot update due to mismatched data file versions");
-      return;
-    }
-
-    await populateDatabase();
-
-    await sql`UPDATE "meta" SET "lastRevision" = ${await getKoLmafiaRevision()} WHERE "id" = 1;`;
-    await sql`UPDATE "meta" SET "lastUpdate" = ${lastGitHubUpdate} WHERE "id" = 1;`;
-    firstTime = false;
   });
 
   await job.trigger();

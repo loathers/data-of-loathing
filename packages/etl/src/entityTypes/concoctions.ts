@@ -1,3 +1,4 @@
+import { Concoction, Ingredient } from "data-of-loathing";
 import { populateEntity, resolveReference } from "../db.js";
 import { checkVersion, loadMafiaData } from "../utils.js";
 
@@ -46,7 +47,6 @@ export async function loadConcoctions() {
   let i = 0;
   const concoctions = [];
 
-  // Accumulate comments that precede a block of
   const comment = [];
   let finishedComment = true;
   for (const line of raw) {
@@ -72,7 +72,6 @@ export async function loadConcoctions() {
 
     const concoction = parseConcoction(line, i++, comment);
 
-    // Filter out concoctions that produce or consume pseudoitems
     if (
       concoction.item === "worthless item" ||
       concoction.methods.includes("SUSHI") ||
@@ -91,46 +90,32 @@ export async function loadConcoctions() {
 export async function populateConcoctions() {
   const data = await loadConcoctions();
 
-  await populateEntity(
-    data,
-    "concoctions",
-    [
-      ["id", "INTEGER PRIMARY KEY"],
-      ["item", "INTEGER REFERENCES items(id) NOT NULL"],
-      ["methods", "TEXT[] NOT NULL"],
-      ["comment", "TEXT"],
-    ],
-    async (concoction) => ({
-      ...concoction,
-      item: await resolveReference(
-        "concoction result",
-        "items",
-        "name",
-        concoction.item,
-      ),
-    }),
-  );
-
-  const junctionTable = data.flatMap(({ id, ingredients }) =>
-    ingredients.map((item) => ({ concoction: id, ...item })),
-  );
+  await populateEntity(data, Concoction, async (concoction) => ({
+    id: concoction.id,
+    item: await resolveReference(
+      "concoction result",
+      "items",
+      "name",
+      concoction.item,
+    ),
+    methods: concoction.methods,
+    comment: concoction.comment,
+  }));
 
   await populateEntity(
-    junctionTable,
-    "ingredients",
-    [
-      ["concoction", `INTEGER REFERENCES "concoctions" (id)`],
-      ["item", "INTEGER REFERENCES items(id)"],
-      ["quantity", "INTEGER NOT NULL"],
-    ],
+    data.flatMap(({ id, ingredients }) =>
+      ingredients.map((ing) => ({ concoction: id, ...ing })),
+    ),
+    Ingredient,
     async (ingredient) => ({
-      ...ingredient,
+      concoction: ingredient.concoction,
       item: await resolveReference(
         "concoction ingredient",
         "items",
         "name",
         ingredient.item,
       ),
+      quantity: ingredient.quantity,
     }),
   );
 }
