@@ -81,7 +81,9 @@ export async function populateEntity<T extends Record<string, unknown>>(
       )
     : data;
   if (transformed.length === 0) return;
-  await em().insertMany(Entity, transformed);
+  // Skip rows that collide on a unique/primary key (e.g. a duplicate upstream
+  // entry) rather than aborting the whole build.
+  await em().qb(Entity).insert(transformed).onConflict().ignore().execute();
 }
 
 // For pure M2M pivot tables that have no entity class.
