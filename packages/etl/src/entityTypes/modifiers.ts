@@ -155,19 +155,35 @@ export async function populateModifiers() {
       .filter(({ type }) => type === source)
       .map(({ thing, modifiers }) => ({ thing, modifiers }));
 
-    await populateEntity(dataForType, Entity, async (datum) => {
-      const lookup = `${prop}:${datum.thing}`;
-      if (IGNORES.includes(lookup)) return null;
+    const resolved = await Promise.all(
+      dataForType.map(async (datum) => {
+        const lookup = `${prop}:${datum.thing}`;
+        if (IGNORES.includes(lookup)) return null;
 
-      const key = await (() => {
-        if (lookup === "item:Love Potion #0") return Promise.resolve(9745);
-        if (resolve) return resolve(datum.thing);
-        return resolveReference(`${prop}Modifiers`, foreignTable, "name", datum.thing);
-      })();
+        const key = await (() => {
+          if (lookup === "item:Love Potion #0") return Promise.resolve(9745);
+          if (resolve) return resolve(datum.thing);
+          return resolveReference(`${prop}Modifiers`, foreignTable, "name", datum.thing);
+        })();
 
-      if (!key) return null;
-      return { [prop]: key, modifiers: datum.modifiers };
-    });
+        if (!key) return null;
+        return { key, modifiers: datum.modifiers };
+      }),
+    );
+
+    // Merge rows that resolve to the same key so a duplicate upstream entry
+    // (e.g. a separate "Last Available" line for the same item) doesn't violate
+    // the 1:1 modifiers constraint. Modifier arrays are concatenated in order.
+    const merged = new Map<number | string, { name: string; value: string }[]>();
+    for (const row of resolved) {
+      if (!row) continue;
+      const existing = merged.get(row.key);
+      if (existing) existing.push(...row.modifiers);
+      else merged.set(row.key, [...row.modifiers]);
+    }
+
+    const rows = [...merged].map(([key, modifiers]) => ({ [prop]: key, modifiers }));
+    await populateEntity(rows, Entity);
   }
 
   const ITEM_CONFIG_TYPES: { source: string; itemName: string }[] = [
