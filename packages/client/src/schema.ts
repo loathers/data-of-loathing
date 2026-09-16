@@ -193,6 +193,7 @@ export class Effect {
   nohookah!: boolean;
   nopvp!: boolean;
   noremove!: boolean;
+  notcrs!: boolean;
   song!: boolean;
   actions!: string[];
   ambiguous!: boolean;
@@ -627,6 +628,7 @@ export const EffectSchema = new EntitySchema<Effect>({
     nohookah: { type: "boolean" },
     nopvp: { type: "boolean" },
     noremove: { type: "boolean" },
+    notcrs: { type: "boolean" },
     song: { type: "boolean" },
     actions: { type: "json" },
     ambiguous: { type: "boolean", default: false },
