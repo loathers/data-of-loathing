@@ -10,6 +10,7 @@ test("Can read effects", async () => {
     createFetchResponse(dedent`
       1
       5\tFar Out\tfarout.gif\t5ad503e9df2df73bfbbb5377b622c8c4\tgood\tnone\tuse 1 patchouli incense stick
+      2764\tFeeling Lost\tlostdog.gif\t8e9b3d0b5e6bd0e4b4f1d1a5b64e3f5c\tbad\tnohookah,notcrs,noremove
     `),
   );
 
@@ -17,7 +18,7 @@ test("Can read effects", async () => {
 
   expectNotNull(effects);
 
-  expect(effects).toHaveLength(1);
+  expect(effects).toHaveLength(2);
 
   const effect = effects[0];
 
@@ -29,9 +30,21 @@ test("Can read effects", async () => {
     nopvp: false,
     nohookah: false,
     noremove: false,
+    notcrs: false,
     song: false,
     quality: "good",
     actions: ["use 1 patchouli incense stick"],
     ambiguous: false,
+  });
+
+  expect(effects[1]).toMatchObject({
+    id: 2764,
+    name: "Feeling Lost",
+    nohookah: true,
+    notcrs: true,
+    noremove: true,
+    nopvp: false,
+    song: false,
+    actions: [],
   });
 });

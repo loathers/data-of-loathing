@@ -16,6 +16,7 @@ export type EffectType = {
   nohookah: boolean;
   nopvp: boolean;
   noremove: boolean;
+  notcrs: boolean;
   song: boolean;
   actions: string[];
   ambiguous: boolean;
@@ -32,6 +33,7 @@ const parseAttributes = (attributesString?: string) => {
     nohookah: attributes.includes("nohookah"),
     nopvp: attributes.includes("nopvp"),
     noremove: attributes.includes("noremove"),
+    notcrs: attributes.includes("notcrs"),
     song: attributes.includes("song"),
   };
 };
