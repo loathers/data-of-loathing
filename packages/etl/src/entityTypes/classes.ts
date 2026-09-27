@@ -26,7 +26,7 @@ const defaultClass: Omit<ClassType, "name" | "id" | "enumName"> = {
 };
 
 export async function loadClasses() {
-  const raw = await loadMafiaEnum("net.sourceforge.kolmafia.AscensionClass");
+  const raw = await loadMafiaEnum("AscensionClass");
   return raw.map((c) => ({ ...defaultClass, ...c }) as ClassType);
 }
 

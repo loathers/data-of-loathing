@@ -30,10 +30,7 @@ const defaultPath: Omit<
 };
 
 export async function loadPaths() {
-  const raw = await loadMafiaEnum(
-    "net.sourceforge.kolmafia.AscensionPath",
-    "Path",
-  );
+  const raw = await loadMafiaEnum("AscensionPath", "Path");
 
   return raw.map((p) => ({ ...defaultPath, ...p }) as PathType);
 }

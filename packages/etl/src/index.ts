@@ -47,6 +47,7 @@ import {
   checkZapGroupsVersion,
   populateZapGroups,
 } from "./entityTypes/zapGroups.js";
+import { MAFIA_DATA_DIRS, MAFIA_JAVA_DIRS } from "./utils.js";
 
 export async function checkVersions() {
   const checks = await Promise.all([
@@ -100,9 +101,11 @@ async function getKoLmafiaRevision() {
 async function getLastGitHubUpdate() {
   const lastGitHubUpdates = await Promise.all(
     [
-      "/src/data",
-      "src/net/sourceforge/kolmafia/AscensionPath.java",
-      "src/net/sourceforge/kolmafia/AscensionClass.java",
+      ...MAFIA_DATA_DIRS,
+      ...MAFIA_JAVA_DIRS.flatMap((dir) => [
+        `${dir}/AscensionPath.java`,
+        `${dir}/AscensionClass.java`,
+      ]),
     ].map(async (path) => {
       const response = await fetch(
         `https://api.github.com/repos/kolmafia/kolmafia/commits?page=1&per_page=1&path=${path}`,
