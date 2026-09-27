@@ -1,8 +1,12 @@
-import { MikroORM } from "@mikro-orm/core";
-import { NodeSqliteDialect, SqliteDriver, SqlMikroORM } from "@mikro-orm/sql";
+import {
+  type MikroORM,
+  NodeSqliteDialect,
+  SqliteDriver,
+  SqlMikroORM,
+} from "@mikro-orm/sql";
 import { entities } from "data-of-loathing";
 
-let orm: MikroORM;
+let orm: MikroORM<SqliteDriver>;
 
 function em() {
   return orm.em;
@@ -13,7 +17,7 @@ function conn() {
 }
 
 export async function openDatabase(path: string) {
-  orm = await SqlMikroORM.init({
+  orm = await SqlMikroORM.init<SqliteDriver>({
     driver: SqliteDriver,
     driverOptions: new NodeSqliteDialect(path),
     dbName: path,
@@ -130,7 +134,7 @@ export async function resolveReference<T extends { id: number }>(
     [name],
     "all",
   );
-  const results = raw.map(deserializeRow);
+  const results = raw.map(deserializeRow) as T[];
 
   if (results.length < 1) {
     console.log(
