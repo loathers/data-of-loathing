@@ -85,9 +85,15 @@ export async function populateEntity<T extends Record<string, unknown>>(
       )
     : data;
   if (transformed.length === 0) return;
+  // A bulk insert takes its column list from the first row, so every row must
+  // carry every key or optional fields absent from row 0 are silently dropped.
+  const keys = [...new Set(transformed.flatMap((d) => Object.keys(d)))];
+  const rows = transformed.map((d) =>
+    Object.fromEntries(keys.map((k) => [k, d[k] ?? null])),
+  );
   // Skip rows that collide on a unique/primary key (e.g. a duplicate upstream
   // entry) rather than aborting the whole build.
-  await em().qb(Entity).insert(transformed).onConflict().ignore().execute();
+  await em().qb(Entity).insert(rows).onConflict().ignore().execute();
 }
 
 // For pure M2M pivot tables that have no entity class.
