@@ -1,10 +1,25 @@
+import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import envPaths from "env-paths";
 import { SqlMikroORM, SqliteDriver, NodeSqliteDialect } from "@mikro-orm/sql";
 import { entities } from "./schema.js";
 import { BaseClient, DEFAULT_URL } from "./BaseClient.js";
+
+// the cache is shared between processes, so readers must never see a partially written file
+async function writeFileAtomic(
+  path: string,
+  data: string | Uint8Array,
+): Promise<void> {
+  const tempPath = `${path}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(tempPath, data);
+    await rename(tempPath, path);
+  } finally {
+    await rm(tempPath, { force: true });
+  }
+}
 
 export type Strategy =
   | { strategy?: "url"; url?: string; force?: boolean }
@@ -24,7 +39,7 @@ export class Client extends BaseClient<Strategy> {
   }
 
   protected async storeEtag(key: string, etag: string): Promise<void> {
-    await writeFile(key, etag, "utf-8");
+    await writeFileAtomic(key, etag);
   }
 
   protected async hasCachedDb(): Promise<boolean> {
@@ -55,7 +70,7 @@ export class Client extends BaseClient<Strategy> {
           etagPath,
           async (data) => {
             await mkdir(cacheDir, { recursive: true });
-            await writeFile(dbPath, Buffer.from(data));
+            await writeFileAtomic(dbPath, Buffer.from(data));
           },
           force,
         );
