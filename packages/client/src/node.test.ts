@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -101,4 +101,18 @@ test("re-downloads when the cached database is missing despite a matching etag",
 
   await new Client().load();
   expect(getCount).toBe(2);
+});
+
+test("replaces the cached database instead of rewriting it in place", async () => {
+  const dbPath = join(cacheDir, "dol.sqlite");
+  await new Client().load();
+  const { ino } = await stat(dbPath);
+
+  remoteEtag = '"etag-2"';
+  await new Client().load();
+
+  expect((await stat(dbPath)).ino).not.toBe(ino);
+  expect((await readdir(cacheDir)).filter((f) => f.endsWith(".tmp"))).toEqual(
+    [],
+  );
 });
